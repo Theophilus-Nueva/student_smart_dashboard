@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../widgets/profile_card.dart';
 import '../widgets/dashboard_tile.dart';
+import '../widgets/notification_badge.dart';
 import 'activity_feed.dart';
 
 
@@ -13,11 +14,31 @@ class DashboardScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Column(
+        backgroundColor: Colors.red[900],
+        foregroundColor: Colors.white,
+        title: Column(
           spacing: 8,
           children: [
-            Text("Smart Dashboard"),
-            ProfileCard(),
+            Row(
+              children: [
+                Image.asset(
+                    'assets/images/images.png',
+                    fit: BoxFit.contain,
+                    width: 48.0,
+                    height: 48.0,
+                ),
+                const SizedBox(width: 8),
+                const Expanded(
+                  child: Text(
+                    "LPU Smart Campus Dashboard",
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                const NotificationBadge(count: 8),
+              ],
+            ),
+            const ProfileCard(),
           ],
         ),
         toolbarHeight: 128,
@@ -38,9 +59,33 @@ class DashboardScreen extends StatelessWidget {
               ],
             ),
           ),
-          Expanded(
+          const Expanded(
             flex: 1,
             child: ActivityFeed(),
+          ),
+        ],
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: Colors.red[900],
+        unselectedItemColor: Colors.white,
+        selectedItemColor: Colors.amber[300],
+        type: BottomNavigationBarType.fixed,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home, color: Colors.amber),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.analytics),
+            label: 'Analytics',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.devices),
+            label: 'Device',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings),
+            label: 'Settings',
           ),
         ],
       ),

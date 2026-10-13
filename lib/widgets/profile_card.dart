@@ -8,10 +8,14 @@ class ProfileCard extends StatelessWidget{
     return Card(
       child: ListTile(
         leading: const CircleAvatar(
-          child: Icon(Icons.person),
+          backgroundColor: Colors.white,
+          child: Icon(
+              Icons.person,
+              color: Colors.amber,
+          ),
         ),
         title: const Text("Theophilus T. Nueva"),
-        subtitle: const Text("BS Information Technology\nSamsung Galaxy A54"),
+        subtitle: const Text("BS Information Technology\nLPU Cavite"),
         minTileHeight: 50,
       ),
     );
