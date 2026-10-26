@@ -1,19 +1,35 @@
 import 'package:flutter/material.dart';
-import '../widgets/profile_card.dart';
-import '../widgets/dashboard_tile.dart';
 import '../widgets/notification_badge.dart';
-import 'activity_feed.dart';
+import 'dashboard_body.dart';
+import 'registration_form_screen.dart';
+import 'summary_page_screen.dart';
+import 'file_storage_screen.dart';
 
-import '../services/api.dart';
-
-
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    double width = MediaQuery.of(context).size.width;
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
 
+class _DashboardScreenState extends State<DashboardScreen> {
+  int _selectedIndex = 0;
+
+  static const List<Widget> _pages = [
+    DashboardBody(),
+    RegistrationFormBody(),
+    SummaryPageBody(),
+    FileStorageBody(),
+  ];
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.red[900],
@@ -24,15 +40,15 @@ class DashboardScreen extends StatelessWidget {
             Row(
               children: [
                 Image.asset(
-                    'assets/images/images.png',
-                    fit: BoxFit.contain,
-                    width: 48.0,
-                    height: 48.0,
+                  'assets/images/images.png',
+                  fit: BoxFit.contain,
+                  width: 48.0,
+                  height: 48.0,
                 ),
                 const SizedBox(width: 8),
                 const Expanded(
                   child: Text(
-                    "LPU Smart Campus Dashboard",
+                    "Student Information App",
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
@@ -40,54 +56,34 @@ class DashboardScreen extends StatelessWidget {
                 const NotificationBadge(count: 8),
               ],
             ),
-            const ProfileCard(),
           ],
         ),
-        toolbarHeight: 128,
+        toolbarHeight: 64,
       ),
-      body: Column(
-        children: [
-          Expanded(
-            flex: width > 600 ? 3 : 2,
-            child: GridView.count(
-              crossAxisCount: width > 600 ? 4 : 2,
-              crossAxisSpacing: 10.0,
-              mainAxisSpacing: 10.0,
-              children: const [
-                DashboardTile(title: "DEVICE", icon: Icons.devices_rounded),
-                DashboardTile(title: "GPS", icon: Icons.gps_fixed_rounded),
-                DashboardTile(title: "API", icon: Icons.api_rounded),
-                DashboardTile(title: "STORAGE", icon: Icons.storage_rounded),
-              ],
-            ),
-          ),
-          const Expanded(
-            flex: 1,
-            child: ActivityFeed(),
-          ),
-        ],
-      ),
+      body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
         backgroundColor: Colors.red[900],
         unselectedItemColor: Colors.white,
         selectedItemColor: Colors.amber[300],
         type: BottomNavigationBarType.fixed,
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.home, color: Colors.amber),
-            label: 'Home',
+            icon: Icon(Icons.dashboard),
+            label: 'Dashboard',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.analytics),
-            label: 'Analytics',
+            icon: Icon(Icons.app_registration),
+            label: 'Registration Form',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.devices),
-            label: 'Device',
+            icon: Icon(Icons.summarize),
+            label: 'Summary Page',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: 'Settings',
+            icon: Icon(Icons.folder),
+            label: 'File Storage Confirmation',
           ),
         ],
       ),

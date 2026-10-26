@@ -9,12 +9,12 @@ void main() {
     await tester.pumpWidget(const MyApp());
 
     // Verify that title is displayed.
-    expect(find.text('LPU Smart Campus Dashboard'), findsOneWidget);
+    expect(find.text('Student Information App'), findsOneWidget);
 
     // Verify bottom navigation bar items exist.
-    expect(find.byIcon(Icons.home), findsOneWidget);
-    expect(find.byIcon(Icons.analytics), findsOneWidget);
-    expect(find.byIcon(Icons.devices), findsOneWidget);
-    expect(find.byIcon(Icons.settings), findsOneWidget);
+    expect(find.byIcon(Icons.dashboard), findsOneWidget);
+    expect(find.byIcon(Icons.app_registration), findsOneWidget);
+    expect(find.byIcon(Icons.summarize), findsOneWidget);
+    expect(find.byIcon(Icons.folder), findsOneWidget);
   });
 }

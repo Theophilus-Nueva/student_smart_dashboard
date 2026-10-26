@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 class DashboardTile extends StatelessWidget {
   final String title;
   final IconData icon;
+  final String description;
 
   const DashboardTile({
     super.key,
     required this.title,
     required this.icon,
+    required this.description,
   });
 
   @override
@@ -20,6 +22,7 @@ class DashboardTile extends StatelessWidget {
         children: [
           Icon(icon,size:40),
           Text(title),
+          Text(description)
         ],
       ),
      ),

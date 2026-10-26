@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'screens/dashboard_screen.dart';
-import 'screens/dashboard_cards.dart';
-
 
 void main() {
   runApp(const MyApp());
