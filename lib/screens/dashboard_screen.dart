@@ -4,6 +4,8 @@ import '../widgets/dashboard_tile.dart';
 import '../widgets/notification_badge.dart';
 import 'activity_feed.dart';
 
+import '../services/api.dart';
+
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
