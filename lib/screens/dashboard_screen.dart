@@ -18,7 +18,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   static const List<Widget> _pages = [
     DashboardBody(),
     RegistrationFormBody(),
-    SummaryPageBody(),
+    SummaryPage(
+
+    ),
     FileStorageBody(),
   ];
 
