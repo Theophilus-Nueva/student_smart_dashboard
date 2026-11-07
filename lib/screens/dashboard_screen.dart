@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import '../widgets/notification_badge.dart';
-import 'dashboard_body.dart';
-import 'registration_form_screen.dart';
-import 'summary_page_screen.dart';
-import 'file_storage_screen.dart';
 
+import '../widgets/app_bottom_nav.dart';
+import '../widgets/home_app_bar.dart';
+import 'dashboard_body.dart';
+
+/// Interim shell (Step 1): new header and bottom nav around the existing
+/// dashboard. Replaced by the role-aware shell in Step 2.
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
@@ -15,79 +16,17 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   int _selectedIndex = 0;
 
-  static const List<Widget> _pages = [
-    DashboardBody(),
-    RegistrationFormBody(),
-    SummaryPage(
-
-    ),
-    FileStorageBody(),
-  ];
-
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
+    final label = AppBottomNav.items[_selectedIndex].$2;
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.red[900],
-        foregroundColor: Colors.white,
-        title: Column(
-          spacing: 8,
-          children: [
-            Row(
-              children: [
-                Image.asset(
-                  'assets/images/images.png',
-                  fit: BoxFit.contain,
-                  width: 48.0,
-                  height: 48.0,
-                ),
-                const SizedBox(width: 8),
-                const Expanded(
-                  child: Text(
-                    "Student Information App",
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                const NotificationBadge(count: 8),
-              ],
-            ),
-          ],
-        ),
-        toolbarHeight: 64,
-      ),
-      body: _pages[_selectedIndex],
-      bottomNavigationBar: BottomNavigationBar(
+      appBar: const HomeAppBar(unread: 8),
+      body: _selectedIndex == 0
+          ? const DashboardBody()
+          : Center(child: Text('$label (coming soon)')),
+      bottomNavigationBar: AppBottomNav(
         currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-        backgroundColor: Colors.red[900],
-        unselectedItemColor: Colors.white,
-        selectedItemColor: Colors.amber[300],
-        type: BottomNavigationBarType.fixed,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard),
-            label: 'Dashboard',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.app_registration),
-            label: 'Registration Form',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.summarize),
-            label: 'Summary Page',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.folder),
-            label: 'File Storage Confirmation',
-          ),
-        ],
+        onTap: (i) => setState(() => _selectedIndex = i),
       ),
     );
   }

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+
 import 'screens/dashboard_screen.dart';
+import 'theme/app_theme.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const MyApp());
 }
 
@@ -10,9 +13,11 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
+      title: 'Smart Campus Tour Guide',
       debugShowCheckedModeBanner: false,
-      home: DashboardScreen(),
+      theme: buildAppTheme(),
+      home: const DashboardScreen(),
     );
   }
 }
