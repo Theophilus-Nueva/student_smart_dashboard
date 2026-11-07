@@ -10,6 +10,7 @@ import 'activity_log.dart';
 import 'app_settings.dart';
 import 'auth_service.dart';
 import 'biometric_service.dart';
+import 'directory_service.dart';
 import 'file_export_service.dart';
 import 'location_service.dart';
 import 'student_repository.dart';
@@ -24,7 +25,9 @@ class AppServices {
     this.biometric = const UnavailableBiometricService(),
     ConnectionCheck? connectionCheck,
     Future<Directory> Function()? documentsDirectory,
+    UsersFetcher? usersFetcher,
   }) : auth = AuthService(prefs),
+       directory = DirectoryService(prefs, fetcher: usersFetcher),
        settings = AppSettings(prefs),
        activity = ActivityLog(prefs),
        students = StudentRepository(prefs),
@@ -42,6 +45,7 @@ class AppServices {
   final StudentRepository students;
   final TourService tour;
   final FileExportService files;
+  final DirectoryService directory;
   final LocationService location = const LocationService();
   late final Session session;
   late final SyncService sync;
@@ -51,6 +55,7 @@ class AppServices {
     students.load();
     tour.load();
     sync.load();
+    directory.load();
 
     session.onSignedIn = (user, method) => activity.add(
       ActivityKind.signIn,

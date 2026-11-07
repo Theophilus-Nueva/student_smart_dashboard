@@ -12,12 +12,17 @@ import 'package:smart_dashboard/services/app_services.dart';
 Future<AppServices> makeServices({
   Map<String, Object> prefs = const {},
   bool online = true,
+  bool apiFails = false,
 }) async {
   SharedPreferences.setMockInitialValues(prefs);
   final services = AppServices(
     prefs: await SharedPreferences.getInstance(),
     connectionCheck: () async => online,
     documentsDirectory: () async => Directory.systemTemp.createTemp('scg'),
+    usersFetcher: () async {
+      if (apiFails) throw Exception('API Error');
+      return sampleApiUsers;
+    },
   );
   await services.init();
   return services;
@@ -64,7 +69,25 @@ Future<void> tapNav(WidgetTester tester, String label) async {
 }
 
 /// The vertical list inside the Home "Dashboard" tab.
-final homeScrollable = find.descendant(
-  of: find.byKey(const Key('home.dashboard')),
-  matching: find.byType(Scrollable),
-).first;
+final homeScrollable = find
+    .descendant(
+      of: find.byKey(const Key('home.dashboard')),
+      matching: find.byType(Scrollable),
+    )
+    .first;
+
+/// Two users in the JSONPlaceholder shape.
+const sampleApiUsers = <Map<String, dynamic>>[
+  {
+    'name': 'Leanne Graham',
+    'email': 'Sincere@april.biz',
+    'phone': '1-770-736-8031 x56442',
+    'company': {'name': 'Romaguera-Crona'},
+  },
+  {
+    'name': 'Ervin Howell',
+    'email': 'Shanna@melissa.tv',
+    'phone': '010-692-6593 x09125',
+    'company': {'name': 'Deckow-Crist'},
+  },
+];

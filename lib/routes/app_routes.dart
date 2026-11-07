@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../auth/role_guard.dart';
+import '../screens/faculty/online_directory_screen.dart';
+import '../screens/faculty/student_details_screen.dart';
+import '../screens/faculty/student_form_screen.dart';
+import '../screens/faculty/student_records_screen.dart';
 import '../screens/shared/file_saved_screen.dart';
 import '../screens/shared/placeholder_screen.dart';
 import '../screens/student/my_record_screen.dart';
@@ -57,6 +61,12 @@ class AppRoutes {
 
   static Widget _screenFor(String name, Object? args, String title) {
     return switch (name) {
+      studentRecords => const StudentRecordsScreen(),
+      studentForm => StudentFormScreen(studentId: args as String?),
+      studentDetails when args is String => StudentDetailsScreen(
+        studentId: args,
+      ),
+      onlineDirectory => const OnlineDirectoryScreen(),
       myRecord => const MyRecordScreen(),
       fileSaved when args is ExportResult => FileSavedScreen(result: args),
       _ => PlaceholderScreen(title: title),
