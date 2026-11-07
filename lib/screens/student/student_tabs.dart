@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../shared/placeholder_screen.dart';
+import '../shared/device_screen.dart';
 import 'student_analytics.dart';
 import 'student_home.dart';
 import 'student_settings.dart';
@@ -9,6 +9,6 @@ import 'student_settings.dart';
 List<Widget> studentTabs() => const [
   StudentHome(),
   StudentAnalytics(),
-  PlaceholderScreen(title: 'Device'),
+  DeviceScreen(),
   StudentSettings(),
 ];

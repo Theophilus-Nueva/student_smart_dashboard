@@ -15,6 +15,7 @@ import 'file_export_service.dart';
 import 'location_service.dart';
 import 'student_repository.dart';
 import 'sync_service.dart';
+import 'task_service.dart';
 import 'tour_service.dart';
 
 /// Holds every app-wide service. Created once in `main` and handed down
@@ -32,9 +33,10 @@ class AppServices {
        activity = ActivityLog(prefs),
        students = StudentRepository(prefs),
        tour = TourService(prefs),
+       tasks = TaskService(prefs),
        files = FileExportService(documentsDirectory: documentsDirectory) {
     session = Session(auth, biometric);
-    sync = SyncService(prefs, [students, tour], check: connectionCheck);
+    sync = SyncService(prefs, [students, tour, tasks], check: connectionCheck);
   }
 
   final SharedPreferences prefs;
@@ -44,6 +46,7 @@ class AppServices {
   final ActivityLog activity;
   final StudentRepository students;
   final TourService tour;
+  final TaskService tasks;
   final FileExportService files;
   final DirectoryService directory;
   final LocationService location = const LocationService();
@@ -54,6 +57,7 @@ class AppServices {
     activity.load();
     students.load();
     tour.load();
+    tasks.load();
     sync.load();
     directory.load();
 

@@ -5,7 +5,15 @@ import '../screens/faculty/online_directory_screen.dart';
 import '../screens/faculty/student_details_screen.dart';
 import '../screens/faculty/student_form_screen.dart';
 import '../screens/faculty/student_records_screen.dart';
+import '../screens/shared/about_lpu_screen.dart';
+import '../screens/shared/campus_tour_screen.dart';
+import '../screens/shared/cloud_tasks_screen.dart';
+import '../screens/shared/emergency_contacts_screen.dart';
+import '../screens/shared/faculty_directory_screen.dart';
 import '../screens/shared/file_saved_screen.dart';
+import '../screens/shared/location_detail_screen.dart';
+import '../screens/shared/map_screen.dart';
+import '../screens/shared/notifications_screen.dart';
 import '../screens/shared/placeholder_screen.dart';
 import '../screens/student/my_record_screen.dart';
 import '../services/file_export_service.dart';
@@ -68,6 +76,16 @@ class AppRoutes {
       ),
       onlineDirectory => const OnlineDirectoryScreen(),
       myRecord => const MyRecordScreen(),
+      about => const AboutLpuScreen(),
+      campusTour => const CampusTourScreen(),
+      locationDetail when args is String => LocationDetailScreen(
+        locationId: args,
+      ),
+      map => const MapScreen(),
+      cloudTasks => const CloudTasksScreen(),
+      notifications => const NotificationsScreen(),
+      emergencyContacts => const EmergencyContactsScreen(),
+      facultyDirectory => const FacultyDirectoryScreen(),
       fileSaved when args is ExportResult => FileSavedScreen(result: args),
       _ => PlaceholderScreen(title: title),
     };
