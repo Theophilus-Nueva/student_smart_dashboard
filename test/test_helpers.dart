@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -5,10 +7,18 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smart_dashboard/main.dart';
 import 'package:smart_dashboard/services/app_services.dart';
 
-/// Fresh services backed by in-memory SharedPreferences.
-Future<AppServices> makeServices([Map<String, Object> prefs = const {}]) async {
+/// Fresh services backed by in-memory SharedPreferences. The connection check
+/// and documents folder are faked so tests never touch the network.
+Future<AppServices> makeServices({
+  Map<String, Object> prefs = const {},
+  bool online = true,
+}) async {
   SharedPreferences.setMockInitialValues(prefs);
-  final services = AppServices(prefs: await SharedPreferences.getInstance());
+  final services = AppServices(
+    prefs: await SharedPreferences.getInstance(),
+    connectionCheck: () async => online,
+    documentsDirectory: () async => Directory.systemTemp.createTemp('scg'),
+  );
   await services.init();
   return services;
 }
@@ -37,3 +47,24 @@ Future<void> signInAs(
   await tester.tap(find.text('Sign In'));
   await tester.pumpAndSettle();
 }
+
+Future<void> pushRoute(
+  WidgetTester tester,
+  String route, {
+  Object? args,
+}) async {
+  final context = tester.element(find.byType(Scaffold).first);
+  Navigator.of(context).pushNamed(route, arguments: args);
+  await tester.pumpAndSettle();
+}
+
+Future<void> tapNav(WidgetTester tester, String label) async {
+  await tester.tap(find.text(label).last);
+  await tester.pumpAndSettle();
+}
+
+/// The vertical list inside the Home "Dashboard" tab.
+final homeScrollable = find.descendant(
+  of: find.byKey(const Key('home.dashboard')),
+  matching: find.byType(Scrollable),
+).first;

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../auth/role_guard.dart';
+import '../screens/shared/file_saved_screen.dart';
 import '../screens/shared/placeholder_screen.dart';
+import '../screens/student/my_record_screen.dart';
+import '../services/file_export_service.dart';
 
 /// Named routes for pushed screens (tab roots live in the role shell).
 class AppRoutes {
@@ -54,6 +57,8 @@ class AppRoutes {
 
   static Widget _screenFor(String name, Object? args, String title) {
     return switch (name) {
+      myRecord => const MyRecordScreen(),
+      fileSaved when args is ExportResult => FileSavedScreen(result: args),
       _ => PlaceholderScreen(title: title),
     };
   }
