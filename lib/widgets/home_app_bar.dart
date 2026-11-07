@@ -31,7 +31,10 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
             backgroundColor: Colors.white,
             child: Padding(
               padding: const EdgeInsets.all(4),
-              child: Image.asset('assets/images/images.png', fit: BoxFit.contain),
+              child: Image.asset(
+                'assets/images/images.png',
+                fit: BoxFit.contain,
+              ),
             ),
           ),
           const SizedBox(width: 10),

@@ -12,9 +12,9 @@ ThemeData buildAppTheme() {
   );
   final radius = BorderRadius.circular(8);
   OutlineInputBorder inputBorder(Color color) => OutlineInputBorder(
-        borderRadius: BorderRadius.circular(6),
-        borderSide: BorderSide(color: color),
-      );
+    borderRadius: BorderRadius.circular(6),
+    borderSide: BorderSide(color: color),
+  );
 
   return ThemeData(
     useMaterial3: true,

@@ -7,22 +7,22 @@ enum NetworkState { online, pending, offline }
 
 extension NetworkStateStyle on NetworkState {
   String get label => switch (this) {
-        NetworkState.online => 'ONLINE',
-        NetworkState.pending => 'SYNC PENDING',
-        NetworkState.offline => 'OFFLINE',
-      };
+    NetworkState.online => 'ONLINE',
+    NetworkState.pending => 'SYNC PENDING',
+    NetworkState.offline => 'OFFLINE',
+  };
 
   Color get color => switch (this) {
-        NetworkState.online => AppColors.online,
-        NetworkState.pending => AppColors.pending,
-        NetworkState.offline => AppColors.offline,
-      };
+    NetworkState.online => AppColors.online,
+    NetworkState.pending => AppColors.pending,
+    NetworkState.offline => AppColors.offline,
+  };
 
   Color get background => switch (this) {
-        NetworkState.online => AppColors.onlineBg,
-        NetworkState.pending => AppColors.pendingBg,
-        NetworkState.offline => AppColors.offlineBg,
-      };
+    NetworkState.online => AppColors.onlineBg,
+    NetworkState.pending => AppColors.pendingBg,
+    NetworkState.offline => AppColors.offlineBg,
+  };
 }
 
 class NetworkStatusBanner extends StatelessWidget {
@@ -45,7 +45,10 @@ class NetworkStatusBanner extends StatelessWidget {
           Container(
             width: 9,
             height: 9,
-            decoration: BoxDecoration(color: state.color, shape: BoxShape.circle),
+            decoration: BoxDecoration(
+              color: state.color,
+              shape: BoxShape.circle,
+            ),
           ),
           const SizedBox(width: 8),
           Text(
