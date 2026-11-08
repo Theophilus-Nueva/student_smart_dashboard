@@ -179,11 +179,14 @@ class _ArGuideScreenState extends State<ArGuideScreen> {
             MobileScanner(
               controller: camera,
               onDetect: _onDetect,
+              placeholderBuilder: (context) =>
+                  const _CameraMessage('Starting camera…', loading: true),
               errorBuilder: (context, error) => _CameraMessage(
-                error.errorCode == MobileScannerErrorCode.permissionDenied
-                    ? 'Camera access is off. Turn it on in your phone '
-                          'settings to scan checkpoints.'
-                    : 'The camera is not available on this device.',
+                _cameraErrorText(error),
+                onRetry:
+                    error.errorCode == MobileScannerErrorCode.permissionDenied
+                    ? null
+                    : () => camera.start(),
               ),
             )
           else
@@ -559,28 +562,74 @@ class _RoutePanel extends StatelessWidget {
   }
 }
 
+/// Readable text for a camera failure, including the plugin's own error so
+/// problems can be diagnosed from a screenshot.
+String _cameraErrorText(MobileScannerException error) {
+  final details = error.errorDetails?.message ?? error.errorDetails?.code;
+  final base = switch (error.errorCode) {
+    MobileScannerErrorCode.permissionDenied =>
+      'Camera access is off. Turn it on for Smart Campus Tour Guide in your '
+          'phone settings to use the AR guide.',
+    MobileScannerErrorCode.unsupported =>
+      'This device has no camera the AR guide can use.',
+    _ => 'The camera could not start.',
+  };
+  return details == null || details.isEmpty
+      ? '$base\n(${error.errorCode.name})'
+      : '$base\n(${error.errorCode.name}: $details)';
+}
+
 class _CameraMessage extends StatelessWidget {
-  const _CameraMessage(this.text);
+  const _CameraMessage(this.text, {this.loading = false, this.onRetry});
 
   final String text;
+  final bool loading;
+  final VoidCallback? onRetry;
 
   @override
   Widget build(BuildContext context) {
     return ColoredBox(
       color: const Color(0xFF263238),
-      child: Center(
+      child: Align(
+        alignment: const Alignment(0, -0.35),
         child: Padding(
           padding: const EdgeInsets.all(32),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.no_photography, color: Colors.white70, size: 40),
-              const SizedBox(height: 8),
+              if (loading)
+                const SizedBox(
+                  width: 28,
+                  height: 28,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.5,
+                    color: Colors.white70,
+                  ),
+                )
+              else
+                const Icon(
+                  Icons.no_photography,
+                  color: Colors.white70,
+                  size: 40,
+                ),
+              const SizedBox(height: 10),
               Text(
                 text,
                 textAlign: TextAlign.center,
                 style: const TextStyle(color: Colors.white70),
               ),
+              if (onRetry != null) ...[
+                const SizedBox(height: 12),
+                OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    side: const BorderSide(color: Colors.white54),
+                    minimumSize: const Size(140, 44),
+                  ),
+                  onPressed: onRetry,
+                  child: const Text('Try again'),
+                ),
+              ],
             ],
           ),
         ),
