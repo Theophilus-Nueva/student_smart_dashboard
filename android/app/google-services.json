@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "925779256051",
+    "project_id": "smart-campus-tour-guide",
+    "storage_bucket": "smart-campus-tour-guide.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:925779256051:android:92790f873ee3cd65184d86",
+        "android_client_info": {
+          "package_name": "com.example.smart_dashboard"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCt0xD0HKUjL398rfKI_0_RZPyvsPNEyNI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

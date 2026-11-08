@@ -2,15 +2,18 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 
+import '../firebase_options.dart';
 import 'task_service.dart';
 
-/// Starts Firebase if this build has a Firebase config (google-services.json
-/// on Android, GoogleService-Info.plist on iOS — added by
-/// `flutterfire configure`). Returns false when it isn't set up, and the app
-/// keeps working with on-phone storage only.
+/// Starts Firebase with the project from `flutterfire configure`
+/// (smart-campus-tour-guide). Returns false if it can't start (for example
+/// on a platform that isn't configured), and the app keeps working with
+/// on-phone storage only.
 Future<bool> initFirebase() async {
   try {
-    await Firebase.initializeApp();
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
     return true;
   } on Object catch (e) {
     debugPrint('Firebase not configured: $e');
