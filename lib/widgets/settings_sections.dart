@@ -22,7 +22,14 @@ class AccountHeaderCard extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         child: Row(
           children: [
-            const Icon(Icons.person, size: 26),
+            CircleAvatar(
+              radius: 28,
+              backgroundColor: AppColors.field,
+              foregroundImage: user.photoAsset == null
+                  ? null
+                  : AssetImage(user.photoAsset!),
+              child: const Icon(Icons.person, size: 28, color: AppColors.muted),
+            ),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
@@ -43,20 +50,6 @@ class AccountHeaderCard extends StatelessWidget {
                     ),
                   ),
                 ],
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-              decoration: BoxDecoration(
-                color: AppColors.brand,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                user.role.label,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w500,
-                ),
               ),
             ),
           ],

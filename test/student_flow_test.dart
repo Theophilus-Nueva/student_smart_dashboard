@@ -76,6 +76,8 @@ void main() {
     await tapNav(tester, 'Settings');
     expect(find.text('Security Center'), findsOneWidget);
     expect(find.text('Granted · Student'), findsOneWidget);
+    // Profile photo instead of the red role pill.
+    expect(find.byType(CircleAvatar), findsOneWidget);
     expect(find.text('Reset Database'), findsNothing);
   });
 
@@ -84,6 +86,8 @@ void main() {
     await signInAs(tester, 'student', 'student123');
     await tapNav(tester, 'Settings');
     await tester.scrollUntilVisible(find.text('Log out'), 300);
+    await tester.ensureVisible(find.text('Log out'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Log out'));
     await tester.pumpAndSettle();
     expect(find.text('Sign In'), findsOneWidget);
