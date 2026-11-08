@@ -91,13 +91,8 @@ class IdCard extends StatelessWidget {
                               semanticLabel: 'Photo of ${user.displayName}',
                             ),
                     ),
-                    Container(
-                      margin: const EdgeInsets.symmetric(vertical: 4),
-                      padding: const EdgeInsets.symmetric(horizontal: 6),
-                      decoration: BoxDecoration(
-                        color: const Color(0xCCFFFFFF),
-                        borderRadius: BorderRadius.circular(3),
-                      ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
                       child: Text(
                         user.idNumber,
                         style: const TextStyle(
