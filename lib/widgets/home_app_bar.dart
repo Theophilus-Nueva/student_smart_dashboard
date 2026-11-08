@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'notification_badge.dart';
+import '../theme/app_assets.dart';
 
 /// Red header used on the tab roots: LPU logo, app name, notification bell.
 class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -31,10 +32,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
             backgroundColor: Colors.white,
             child: Padding(
               padding: const EdgeInsets.all(4),
-              child: Image.asset(
-                'assets/images/images.png',
-                fit: BoxFit.contain,
-              ),
+              child: Image.asset(AppAssets.logo, fit: BoxFit.contain),
             ),
           ),
           const SizedBox(width: 10),

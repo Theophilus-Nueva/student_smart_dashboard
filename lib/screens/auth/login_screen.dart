@@ -4,6 +4,7 @@ import '../../services/app_services.dart';
 import '../../services/app_settings.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/common.dart';
+import '../../theme/app_assets.dart';
 
 /// Shared / Login and Shared / Biometric Login (Week 6).
 class LoginScreen extends StatefulWidget {
@@ -79,7 +80,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Image.asset('assets/images/images.png', height: 120),
+                    Image.asset(AppAssets.logo, height: 120),
                     const SizedBox(height: 16),
                     const Text(
                       'Smart Campus Tour Guide',

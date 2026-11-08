@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../theme/app_colors.dart';
+import '../../theme/app_assets.dart';
 
 /// Shared / About LPU (Week 3). Mission, vision and core values are
 /// placeholders in the Figma file too; replace them with LPU's official text.
@@ -21,7 +22,7 @@ class AboutLpuScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         children: [
           const SizedBox(height: 8),
-          Image.asset('assets/images/images.png', height: 96),
+          Image.asset(AppAssets.logo, height: 96),
           const SizedBox(height: 12),
           const Text(
             'Lyceum of the Philippines University – Cavite',

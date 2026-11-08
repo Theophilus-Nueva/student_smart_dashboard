@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/app_user.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_assets.dart';
 
 /// LPU ID card from the Home frames: logo, photo, ID number, role band,
 /// name band. The photo is a placeholder until the camera step.
@@ -34,11 +35,7 @@ class IdCard extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(8, 8, 8, 6),
               child: Row(
                 children: [
-                  Image.asset(
-                    'assets/images/images.png',
-                    width: 36,
-                    height: 30,
-                  ),
+                  Image.asset(AppAssets.logo, width: 36, height: 30),
                   const SizedBox(width: 6),
                   const Expanded(
                     child: Text(
