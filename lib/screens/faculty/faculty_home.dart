@@ -8,7 +8,6 @@ import '../../widgets/common.dart';
 import '../../widgets/current_location_card.dart';
 import '../../widgets/id_card.dart';
 import '../../widgets/stat_card.dart';
-import '../../widgets/sync_status_banner.dart';
 import '../../widgets/tour_progress_card.dart';
 import '../../widgets/world_clock.dart';
 import '../shared/home_scaffold.dart';
@@ -45,8 +44,6 @@ class _FacultyHomeState extends State<FacultyHome> {
         key: const Key('home.dashboard'),
         padding: const EdgeInsets.all(16),
         children: [
-          SyncStatusBanner(sync: services.sync),
-          const SizedBox(height: 12),
           const _SyncStatusCard(),
           const SizedBox(height: 12),
           const CurrentLocationCard(),

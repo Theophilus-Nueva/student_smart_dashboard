@@ -12,7 +12,7 @@ void main() {
 
     expect(find.text('Dashboard'), findsOneWidget);
     expect(find.text('Recent Activity'), findsOneWidget);
-    expect(find.text('ONLINE'), findsOneWidget);
+    expect(find.text('ONLINE'), findsNothing); // no status bar on Home
     expect(find.text('Current Location'), findsOneWidget);
     expect(find.text('Open Map'), findsOneWidget);
     // ID card: role and last name in capitals.
