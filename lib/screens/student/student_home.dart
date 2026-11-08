@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../routes/app_routes.dart';
 import '../../services/app_services.dart';
-import '../../services/app_settings.dart';
-import '../../theme/app_colors.dart';
 import '../../widgets/action_tile.dart';
 import '../../widgets/common.dart';
 import '../../widgets/current_location_card.dart';
@@ -30,12 +28,6 @@ class StudentHome extends StatelessWidget {
           const CurrentLocationCard(),
           const SizedBox(height: 16),
           IdCard(user: user),
-          const SizedBox(height: 8),
-          Text(
-            '${user.subtitle} · $sampleDeviceName',
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 12, color: AppColors.muted),
-          ),
           const SectionHeader('Quick Actions'),
           ActionGrid(
             children: [
