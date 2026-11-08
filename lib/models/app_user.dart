@@ -19,7 +19,8 @@ class AppUser {
   final String displayName;
   final Role role;
 
-  /// Student ID for students, employee ID for faculty.
+  /// Student ID for students, employee ID for faculty. Empty when the
+  /// account has none (the ID card then leaves the line out).
   final String idNumber;
 
   /// Programme for students, department for faculty.

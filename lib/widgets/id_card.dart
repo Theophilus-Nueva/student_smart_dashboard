@@ -109,16 +109,21 @@ class IdCard extends StatelessWidget {
                               semanticLabel: 'Photo of ${user.displayName}',
                             ),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4 * scale),
-                      child: Text(
-                        user.idNumber,
-                        style: const TextStyle(
-                          fontSize: 11 * scale,
-                          fontWeight: FontWeight.w600,
+                    if (user.idNumber.isEmpty)
+                      const SizedBox(height: 6 * scale)
+                    else
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 4 * scale,
+                        ),
+                        child: Text(
+                          user.idNumber,
+                          style: const TextStyle(
+                            fontSize: 11 * scale,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
-                    ),
                   ],
                 ),
               ],

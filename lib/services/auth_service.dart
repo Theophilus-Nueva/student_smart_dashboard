@@ -37,7 +37,7 @@ class AuthService {
         username: 'alyssa.pocaan@lpu.example',
         displayName: 'Pocaan, Alyssa Paola D.',
         role: Role.faculty,
-        idNumber: 'FAC-2019-0142',
+        idNumber: '',
         subtitle: 'CCS · Information Technology',
         photoAsset: AppAssets.portraitAlyssa,
       ),
