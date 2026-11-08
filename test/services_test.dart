@@ -6,11 +6,18 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:smart_dashboard/models/student.dart';
 import 'package:smart_dashboard/services/file_export_service.dart';
 import 'package:smart_dashboard/services/task_service.dart';
+import 'package:smart_dashboard/widgets/id_card.dart';
 import 'package:smart_dashboard/widgets/network_status.dart';
 
 import 'test_helpers.dart';
 
 void main() {
+  test('ID card name puts the last name in capitals', () {
+    expect(idCardName('Nueva, Theophilus T.'), 'NUEVA, Theophilus T.');
+    expect(idCardName('Dela Cruz, Juan'), 'DELA CRUZ, Juan');
+    expect(idCardName('Madonna'), 'Madonna');
+  });
+
   taskRemoteTests();
 
   test('Export writes student_info.txt in the Week 3 format', () async {

@@ -6,6 +6,15 @@ import '../theme/app_assets.dart';
 
 /// LPU ID card from the Home frames: logo, photo, ID number, role band,
 /// name band, over the campus photo. The portrait is a placeholder.
+/// "Nueva, Theophilus T." → "NUEVA, Theophilus T." (last name in caps,
+/// as printed on LPU IDs). Names without a comma are left as they are.
+String idCardName(String displayName) {
+  final comma = displayName.indexOf(',');
+  if (comma == -1) return displayName;
+  return displayName.substring(0, comma).toUpperCase() +
+      displayName.substring(comma);
+}
+
 class IdCard extends StatelessWidget {
   const IdCard({super.key, required this.user});
 
@@ -110,7 +119,7 @@ class IdCard extends StatelessWidget {
               color: const Color(0xFFD9CCF0),
               padding: const EdgeInsets.symmetric(vertical: 3),
               child: Text(
-                user.role.label,
+                user.role.label.toUpperCase(),
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   fontSize: 13,
@@ -124,7 +133,7 @@ class IdCard extends StatelessWidget {
               color: AppColors.brand,
               padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
               child: Text(
-                user.displayName,
+                idCardName(user.displayName),
                 textAlign: TextAlign.center,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,

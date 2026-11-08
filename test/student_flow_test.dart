@@ -15,7 +15,9 @@ void main() {
     expect(find.text('ONLINE'), findsOneWidget);
     expect(find.text('Current Location'), findsOneWidget);
     expect(find.text('Open Map'), findsOneWidget);
-    expect(find.text('Nueva, Theophilus T.'), findsOneWidget);
+    // ID card: role and last name in capitals.
+    expect(find.text('NUEVA, Theophilus T.'), findsOneWidget);
+    expect(find.text('STUDENT'), findsOneWidget);
 
     for (final text in [
       'Quick Actions',
