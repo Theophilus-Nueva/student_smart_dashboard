@@ -13,6 +13,7 @@ import 'biometric_service.dart';
 import 'device_service.dart';
 import 'directory_service.dart';
 import 'file_export_service.dart';
+import 'firebase_service.dart';
 import 'location_service.dart';
 import 'notification_service.dart';
 import 'student_repository.dart';
@@ -105,6 +106,24 @@ class AppServices {
     unawaited(notifications.init().catchError((Object _) {}));
     unawaited(sync.checkConnection());
     sync.listen(connectivityChanges());
+  }
+}
+
+extension FirebaseHookup on AppServices {
+  /// Call after [initFirebase] succeeds: tasks sync to Firestore and
+  /// sign-ins are logged to the `logins` collection.
+  void attachFirebase() {
+    final remote = FirestoreTaskRemote();
+    tasks.attachRemote(remote);
+    final previous = session.onSignedIn;
+    session.onSignedIn = (user, method) {
+      previous?.call(user, method);
+      unawaited(
+        remote
+            .logLogin(user.username, user.role.name, method)
+            .catchError((Object _) {}),
+      );
+    };
   }
 }
 

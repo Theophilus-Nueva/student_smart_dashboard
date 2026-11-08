@@ -1,14 +1,18 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:smart_dashboard/models/student.dart';
 import 'package:smart_dashboard/services/file_export_service.dart';
+import 'package:smart_dashboard/services/task_service.dart';
 import 'package:smart_dashboard/widgets/network_status.dart';
 
 import 'test_helpers.dart';
 
 void main() {
+  taskRemoteTests();
+
   test('Export writes student_info.txt in the Week 3 format', () async {
     final dir = await Directory.systemTemp.createTemp('export');
     final service = FileExportService(documentsDirectory: () async => dir);
@@ -74,4 +78,52 @@ void main() {
     expect(await services.sync.syncNow(), isTrue);
     expect(services.sync.pendingCount, 0);
   });
+}
+
+class _FakeRemote implements TaskRemote {
+  final controller = StreamController<List<CloudTask>>();
+  final saved = <String, CloudTask>{};
+  final deleted = <String>[];
+
+  @override
+  Stream<List<CloudTask>> watch() => controller.stream;
+
+  @override
+  Future<void> upsert(CloudTask task) async => saved[task.id] = task;
+
+  @override
+  Future<void> delete(String id) async => deleted.add(id);
+}
+
+void taskRemoteTests() {
+  test(
+    'Tasks push to the cloud on sync and merge live cloud changes',
+    () async {
+      final services = await makeServices();
+      final remote = _FakeRemote();
+      services.tasks.attachRemote(remote);
+
+      await services.tasks.add('Review Assignment 3');
+      await Future<void>.delayed(Duration.zero); // auto-sync runs
+      expect(remote.saved.values.single.title, 'Review Assignment 3');
+      expect(services.tasks.pendingCount, 0);
+
+      // Another device adds a task in Firestore.
+      remote.controller.add([
+        ...remote.saved.values.map((t) => t.copyWith(synced: true)),
+        CloudTask(
+          id: 'x1',
+          title: 'Study for Midterms',
+          updatedAt: DateTime(2026),
+        ),
+      ]);
+      await Future<void>.delayed(Duration.zero);
+      expect(services.tasks.totalCount, 2);
+
+      final id = services.tasks.tasks.firstWhere((t) => t.id != 'x1').id;
+      await services.tasks.delete(id);
+      expect(remote.deleted, [id]);
+      await remote.controller.close();
+    },
+  );
 }

@@ -5,12 +5,15 @@ import 'routes/app_routes.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/shell/role_shell.dart';
 import 'services/app_services.dart';
+import 'services/firebase_service.dart';
 import 'theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  final firebaseReady = await initFirebase();
   final services = AppServices(prefs: await SharedPreferences.getInstance());
   await services.init();
+  if (firebaseReady) services.attachFirebase();
   runApp(SmartCampusApp(services: services));
 }
 

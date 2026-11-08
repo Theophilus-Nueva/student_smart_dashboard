@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -47,9 +48,16 @@ class CloudTask {
   );
 }
 
-/// Local task store. Firestore (`dashboard` collection) replaces the
-/// storage once `firebase_core` / `cloud_firestore` are added; until then
-/// tasks persist on the phone and join the Week 7 sync queue.
+/// Cloud copy of the tasks (Firestore in the app, a fake in tests).
+abstract class TaskRemote {
+  Stream<List<CloudTask>> watch();
+  Future<void> upsert(CloudTask task);
+  Future<void> delete(String id);
+}
+
+/// Tasks live on the phone first (Week 7 offline queue) and are pushed to
+/// the cloud when the sync service runs. With a [TaskRemote] attached, live
+/// cloud changes stream back in (Week 6 StreamBuilder behaviour).
 class TaskService extends ChangeNotifier implements Syncable {
   TaskService(this._prefs);
 
@@ -57,6 +65,24 @@ class TaskService extends ChangeNotifier implements Syncable {
 
   final SharedPreferences _prefs;
   List<CloudTask> _tasks = [];
+  TaskRemote? _remote;
+  StreamSubscription<List<CloudTask>>? _remoteSub;
+
+  bool get isCloudConnected => _remote != null;
+
+  void attachRemote(TaskRemote remote) {
+    _remote = remote;
+    _remoteSub?.cancel();
+    _remoteSub = remote.watch().listen(_mergeRemote, onError: (Object _) {});
+  }
+
+  /// Cloud list wins for synced tasks; local unsynced edits are kept.
+  void _mergeRemote(List<CloudTask> remote) {
+    final pending = _tasks.where((t) => !t.synced).toList();
+    final pendingIds = pending.map((t) => t.id).toSet();
+    _tasks = [...pending, ...remote.where((t) => !pendingIds.contains(t.id))];
+    unawaited(_save());
+  }
 
   /// Open tasks first, newest first.
   List<CloudTask> get tasks => List.unmodifiable(
@@ -101,6 +127,8 @@ class TaskService extends ChangeNotifier implements Syncable {
   Future<void> delete(String id) async {
     _tasks.removeWhere((t) => t.id == id);
     await _save();
+    // Firestore queues the delete itself while offline.
+    unawaited(_remote?.delete(id).catchError((Object _) {}));
   }
 
   Future<void> _change(String id, CloudTask Function(CloudTask) edit) async {
@@ -127,7 +155,26 @@ class TaskService extends ChangeNotifier implements Syncable {
   @override
   Future<void> markAllSynced() async {
     if (pendingCount == 0) return;
-    _tasks = [for (final t in _tasks) t.copyWith(synced: true)];
+    final remote = _remote;
+    if (remote != null) {
+      for (final t in _tasks.where((t) => !t.synced).toList()) {
+        try {
+          await remote.upsert(t).timeout(const Duration(seconds: 10));
+        } on Object {
+          break; // Leave the rest pending; the next sync retries.
+        }
+        final i = _tasks.indexWhere((x) => x.id == t.id);
+        if (i != -1) _tasks[i] = _tasks[i].copyWith(synced: true);
+      }
+    } else {
+      _tasks = [for (final t in _tasks) t.copyWith(synced: true)];
+    }
     await _save();
+  }
+
+  @override
+  void dispose() {
+    _remoteSub?.cancel();
+    super.dispose();
   }
 }
