@@ -34,6 +34,7 @@ class AppServices {
     UsersFetcher? usersFetcher,
     this.location = const GpsLocationService(),
     this.useNativeMaps = true,
+    this.useNativeCamera = true,
     SensorSource sensors = const DeviceSensorSource(),
   }) : biometric = biometric ?? LocalAuthBiometricService(),
        notifications = notifications ?? LocalNotificationService(),
@@ -71,6 +72,9 @@ class AppServices {
 
   /// False in widget tests, where the Google Maps platform view can't run.
   final bool useNativeMaps;
+
+  /// False in widget tests, where the live camera (AR guide) can't run.
+  final bool useNativeCamera;
   late final LocationTracker tracker = LocationTracker(location);
   late final Session session;
   late final SyncService sync;

@@ -42,7 +42,8 @@ class _FacultyHomeState extends State<FacultyHome> {
     return HomeScaffold(
       dashboard: ListView(
         key: const Key('home.dashboard'),
-        padding: const EdgeInsets.all(16),
+        // Extra bottom space so the AR Guide button never covers content.
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 88),
         children: [
           const _SyncStatusCard(),
           const SizedBox(height: 12),

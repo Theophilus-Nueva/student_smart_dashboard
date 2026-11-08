@@ -17,7 +17,7 @@
 		<string>mailto</string>
 	</array>
 	<key>NSCameraUsageDescription</key>
-	<string>Take photos for your device dashboard.</string>
+	<string>Take photos for your device dashboard and scan campus checkpoints in the AR guide.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Use Face ID to sign in to Smart Campus Tour Guide.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>

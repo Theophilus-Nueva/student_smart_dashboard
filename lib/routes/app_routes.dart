@@ -6,6 +6,7 @@ import '../screens/faculty/student_details_screen.dart';
 import '../screens/faculty/student_form_screen.dart';
 import '../screens/faculty/student_records_screen.dart';
 import '../screens/shared/about_lpu_screen.dart';
+import '../screens/shared/ar_guide_screen.dart';
 import '../screens/shared/campus_tour_screen.dart';
 import '../screens/shared/cloud_tasks_screen.dart';
 import '../screens/shared/emergency_contacts_screen.dart';
@@ -36,6 +37,7 @@ class AppRoutes {
   static const about = '/about';
   static const campusTour = '/tour';
   static const locationDetail = '/tour/location';
+  static const arGuide = '/tour/ar';
   static const map = '/map';
   static const cloudTasks = '/cloud-tasks';
   static const notifications = '/notifications';
@@ -53,6 +55,7 @@ class AppRoutes {
     about: 'About LPU',
     campusTour: 'Campus Tour',
     locationDetail: 'Location Detail',
+    arGuide: 'AR Campus Guide',
     map: 'Map',
     cloudTasks: 'Cloud Tasks',
     notifications: 'Notifications',
@@ -81,6 +84,7 @@ class AppRoutes {
       locationDetail when args is String => LocationDetailScreen(
         locationId: args,
       ),
+      arGuide => const ArGuideScreen(),
       map => const MapScreen(),
       cloudTasks => const CloudTasksScreen(),
       notifications => const NotificationsScreen(),

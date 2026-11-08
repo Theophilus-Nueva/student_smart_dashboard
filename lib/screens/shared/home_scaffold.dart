@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../routes/app_routes.dart';
 import '../../services/app_services.dart';
+import '../../theme/app_colors.dart';
 import '../../widgets/home_app_bar.dart';
 import 'recent_activity_view.dart';
 
@@ -18,6 +19,16 @@ class HomeScaffold extends StatelessWidget {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
+        // Week 7 "Launch AR Guide" shortcut.
+        floatingActionButton: FloatingActionButton.extended(
+          heroTag: 'ar-guide',
+          tooltip: 'Launch AR Guide',
+          backgroundColor: AppColors.brand,
+          foregroundColor: Colors.white,
+          onPressed: () => Navigator.of(context).pushNamed(AppRoutes.arGuide),
+          icon: const Icon(Icons.view_in_ar),
+          label: const Text('AR Guide'),
+        ),
         appBar: PreferredSize(
           preferredSize: const Size.fromHeight(64),
           child: ListenableBuilder(

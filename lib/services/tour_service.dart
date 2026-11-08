@@ -65,6 +65,40 @@ class TourService extends ChangeNotifier implements Syncable {
     return null;
   }
 
+  /// Location whose checkpoint QR code is [code] (e.g. "UC002"), if any.
+  TourLocation? byQrCode(String code) {
+    final c = code.trim().toUpperCase();
+    for (final l in campusLocations) {
+      if (l.qrCode == c) return l;
+    }
+    return null;
+  }
+
+  // ---- Week 7 AR guided route ---------------------------------------------
+
+  List<TourLocation> get routeStops => [for (final id in arRouteIds) byId(id)!];
+
+  int get routeVisitedCount => routeStops.where((l) => isVisited(l.id)).length;
+
+  double get routeProgress =>
+      routeStops.isEmpty ? 0 : routeVisitedCount / routeStops.length;
+
+  /// The route stop visited most recently, or null before the first scan.
+  TourLocation? get currentRouteStop {
+    for (final v in visits) {
+      if (arRouteIds.contains(v.locationId)) return byId(v.locationId);
+    }
+    return null;
+  }
+
+  /// First route stop not visited yet, or null when the route is done.
+  TourLocation? get nextRouteStop {
+    for (final l in routeStops) {
+      if (!isVisited(l.id)) return l;
+    }
+    return null;
+  }
+
   Future<void> recordVisit(String locationId) async {
     _visits.add(Visit(locationId: locationId, time: DateTime.now()));
     await _saveVisits();

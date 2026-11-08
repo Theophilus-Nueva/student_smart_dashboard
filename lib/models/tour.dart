@@ -10,6 +10,7 @@ class TourLocation {
     required this.hours,
     required this.distanceMeters,
     required this.qrCode,
+    required this.bearingDegrees,
   });
 
   final String id;
@@ -21,8 +22,13 @@ class TourLocation {
   /// Estimated distance from the campus entrance until GPS is added.
   final int distanceMeters;
 
-  /// Week 7 checkpoint code (kept for the model; the AR guide is out of scope).
+  /// Week 7 AR checkpoint: the text inside the location's QR code.
   final String qrCode;
+
+  /// Compass direction from the campus entrance (0 = north, 90 = east).
+  /// Sample values until real building coordinates are available; the AR
+  /// guide uses them to place each label.
+  final double bearingDegrees;
 
   /// About 80 m per minute of walking.
   int get walkMinutes => (distanceMeters / 80).ceil().clamp(1, 60);
@@ -69,6 +75,7 @@ const campusLocations = <TourLocation>[
     hours: 'Open 7:00 AM – 9:00 PM',
     distanceMeters: 20,
     qrCode: 'UC001',
+    bearingDegrees: 0,
   ),
   TourLocation(
     id: 'library',
@@ -80,6 +87,7 @@ const campusLocations = <TourLocation>[
     hours: 'Open 7:00 AM – 8:00 PM',
     distanceMeters: 50,
     qrCode: 'UC002',
+    bearingDegrees: 45,
   ),
   TourLocation(
     id: 'computer-lab',
@@ -90,6 +98,7 @@ const campusLocations = <TourLocation>[
     hours: 'Open 7:00 AM – 7:00 PM',
     distanceMeters: 120,
     qrCode: 'UC004',
+    bearingDegrees: 120,
   ),
   TourLocation(
     id: 'student-center',
@@ -99,6 +108,7 @@ const campusLocations = <TourLocation>[
     hours: 'Open 8:00 AM – 6:00 PM',
     distanceMeters: 75,
     qrCode: 'UC005',
+    bearingDegrees: 200,
   ),
   TourLocation(
     id: 'auditorium',
@@ -108,6 +118,7 @@ const campusLocations = <TourLocation>[
     hours: 'Open during scheduled events',
     distanceMeters: 150,
     qrCode: 'UC006',
+    bearingDegrees: 280,
   ),
   TourLocation(
     id: 'registrar',
@@ -117,5 +128,15 @@ const campusLocations = <TourLocation>[
     hours: 'Open 8:00 AM – 5:00 PM',
     distanceMeters: 90,
     qrCode: 'UC003',
+    bearingDegrees: 330,
   ),
+];
+
+/// Week 7 guided route (AR guide), in walking order.
+const arRouteIds = [
+  'main-building',
+  'library',
+  'computer-lab',
+  'student-center',
+  'auditorium',
 ];

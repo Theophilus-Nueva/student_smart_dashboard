@@ -28,6 +28,7 @@ Future<AppServices> makeServices({
     biometric: biometric,
     notifications: const SilentNotificationService(),
     useNativeMaps: false,
+    useNativeCamera: false,
     sensors: const FakeSensors(),
     documentsDirectory: () async => Directory.systemTemp.createTemp('scg'),
     usersFetcher: () async {
