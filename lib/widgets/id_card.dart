@@ -4,8 +4,6 @@ import '../models/app_user.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_assets.dart';
 
-/// LPU ID card from the Home frames: logo, photo, ID number, role band,
-/// name band, over the campus photo. The portrait is a placeholder.
 /// "Nueva, Theophilus T." → "NUEVA, Theophilus T." (last name in caps,
 /// as printed on LPU IDs). Names without a comma are left as they are.
 String idCardName(String displayName) {
@@ -15,20 +13,26 @@ String idCardName(String displayName) {
       displayName.substring(comma);
 }
 
+/// LPU ID card from the Home frames: logo, portrait and ID number over the
+/// campus photo, then the role band and name band.
 class IdCard extends StatelessWidget {
   const IdCard({super.key, required this.user});
 
   final AppUser user;
 
+  /// Size relative to the original 150 px Figma card.
+  static const scale = 1.4;
+  static const width = 150 * scale;
+
   @override
   Widget build(BuildContext context) {
     return Center(
       child: Container(
-        width: 150,
+        width: width,
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(8 * scale),
           // No outline: a border would inset the photo and leave white
           // strips down the sides. The shadow marks the card's edge.
           boxShadow: const [
@@ -76,22 +80,27 @@ class IdCard extends StatelessWidget {
                 Column(
                   children: [
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(6, 6, 6, 4),
+                      padding: const EdgeInsets.fromLTRB(
+                        6 * scale,
+                        6 * scale,
+                        6 * scale,
+                        4 * scale,
+                      ),
                       child: Image.asset(
                         AppAssets.idHeader,
-                        height: 56,
+                        height: 56 * scale,
                         fit: BoxFit.contain,
                         semanticLabel: 'Lyceum of the Philippines University',
                       ),
                     ),
                     Container(
-                      width: 64,
-                      height: 76,
+                      width: 64 * scale,
+                      height: 76 * scale,
                       color: const Color(0xFFB0BEC5),
                       child: user.photoAsset == null
                           ? const Icon(
                               Icons.person,
-                              size: 52,
+                              size: 52 * scale,
                               color: Colors.white,
                             )
                           : Image.asset(
@@ -101,11 +110,11 @@ class IdCard extends StatelessWidget {
                             ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      padding: const EdgeInsets.symmetric(vertical: 4 * scale),
                       child: Text(
                         user.idNumber,
                         style: const TextStyle(
-                          fontSize: 11,
+                          fontSize: 11 * scale,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -117,27 +126,33 @@ class IdCard extends StatelessWidget {
             Container(
               width: double.infinity,
               color: const Color(0xFFD9CCF0),
-              padding: const EdgeInsets.symmetric(vertical: 3),
+              padding: const EdgeInsets.symmetric(vertical: 3 * scale),
               child: Text(
                 user.role.label.toUpperCase(),
                 textAlign: TextAlign.center,
                 style: const TextStyle(
-                  fontSize: 13,
+                  fontSize: 13 * scale,
                   fontWeight: FontWeight.w600,
                 ),
               ),
             ),
-            Container(height: 3, color: AppColors.badge),
+            Container(height: 3 * scale, color: AppColors.badge),
             Container(
               width: double.infinity,
               color: AppColors.brand,
-              padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+              padding: const EdgeInsets.symmetric(
+                vertical: 4 * scale,
+                horizontal: 4 * scale,
+              ),
               child: Text(
                 idCardName(user.displayName),
                 textAlign: TextAlign.center,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(color: Colors.white, fontSize: 12),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 12 * scale,
+                ),
               ),
             ),
           ],
