@@ -28,11 +28,13 @@ class AppBottomNav extends StatelessWidget {
     return DecoratedBox(
       decoration: const BoxDecoration(
         color: Colors.white,
+        // Hairline along the top, barely visible.
+        border: Border(top: BorderSide(color: Color(0x0F000000), width: 0.5)),
         boxShadow: [
           BoxShadow(
-            color: Color(0x1F000000),
-            blurRadius: 12,
-            offset: Offset(0, -2),
+            color: Color(0x0D000000),
+            blurRadius: 20,
+            offset: Offset(0, -4),
           ),
         ],
       ),
