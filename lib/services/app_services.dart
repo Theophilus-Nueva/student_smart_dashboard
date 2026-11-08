@@ -25,8 +25,11 @@ class AppServices {
     required this.prefs,
     this.biometric = const UnavailableBiometricService(),
     ConnectionCheck? connectionCheck,
+    this.connectivityChanges = deviceConnectivityChanges,
     Future<Directory> Function()? documentsDirectory,
     UsersFetcher? usersFetcher,
+    this.location = const GpsLocationService(),
+    this.useNativeMaps = true,
   }) : auth = AuthService(prefs),
        directory = DirectoryService(prefs, fetcher: usersFetcher),
        settings = AppSettings(prefs),
@@ -40,6 +43,7 @@ class AppServices {
   }
 
   final SharedPreferences prefs;
+  final Stream<bool> Function() connectivityChanges;
   final BiometricService biometric;
   final AuthService auth;
   final AppSettings settings;
@@ -49,7 +53,11 @@ class AppServices {
   final TaskService tasks;
   final FileExportService files;
   final DirectoryService directory;
-  final LocationService location = const LocationService();
+  final LocationService location;
+
+  /// False in widget tests, where the Google Maps platform view can't run.
+  final bool useNativeMaps;
+  late final LocationTracker tracker = LocationTracker(location);
   late final Session session;
   late final SyncService sync;
 
@@ -81,6 +89,7 @@ class AppServices {
     );
 
     unawaited(sync.checkConnection());
+    sync.listen(connectivityChanges());
   }
 }
 

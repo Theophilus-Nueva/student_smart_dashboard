@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../models/app_user.dart';
+import '../../services/app_services.dart';
+import '../../services/location_service.dart';
 import '../../widgets/app_bottom_nav.dart';
 import '../faculty/faculty_tabs.dart';
 import '../student/student_tabs.dart';
@@ -21,6 +23,21 @@ class _RoleShellState extends State<RoleShell> {
   late final List<Widget> _tabs = widget.user.isFaculty
       ? facultyTabs()
       : studentTabs();
+
+  LocationTracker? _tracker;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // GPS updates for the Current Location card and the map while signed in.
+    _tracker ??= AppScope.of(context).tracker..start();
+  }
+
+  @override
+  void dispose() {
+    _tracker?.stop();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {

@@ -1,73 +1,147 @@
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
+import '../../services/app_services.dart';
 import '../../services/location_service.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/common.dart';
 
-/// Shared / Map (Week 6). Until `google_maps_flutter` is added this draws a
-/// simple schematic with the current location and the Home, School and
-/// Workplace markers at their relative positions.
+/// Shared / Map (Week 6): Google Map centred on you (zoom 16) with Home,
+/// School and Workplace markers. Widget tests use the schematic instead,
+/// because the native map view can't run there.
 class MapScreen extends StatelessWidget {
   const MapScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    const fix = LocationService.campus;
+    final services = AppScope.of(context);
+    final tracker = services.tracker;
     return Scaffold(
       appBar: AppBar(title: const Text('Map')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          AspectRatio(
-            aspectRatio: 1,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: const _SchematicMap(),
-            ),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Schematic view. The live Google Map is added with the maps '
-            'package in a later step.',
-            style: TextStyle(fontSize: 12, color: AppColors.muted),
-          ),
-          const SectionHeader('Current location'),
-          Row(
+      body: ListenableBuilder(
+        listenable: tracker,
+        builder: (context, _) {
+          final fix = tracker.fix;
+          return ListView(
+            padding: const EdgeInsets.all(16),
             children: [
-              Expanded(
-                child: InfoField(
-                  label: 'Latitude',
-                  value: fix.latitude.toStringAsFixed(4),
+              AspectRatio(
+                aspectRatio: 1,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: services.useNativeMaps
+                      ? _LiveMap(fix: fix)
+                      : const _SchematicMap(),
                 ),
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: InfoField(
-                  label: 'Longitude',
-                  value: fix.longitude.toStringAsFixed(4),
+              if (!fix.live) ...[
+                const SizedBox(height: 8),
+                Text(
+                  fix.problem == null
+                      ? 'Waiting for GPS · showing the campus location.'
+                      : '${fix.problem} · showing the campus location.',
+                  style: const TextStyle(fontSize: 12, color: AppColors.muted),
                 ),
-              ),
-            ],
-          ),
-          const SectionHeader('Markers'),
-          for (final m in LocationService.markers)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 6),
-              child: Row(
+              ],
+              const SectionHeader('Current location'),
+              Row(
                 children: [
-                  Icon(_iconFor(m.label), size: 20),
-                  const SizedBox(width: 12),
-                  Expanded(child: Text(m.label)),
-                  Text(
-                    '${m.latitude.toStringAsFixed(4)}, '
-                    '${m.longitude.toStringAsFixed(4)}',
-                    style: const TextStyle(color: AppColors.muted),
+                  Expanded(
+                    child: InfoField(
+                      label: 'Latitude',
+                      value: fix.latitude.toStringAsFixed(4),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: InfoField(
+                      label: 'Longitude',
+                      value: fix.longitude.toStringAsFixed(4),
+                    ),
                   ),
                 ],
               ),
-            ),
-        ],
+              const SectionHeader('Markers'),
+              for (final m in LocationService.markers)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Row(
+                    children: [
+                      Icon(_iconFor(m.label), size: 20),
+                      const SizedBox(width: 12),
+                      Expanded(child: Text(m.label)),
+                      Text(
+                        '${m.latitude.toStringAsFixed(4)}, '
+                        '${m.longitude.toStringAsFixed(4)}',
+                        style: const TextStyle(color: AppColors.muted),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          );
+        },
       ),
+    );
+  }
+}
+
+class _LiveMap extends StatefulWidget {
+  const _LiveMap({required this.fix});
+
+  final LocationFix fix;
+
+  @override
+  State<_LiveMap> createState() => _LiveMapState();
+}
+
+class _LiveMapState extends State<_LiveMap> {
+  GoogleMapController? _controller;
+
+  @override
+  void didUpdateWidget(_LiveMap old) {
+    super.didUpdateWidget(old);
+    final f = widget.fix;
+    if (f.latitude != old.fix.latitude || f.longitude != old.fix.longitude) {
+      _controller?.animateCamera(
+        CameraUpdate.newLatLng(LatLng(f.latitude, f.longitude)),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final fix = widget.fix;
+    return GoogleMap(
+      initialCameraPosition: CameraPosition(
+        target: LatLng(fix.latitude, fix.longitude),
+        zoom: 16,
+      ),
+      onMapCreated: (c) => _controller = c,
+      myLocationEnabled: fix.live,
+      myLocationButtonEnabled: fix.live,
+      markers: {
+        for (final m in LocationService.markers)
+          Marker(
+            markerId: MarkerId(m.label),
+            position: LatLng(m.latitude, m.longitude),
+            infoWindow: InfoWindow(title: m.label),
+          ),
+        Marker(
+          markerId: const MarkerId('me'),
+          position: LatLng(fix.latitude, fix.longitude),
+          icon: BitmapDescriptor.defaultMarkerWithHue(
+            BitmapDescriptor.hueAzure,
+          ),
+          infoWindow: const InfoWindow(title: 'You are here'),
+        ),
+      },
     );
   }
 }

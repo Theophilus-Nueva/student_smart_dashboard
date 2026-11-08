@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../routes/app_routes.dart';
 import '../../services/app_services.dart';
 import '../../services/app_settings.dart';
-import '../../services/location_service.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/action_tile.dart';
 import '../../widgets/common.dart';
@@ -31,7 +30,7 @@ class StudentHome extends StatelessWidget {
         children: [
           SyncStatusBanner(sync: services.sync),
           const SizedBox(height: 12),
-          const CurrentLocationCard(fix: LocationService.campus),
+          const CurrentLocationCard(),
           const SizedBox(height: 16),
           IdCard(user: user),
           const SizedBox(height: 8),

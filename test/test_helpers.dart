@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:smart_dashboard/main.dart';
 import 'package:smart_dashboard/services/app_services.dart';
+import 'package:smart_dashboard/services/location_service.dart';
 
 /// Fresh services backed by in-memory SharedPreferences. The connection check
 /// and documents folder are faked so tests never touch the network.
@@ -18,6 +19,9 @@ Future<AppServices> makeServices({
   final services = AppServices(
     prefs: await SharedPreferences.getInstance(),
     connectionCheck: () async => online,
+    connectivityChanges: () => const Stream<bool>.empty(),
+    location: const SampleLocationService(),
+    useNativeMaps: false,
     documentsDirectory: () async => Directory.systemTemp.createTemp('scg'),
     usersFetcher: () async {
       if (apiFails) throw Exception('API Error');

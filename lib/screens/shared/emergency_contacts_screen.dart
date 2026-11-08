@@ -1,45 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../../models/activity_item.dart';
+import '../../services/app_services.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/common.dart';
 import '../../widgets/list_row.dart';
 
-/// Shared / Emergency Contacts (Week 6). Opening the dialer, SMS or email
-/// app needs `url_launcher`; until it is added each contact shows its
-/// details with a copy button.
+/// Shared / Emergency Contacts (Week 6): tel:, sms: and mailto: links via
+/// `url_launcher`. Sample numbers from the Figma prototype.
 class EmergencyContactsScreen extends StatelessWidget {
   const EmergencyContactsScreen({super.key});
 
-  static const contacts = [
-    (
-      Icons.call,
-      'Call Security',
-      'Campus security office · +63 912 345 6789',
-      'tel:+639123456789',
-    ),
-    (
-      Icons.call,
-      'Call Adviser',
-      'Your class adviser · +63 912 345 6790',
-      'tel:+639123456790',
-    ),
-    (
-      Icons.email,
-      'Email Support',
-      'support@lpu.example',
-      'mailto:support@lpu.example',
-    ),
-    (
-      Icons.sms,
-      'Send SOS SMS',
-      'Texts your location to your emergency contacts',
-      'sms:+639123456789',
-    ),
-  ];
+  static const securityNumber = '+639123456789';
+  static const adviserNumber = '+639123456790';
+  static const supportEmail = 'support@lpu.example';
 
-  void _show(BuildContext context, String title, String uri) {
-    final value = uri.substring(uri.indexOf(':') + 1);
+  Future<void> _open(BuildContext context, String title, Uri uri) async {
+    final services = AppScope.of(context);
+    var opened = false;
+    try {
+      opened = await launchUrl(uri);
+    } on PlatformException {
+      opened = false;
+    }
+    if (opened) {
+      await services.activity.add(ActivityKind.device, title, uri.path);
+      return;
+    }
+    if (!context.mounted) return;
+    // No app can handle the link (e.g. an emulator without a dialer).
+    final value = uri.path;
     showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
@@ -57,8 +49,7 @@ class EmergencyContactsScreen extends StatelessWidget {
             SelectableText(value, style: const TextStyle(fontSize: 20)),
             const SizedBox(height: 8),
             const Text(
-              'Opening the dialer, SMS or email app is added with the '
-              'url_launcher package.',
+              'No app on this device can open this contact.',
               style: TextStyle(fontSize: 12, color: AppColors.muted),
             ),
             const SizedBox(height: 16),
@@ -77,6 +68,20 @@ class EmergencyContactsScreen extends StatelessWidget {
     );
   }
 
+  Future<void> _sos(BuildContext context) async {
+    final fix = await AppScope.of(context).location.current();
+    if (!context.mounted) return;
+    final body =
+        'SOS from Smart Campus Tour Guide. I need help. My location: '
+        '${fix.latitude.toStringAsFixed(5)}, ${fix.longitude.toStringAsFixed(5)}'
+        ' https://maps.google.com/?q=${fix.latitude},${fix.longitude}';
+    await _open(
+      context,
+      'Send SOS SMS',
+      Uri(scheme: 'sms', path: securityNumber, queryParameters: {'body': body}),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -89,16 +94,50 @@ class EmergencyContactsScreen extends StatelessWidget {
             style: TextStyle(color: AppColors.muted),
           ),
           const SizedBox(height: 12),
-          for (final (icon, title, subtitle, uri) in contacts) ...[
-            ListRow(
-              icon: icon,
-              iconColor: title == 'Send SOS SMS' ? AppColors.brand : null,
-              title: title,
-              subtitle: subtitle,
-              onTap: () => _show(context, title, uri),
+          ListRow(
+            icon: Icons.call,
+            title: 'Call Security',
+            subtitle: 'Campus security office · +63 912 345 6789',
+            onTap: () => _open(
+              context,
+              'Call Security',
+              Uri(scheme: 'tel', path: securityNumber),
             ),
-            const SizedBox(height: 10),
-          ],
+          ),
+          const SizedBox(height: 10),
+          ListRow(
+            icon: Icons.call,
+            title: 'Call Adviser',
+            subtitle: 'Your class adviser · +63 912 345 6790',
+            onTap: () => _open(
+              context,
+              'Call Adviser',
+              Uri(scheme: 'tel', path: adviserNumber),
+            ),
+          ),
+          const SizedBox(height: 10),
+          ListRow(
+            icon: Icons.email,
+            title: 'Email Support',
+            subtitle: supportEmail,
+            onTap: () => _open(
+              context,
+              'Email Support',
+              Uri(
+                scheme: 'mailto',
+                path: supportEmail,
+                query: 'subject=Smart%20Campus%20Tour%20Guide%20support',
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          ListRow(
+            icon: Icons.sms,
+            iconColor: AppColors.brand,
+            title: 'Send SOS SMS',
+            subtitle: 'Texts your location to campus security',
+            onTap: () => _sos(context),
+          ),
         ],
       ),
     );

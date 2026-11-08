@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../routes/app_routes.dart';
 import '../../services/app_services.dart';
-import '../../services/location_service.dart';
 import '../../theme/app_colors.dart';
 import '../../utils/format.dart';
 import '../../widgets/action_tile.dart';
@@ -51,7 +50,7 @@ class _FacultyHomeState extends State<FacultyHome> {
           const SizedBox(height: 12),
           const _SyncStatusCard(),
           const SizedBox(height: 12),
-          const CurrentLocationCard(fix: LocationService.campus),
+          const CurrentLocationCard(),
           const SizedBox(height: 16),
           IdCard(user: user),
           const SectionHeader('Class Overview'),

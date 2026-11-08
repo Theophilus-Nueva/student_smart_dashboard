@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../widgets/network_status.dart';
@@ -11,18 +11,18 @@ import 'syncable.dart';
 /// Returns true when the internet is reachable.
 typedef ConnectionCheck = Future<bool> Function();
 
-/// Default check until `connectivity_plus` is added: can we reach the
-/// Week 2 API host at all?
-Future<bool> pingApiHost() async {
-  try {
-    await http
-        .head(Uri.parse('https://jsonplaceholder.typicode.com/users/1'))
-        .timeout(const Duration(seconds: 5));
-    return true;
-  } on Exception {
-    return false;
-  }
-}
+bool _isOnline(List<ConnectivityResult> results) =>
+    results.any((r) => r != ConnectivityResult.none);
+
+/// Week 7 ConnectivityService: current state from `connectivity_plus`.
+Future<bool> checkDeviceConnectivity() async =>
+    _isOnline(await Connectivity().checkConnectivity());
+
+/// Week 7 ConnectivityService: changes as they happen. Current
+/// `connectivity_plus` emits a list of results, so "offline" means the list
+/// only contains `none`.
+Stream<bool> deviceConnectivityChanges() =>
+    Connectivity().onConnectivityChanged.map(_isOnline);
 
 class ConnectivityLog {
   const ConnectivityLog({required this.online, required this.time});
@@ -48,7 +48,7 @@ class ConnectivityLog {
 /// every [Syncable] store, and syncs them (automatically or via Sync Now).
 class SyncService extends ChangeNotifier {
   SyncService(this._prefs, this._stores, {ConnectionCheck? check})
-    : _check = check ?? pingApiHost {
+    : _check = check ?? checkDeviceConnectivity {
     for (final store in _stores) {
       store.addListener(_onStoreChanged);
     }
@@ -62,6 +62,7 @@ class SyncService extends ChangeNotifier {
   final SharedPreferences _prefs;
   final List<Syncable> _stores;
   final ConnectionCheck _check;
+  StreamSubscription<bool>? _changes;
 
   bool _online = true;
   bool _syncing = false;
@@ -107,6 +108,12 @@ class SyncService extends ChangeNotifier {
         _log = [];
       }
     }
+  }
+
+  /// Listens for connectivity changes for the life of the app.
+  void listen(Stream<bool> changes) {
+    _changes?.cancel();
+    _changes = changes.listen(setOnline);
   }
 
   Future<bool> checkConnection() async {
@@ -174,6 +181,7 @@ class SyncService extends ChangeNotifier {
 
   @override
   void dispose() {
+    _changes?.cancel();
     for (final store in _stores) {
       store.removeListener(_onStoreChanged);
     }
