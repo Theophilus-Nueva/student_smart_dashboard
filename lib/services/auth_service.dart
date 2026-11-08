@@ -39,6 +39,7 @@ class AuthService {
         role: Role.faculty,
         idNumber: 'FAC-2019-0142',
         subtitle: 'CCS · Information Technology',
+        photoAsset: AppAssets.portraitAlyssa,
       ),
     ),
   ];

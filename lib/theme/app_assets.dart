@@ -14,4 +14,7 @@ class AppAssets {
   /// ID portrait for the demo student account.
   static const portraitTheophilus =
       'assets/images/portrait_theophilus_nueva.jpg';
+
+  /// ID portrait for the demo faculty account.
+  static const portraitAlyssa = 'assets/images/portrait_alyssa_pocaan.jpg';
 }
