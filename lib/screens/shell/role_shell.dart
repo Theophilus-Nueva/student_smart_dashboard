@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../models/app_user.dart';
 import '../../services/app_services.dart';
+import '../../services/device_service.dart';
 import '../../services/location_service.dart';
 import '../../widgets/app_bottom_nav.dart';
 import '../faculty/faculty_tabs.dart';
@@ -24,18 +25,22 @@ class _RoleShellState extends State<RoleShell> {
       ? facultyTabs()
       : studentTabs();
 
+  static const deviceTab = 2;
   LocationTracker? _tracker;
+  DeviceService? _device;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     // GPS updates for the Current Location card and the map while signed in.
     _tracker ??= AppScope.of(context).tracker..start();
+    _device ??= AppScope.of(context).device;
   }
 
   @override
   void dispose() {
     _tracker?.stop();
+    _device?.stopSensors();
     super.dispose();
   }
 
@@ -45,7 +50,16 @@ class _RoleShellState extends State<RoleShell> {
       body: IndexedStack(index: _index, children: _tabs),
       bottomNavigationBar: AppBottomNav(
         currentIndex: _index,
-        onTap: (i) => setState(() => _index = i),
+        onTap: (i) {
+          // Week 5 sensors run only while the Device tab is showing.
+          final device = AppScope.of(context).device;
+          if (i == deviceTab) {
+            device.startSensors();
+          } else {
+            device.stopSensors();
+          }
+          setState(() => _index = i);
+        },
       ),
     );
   }

@@ -10,6 +10,7 @@ import 'activity_log.dart';
 import 'app_settings.dart';
 import 'auth_service.dart';
 import 'biometric_service.dart';
+import 'device_service.dart';
 import 'directory_service.dart';
 import 'file_export_service.dart';
 import 'location_service.dart';
@@ -32,6 +33,7 @@ class AppServices {
     UsersFetcher? usersFetcher,
     this.location = const GpsLocationService(),
     this.useNativeMaps = true,
+    SensorSource sensors = const DeviceSensorSource(),
   }) : biometric = biometric ?? LocalAuthBiometricService(),
        notifications = notifications ?? LocalNotificationService(),
        auth = AuthService(prefs),
@@ -41,7 +43,12 @@ class AppServices {
        students = StudentRepository(prefs),
        tour = TourService(prefs),
        tasks = TaskService(prefs),
-       files = FileExportService(documentsDirectory: documentsDirectory) {
+       files = FileExportService(documentsDirectory: documentsDirectory),
+       device = DeviceService(
+         prefs,
+         sensors: sensors,
+         documentsDirectory: documentsDirectory,
+       ) {
     session = Session(auth, this.biometric);
     sync = SyncService(prefs, [students, tour, tasks], check: connectionCheck);
   }
@@ -57,6 +64,7 @@ class AppServices {
   final TourService tour;
   final TaskService tasks;
   final FileExportService files;
+  final DeviceService device;
   final DirectoryService directory;
   final LocationService location;
 
@@ -73,6 +81,7 @@ class AppServices {
     tasks.load();
     sync.load();
     directory.load();
+    device.load();
 
     session.onSignedIn = (user, method) => activity.add(
       ActivityKind.signIn,

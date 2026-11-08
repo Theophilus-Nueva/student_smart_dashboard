@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smart_dashboard/main.dart';
 import 'package:smart_dashboard/services/app_services.dart';
 import 'package:smart_dashboard/services/biometric_service.dart';
+import 'package:smart_dashboard/services/device_service.dart';
 import 'package:smart_dashboard/services/location_service.dart';
 import 'package:smart_dashboard/services/notification_service.dart';
 
@@ -27,6 +28,7 @@ Future<AppServices> makeServices({
     biometric: biometric,
     notifications: const SilentNotificationService(),
     useNativeMaps: false,
+    sensors: const FakeSensors(),
     documentsDirectory: () async => Directory.systemTemp.createTemp('scg'),
     usersFetcher: () async {
       if (apiFails) throw Exception('API Error');
@@ -111,4 +113,18 @@ class AcceptingBiometric implements BiometricService {
   @override
   Future<BiometricResult> authenticate(String reason) async =>
       BiometricResult.success;
+}
+
+/// One reading per sensor: phone flat, top pointing east.
+class FakeSensors implements SensorSource {
+  const FakeSensors();
+
+  @override
+  Stream<Vec3> accelerometer() => Stream.value(const Vec3(0.02, -0.98, 9.81));
+
+  @override
+  Stream<Vec3> gyroscope() => Stream.value(const Vec3(0.01, 0.03, -0.02));
+
+  @override
+  Stream<Vec3> magnetometer() => Stream.value(const Vec3(-30, 0, -20));
 }

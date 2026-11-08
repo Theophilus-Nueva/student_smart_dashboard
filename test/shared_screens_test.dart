@@ -90,11 +90,18 @@ void main() {
     expect(services.activity.unreadCount, 0);
   });
 
-  testWidgets('Device tab shows the sensor layout', (tester) async {
-    await pumpApp(tester);
+  testWidgets('Device tab shows live sensor readings', (tester) async {
+    final services = await pumpApp(tester);
     await signInAs(tester, 'student', 'student123');
     await tapNav(tester, 'Device');
     expect(find.text('Take Photo'), findsOneWidget);
-    expect(find.text('Accelerometer'), findsOneWidget);
+    expect(find.text('Accelerometer'), findsWidgets);
+    // Fake readings: accelerometer Z, compass pointing east.
+    expect(find.text('9.81'), findsOneWidget);
+    expect(find.text('E · 90°'), findsOneWidget);
+    expect(find.text('Active'), findsWidgets);
+
+    await tapNav(tester, 'Home');
+    expect(services.device.sensorsRunning, isFalse);
   });
 }
