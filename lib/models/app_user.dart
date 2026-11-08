@@ -12,6 +12,7 @@ class AppUser {
     required this.role,
     required this.idNumber,
     required this.subtitle,
+    this.photoAsset,
   });
 
   final String username;
@@ -23,6 +24,9 @@ class AppUser {
 
   /// Programme for students, department for faculty.
   final String subtitle;
+
+  /// ID card portrait (bundled asset), or null for the placeholder.
+  final String? photoAsset;
 
   bool get isFaculty => role == Role.faculty;
 }

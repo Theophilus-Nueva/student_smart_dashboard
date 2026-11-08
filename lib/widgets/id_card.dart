@@ -74,15 +74,22 @@ class IdCard extends StatelessWidget {
                     Container(
                       width: 64,
                       height: 76,
+                      clipBehavior: Clip.hardEdge,
                       decoration: BoxDecoration(
                         color: const Color(0xFFB0BEC5),
                         border: Border.all(color: Colors.white, width: 2),
                       ),
-                      child: const Icon(
-                        Icons.person,
-                        size: 52,
-                        color: Colors.white,
-                      ),
+                      child: user.photoAsset == null
+                          ? const Icon(
+                              Icons.person,
+                              size: 52,
+                              color: Colors.white,
+                            )
+                          : Image.asset(
+                              user.photoAsset!,
+                              fit: BoxFit.cover,
+                              semanticLabel: 'Photo of ${user.displayName}',
+                            ),
                     ),
                     Container(
                       margin: const EdgeInsets.symmetric(vertical: 4),

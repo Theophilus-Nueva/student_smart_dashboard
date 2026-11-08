@@ -10,4 +10,8 @@ class AppAssets {
 
   /// LPU Cavite campus photo (ID card background).
   static const campusPhoto = 'assets/images/lpu_campus.jpg';
+
+  /// ID portrait for the demo student account.
+  static const portraitTheophilus =
+      'assets/images/portrait_theophilus_nueva.jpg';
 }

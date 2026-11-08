@@ -1,6 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/app_user.dart';
+import '../theme/app_assets.dart';
 
 /// Local account check for the prototype. There is no LPU sign-in backend in
 /// the labs, so two demo accounts are seeded here.
@@ -26,6 +27,7 @@ class AuthService {
         role: Role.student,
         idNumber: '2024-2-02401',
         subtitle: 'BS Information Technology',
+        photoAsset: AppAssets.portraitTheophilus,
       ),
     ),
     _Account(
