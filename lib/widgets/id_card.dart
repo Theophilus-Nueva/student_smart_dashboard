@@ -5,7 +5,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_assets.dart';
 
 /// LPU ID card from the Home frames: logo, photo, ID number, role band,
-/// name band. The photo is a placeholder until the camera step.
+/// name band, over the campus photo. The portrait is a placeholder.
 class IdCard extends StatelessWidget {
   const IdCard({super.key, required this.user});
 
@@ -30,37 +30,78 @@ class IdCard extends StatelessWidget {
           ],
         ),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(6, 6, 6, 4),
-              child: Image.asset(
-                AppAssets.idHeader,
-                height: 56,
-                fit: BoxFit.contain,
-                semanticLabel: 'Lyceum of the Philippines University',
-              ),
-            ),
-            Container(
-              height: 96,
-              width: double.infinity,
-              color: const Color(0xFFDCE3D9),
-              alignment: Alignment.center,
-              child: Container(
-                width: 64,
-                height: 76,
-                color: const Color(0xFFB0BEC5),
-                child: const Icon(Icons.person, size: 52, color: Colors.white),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 2),
-              child: Text(
-                user.idNumber,
-                style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
+            // Header, portrait and ID number sit on the campus photo, which
+            // fades up into white behind the logo.
+            Stack(
+              children: [
+                Positioned.fill(
+                  child: Image.asset(
+                    AppAssets.campusPhoto,
+                    fit: BoxFit.cover,
+                    alignment: const Alignment(0, 0.2),
+                  ),
                 ),
-              ),
+                const Positioned.fill(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.white,
+                          Colors.white,
+                          Color(0xCCFFFFFF),
+                          Color(0x00FFFFFF),
+                        ],
+                        stops: [0, 0.42, 0.56, 0.86],
+                      ),
+                    ),
+                  ),
+                ),
+                Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(6, 6, 6, 4),
+                      child: Image.asset(
+                        AppAssets.idHeader,
+                        height: 56,
+                        fit: BoxFit.contain,
+                        semanticLabel: 'Lyceum of the Philippines University',
+                      ),
+                    ),
+                    Container(
+                      width: 64,
+                      height: 76,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFB0BEC5),
+                        border: Border.all(color: Colors.white, width: 2),
+                      ),
+                      child: const Icon(
+                        Icons.person,
+                        size: 52,
+                        color: Colors.white,
+                      ),
+                    ),
+                    Container(
+                      margin: const EdgeInsets.symmetric(vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 6),
+                      decoration: BoxDecoration(
+                        color: const Color(0xCCFFFFFF),
+                        borderRadius: BorderRadius.circular(3),
+                      ),
+                      child: Text(
+                        user.idNumber,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
             Container(
               width: double.infinity,

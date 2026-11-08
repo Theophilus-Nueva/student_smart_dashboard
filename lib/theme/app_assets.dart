@@ -7,4 +7,7 @@ class AppAssets {
 
   /// Crest + "LPU · Lyceum of the Philippines University" lockup (ID card).
   static const idHeader = 'assets/images/lpu_id_header.png';
+
+  /// LPU Cavite campus photo (ID card background).
+  static const campusPhoto = 'assets/images/lpu_campus.jpg';
 }
