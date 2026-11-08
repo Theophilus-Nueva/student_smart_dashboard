@@ -7,7 +7,6 @@ import '../../widgets/common.dart';
 import '../../widgets/connectivity_log_list.dart';
 import '../../widgets/network_status.dart';
 import '../../widgets/stat_card.dart';
-import '../../widgets/sync_status_banner.dart';
 
 /// Student / Analytics: personal stats only (Weeks 6–7).
 class StudentAnalytics extends StatelessWidget {
@@ -84,13 +83,6 @@ class StudentAnalytics extends StatelessWidget {
                   ),
                   StatCard(label: 'Sign-ins logged', value: '$logins'),
                 ],
-              ),
-              const SectionHeader('Sync queue'),
-              SyncStatusBanner(sync: sync),
-              const SizedBox(height: 6),
-              const Text(
-                'Your visits and tasks upload automatically when you are online.',
-                style: TextStyle(fontSize: 12, color: AppColors.muted),
               ),
               const SectionHeader('Connectivity log'),
               ConnectivityLogList(sync: sync),

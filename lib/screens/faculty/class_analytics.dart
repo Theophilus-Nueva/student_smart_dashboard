@@ -8,7 +8,6 @@ import '../../utils/format.dart';
 import '../../widgets/common.dart';
 import '../../widgets/connectivity_log_list.dart';
 import '../../widgets/stat_card.dart';
-import '../../widgets/sync_status_banner.dart';
 
 /// Faculty / Class Analytics: student stats, students by programme, API
 /// summary, sync and connectivity log, app activity (Weeks 2, 4, 6, 7).
@@ -98,8 +97,6 @@ class ClassAnalytics extends StatelessWidget {
                 ],
               ),
               const SectionHeader('Sync'),
-              SyncStatusBanner(sync: sync),
-              const SizedBox(height: 10),
               StatGrid(
                 children: [
                   StatCard(
