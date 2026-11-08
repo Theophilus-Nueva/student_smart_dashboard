@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../services/app_services.dart';
+import '../../services/app_settings.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/common.dart';
 
@@ -18,6 +19,20 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _busy = false;
   bool _obscure = true;
   String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    // Settings › Fingerprint Login: prompt straight away for the last account.
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      final services = AppScope.of(context);
+      if (!services.settings.get(AppSettings.fingerprintLogin)) return;
+      if (services.session.rememberedUser == null) return;
+      if (!await services.biometric.isAvailable() || !mounted) return;
+      await _fingerprint();
+    });
+  }
 
   @override
   void dispose() {

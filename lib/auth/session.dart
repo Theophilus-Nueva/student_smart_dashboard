@@ -52,9 +52,10 @@ class Session extends ChangeNotifier {
         return null;
       case BiometricResult.failed:
         return 'Fingerprint not recognised. Try again or use your password.';
+      case BiometricResult.cancelled:
+        return 'Fingerprint sign-in cancelled.';
       case BiometricResult.unavailable:
-        return 'Fingerprint login is not available on this device yet. '
-            'Use your password.';
+        return 'No fingerprint is set up on this device. Use your password.';
     }
   }
 

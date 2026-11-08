@@ -13,6 +13,7 @@ import 'biometric_service.dart';
 import 'directory_service.dart';
 import 'file_export_service.dart';
 import 'location_service.dart';
+import 'notification_service.dart';
 import 'student_repository.dart';
 import 'sync_service.dart';
 import 'task_service.dart';
@@ -23,14 +24,17 @@ import 'tour_service.dart';
 class AppServices {
   AppServices({
     required this.prefs,
-    this.biometric = const UnavailableBiometricService(),
+    BiometricService? biometric,
+    NotificationService? notifications,
     ConnectionCheck? connectionCheck,
     this.connectivityChanges = deviceConnectivityChanges,
     Future<Directory> Function()? documentsDirectory,
     UsersFetcher? usersFetcher,
     this.location = const GpsLocationService(),
     this.useNativeMaps = true,
-  }) : auth = AuthService(prefs),
+  }) : biometric = biometric ?? LocalAuthBiometricService(),
+       notifications = notifications ?? LocalNotificationService(),
+       auth = AuthService(prefs),
        directory = DirectoryService(prefs, fetcher: usersFetcher),
        settings = AppSettings(prefs),
        activity = ActivityLog(prefs),
@@ -38,13 +42,14 @@ class AppServices {
        tour = TourService(prefs),
        tasks = TaskService(prefs),
        files = FileExportService(documentsDirectory: documentsDirectory) {
-    session = Session(auth, biometric);
+    session = Session(auth, this.biometric);
     sync = SyncService(prefs, [students, tour, tasks], check: connectionCheck);
   }
 
   final SharedPreferences prefs;
   final Stream<bool> Function() connectivityChanges;
   final BiometricService biometric;
+  final NotificationService notifications;
   final AuthService auth;
   final AppSettings settings;
   final ActivityLog activity;
@@ -88,6 +93,7 @@ class AppServices {
           : 'Changes are saved on this phone',
     );
 
+    unawaited(notifications.init().catchError((Object _) {}));
     unawaited(sync.checkConnection());
     sync.listen(connectivityChanges());
   }

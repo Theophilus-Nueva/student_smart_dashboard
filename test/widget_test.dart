@@ -78,6 +78,23 @@ void main() {
     );
   });
 
+  testWidgets('Fingerprint opens the last account after a password sign-in', (
+    tester,
+  ) async {
+    final services = await makeServices(biometric: const AcceptingBiometric());
+    await pumpApp(tester, services: services);
+    await signInAs(tester, 'faculty', 'faculty123');
+    services.session.signOut();
+    await tester.pumpAndSettle();
+
+    // Fingerprint Login is on by default, so the sheet opens by itself.
+    expect(find.text('Fingerprint Required'), findsOneWidget);
+    await tester.tap(find.byTooltip('Scan fingerprint'));
+    await tester.pumpAndSettle();
+    expect(services.session.user?.displayName, 'Pocaan, Alyssa Paola D.');
+    expect(services.session.method, 'fingerprint');
+  });
+
   testWidgets('Network status shows the three Week 7 states', (tester) async {
     await tester.pumpWidget(
       const MaterialApp(
