@@ -81,7 +81,9 @@ ThemeData buildAppTheme() {
       ),
       trackOutlineColor: WidgetStateProperty.all(Colors.transparent),
     ),
-    tabBarTheme: const TabBarThemeData(
+    tabBarTheme: TabBarThemeData(
+      // Light grey press/hover highlight instead of the brand red.
+      overlayColor: WidgetStateProperty.all(const Color(0x1F9E9E9E)),
       labelColor: AppColors.tabActive,
       unselectedLabelColor: AppColors.muted,
       indicatorColor: AppColors.tabActive,
