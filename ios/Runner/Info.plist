@@ -7,7 +7,25 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Smart Dashboard</string>
+	<string>Smart Campus Tour Guide</string>
+	<key>GMSApiKey</key>
+	<string>$(MAPS_API_KEY)</string>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>tel</string>
+		<string>sms</string>
+		<string>mailto</string>
+	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>Take photos for your device dashboard.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Use Face ID to sign in to Smart Campus Tour Guide.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Show your current location on campus and on the map.</string>
+	<key>NSMotionUsageDescription</key>
+	<string>Show accelerometer, gyroscope and compass readings.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Choose photos from your gallery for your device dashboard.</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>

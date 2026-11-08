@@ -1,5 +1,6 @@
 package com.example.smart_dashboard
 
-import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
 
-class MainActivity : FlutterActivity()
+// local_auth (fingerprint login) needs a FragmentActivity.
+class MainActivity : FlutterFragmentActivity()
