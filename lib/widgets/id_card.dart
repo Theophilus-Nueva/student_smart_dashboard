@@ -32,22 +32,12 @@ class IdCard extends StatelessWidget {
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(8, 8, 8, 6),
-              child: Row(
-                children: [
-                  Image.asset(AppAssets.logo, width: 36, height: 30),
-                  const SizedBox(width: 6),
-                  const Expanded(
-                    child: Text(
-                      'LPU',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w300,
-                        letterSpacing: 1,
-                      ),
-                    ),
-                  ),
-                ],
+              padding: const EdgeInsets.fromLTRB(6, 6, 6, 4),
+              child: Image.asset(
+                AppAssets.idHeader,
+                height: 56,
+                fit: BoxFit.contain,
+                semanticLabel: 'Lyceum of the Philippines University',
               ),
             ),
             Container(

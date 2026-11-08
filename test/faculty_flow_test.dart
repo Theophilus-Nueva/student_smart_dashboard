@@ -15,10 +15,11 @@ void main() {
     expect(find.text('Sync Status'), findsOneWidget);
     expect(find.text('Sync Now'), findsOneWidget);
     await tester.scrollUntilVisible(
-      find.text('Class Overview'),
+      find.text('Total Students'),
       200,
       scrollable: homeScrollable,
     );
+    expect(find.text('Class Overview'), findsOneWidget);
     expect(find.text('Total Students'), findsOneWidget);
     expect(find.text('5'), findsWidgets);
   });
