@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 
 /// Bottom nav from the Figma component set (Active=Home/Analytics/Device/Settings).
-/// Icons are always white; a translucent pill behind the icon marks the
-/// selected tab, and its label is bold.
+/// White bar with a soft top shadow. Grey icons; the selected tab is red
+/// with a light red pill behind the icon and a bold label.
 class AppBottomNav extends StatelessWidget {
   const AppBottomNav({
     super.key,
@@ -24,43 +24,34 @@ class AppBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Floating bar: inset from the screen edges, rounded, with a shadow.
-    return SafeArea(
-      top: false,
-      minimum: const EdgeInsets.only(bottom: 12),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(28),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x33000000),
-                blurRadius: 16,
-                offset: Offset(0, 6),
-              ),
-            ],
+    // Full-width white bar with a soft shadow along its top edge.
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Color(0x1F000000),
+            blurRadius: 12,
+            offset: Offset(0, -2),
           ),
-          child: Material(
-            color: AppColors.brand,
-            borderRadius: BorderRadius.circular(28),
-            clipBehavior: Clip.antiAlias,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(minHeight: 64),
-              child: Row(
-                children: [
-                  for (var i = 0; i < items.length; i++)
-                    Expanded(
-                      child: _NavItem(
-                        icon: items[i].$1,
-                        label: items[i].$2,
-                        selected: i == currentIndex,
-                        onTap: () => onTap(i),
-                      ),
-                    ),
-                ],
-              ),
-            ),
+        ],
+      ),
+      child: SafeArea(
+        top: false,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 64),
+          child: Row(
+            children: [
+              for (var i = 0; i < items.length; i++)
+                Expanded(
+                  child: _NavItem(
+                    icon: items[i].$1,
+                    label: items[i].$2,
+                    selected: i == currentIndex,
+                    onTap: () => onTap(i),
+                  ),
+                ),
+            ],
           ),
         ),
       ),
@@ -101,19 +92,21 @@ class _NavItem extends StatelessWidget {
                 height: 30,
                 decoration: BoxDecoration(
                   color: selected
-                      ? Colors.white.withValues(alpha: 0.28)
+                      ? AppColors.brand.withValues(alpha: 0.12)
                       : Colors.transparent,
                   borderRadius: BorderRadius.circular(15),
                 ),
-                child: Icon(icon, color: Colors.white, size: 22),
+                child: Icon(
+                  icon,
+                  color: selected ? AppColors.brand : AppColors.muted,
+                  size: 22,
+                ),
               ),
               const SizedBox(height: 3),
               Text(
                 label,
                 style: TextStyle(
-                  color: selected
-                      ? Colors.white
-                      : Colors.white.withValues(alpha: 0.75),
+                  color: selected ? AppColors.brand : AppColors.muted,
                   fontSize: 12,
                   fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
                 ),
