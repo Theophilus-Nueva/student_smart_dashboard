@@ -77,7 +77,6 @@ class _OnlineDirectoryScreenState extends State<OnlineDirectoryScreen> {
         listenable: Listenable.merge([directory, services.sync, _search]),
         builder: (context, _) {
           final header = <Widget>[
-            const FacultyOnlyTag(),
             StatGrid(
               children: [
                 StatCard(

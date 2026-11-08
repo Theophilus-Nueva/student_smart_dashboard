@@ -121,7 +121,6 @@ class _StudentFormScreenState extends State<StudentFormScreen> {
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
                 children: [
-                  const FacultyOnlyTag(),
                   _label('Student Name'),
                   TextFormField(
                     key: const Key('form.name'),

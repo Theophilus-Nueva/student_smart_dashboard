@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../routes/app_routes.dart';
 import '../../services/app_services.dart';
-import '../../theme/app_colors.dart';
 import '../../utils/format.dart';
 import '../../widgets/action_tile.dart';
 import '../../widgets/common.dart';
@@ -158,10 +157,6 @@ class _SyncStatusCard extends StatelessWidget {
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                    ),
-                    Text(
-                      'Faculty only',
-                      style: TextStyle(fontSize: 12, color: AppColors.brand),
                     ),
                   ],
                 ),

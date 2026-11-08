@@ -42,7 +42,6 @@ class ClassAnalytics extends StatelessWidget {
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              const FacultyOnlyTag(),
               StatGrid(
                 children: [
                   StatCard(label: 'Total Students', value: '${students.total}'),

@@ -33,7 +33,6 @@ class StudentDetailsScreen extends StatelessWidget {
           return ListView(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
             children: [
-              const FacultyOnlyTag(),
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(16),

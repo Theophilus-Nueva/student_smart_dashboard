@@ -74,7 +74,6 @@ class FacultySettings extends StatelessWidget {
           AccountHeaderCard(user: services.session.user!),
           const SecurityCenterSection(),
           const SectionHeader('Data Management'),
-          const FacultyOnlyTag(),
           ListRow(
             icon: Icons.refresh,
             title: 'Refresh Dashboard',

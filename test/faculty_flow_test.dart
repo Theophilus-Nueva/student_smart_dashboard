@@ -106,6 +106,8 @@ void main() {
     expect(find.text('97.5 · Top performer'), findsOneWidget);
 
     await tester.scrollUntilVisible(find.text('Delete'), 200);
+    await tester.ensureVisible(find.text('Delete'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Delete'));
     await tester.pumpAndSettle();
     expect(find.text('Delete student?'), findsOneWidget);

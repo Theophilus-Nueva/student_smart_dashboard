@@ -38,7 +38,6 @@ class _StudentRecordsScreenState extends State<StudentRecordsScreen> {
           return ListView(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
             children: [
-              const FacultyOnlyTag(),
               TextField(
                 controller: _search,
                 decoration: const InputDecoration(

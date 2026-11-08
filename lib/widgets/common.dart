@@ -111,30 +111,6 @@ class PillChip extends StatelessWidget {
   }
 }
 
-/// Red "Faculty only" tag shown at the top of faculty-only screens.
-class FacultyOnlyTag extends StatelessWidget {
-  const FacultyOnlyTag({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.only(bottom: 12),
-      child: Row(
-        children: [
-          Icon(Icons.lock, size: 14, color: AppColors.brand),
-          SizedBox(width: 6),
-          Expanded(
-            child: Text(
-              'Faculty only · students are redirected to Access Denied',
-              style: TextStyle(fontSize: 12, color: AppColors.brand),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 /// Grey label/value box (coordinates, record fields).
 class InfoField extends StatelessWidget {
   const InfoField({super.key, required this.label, required this.value});
