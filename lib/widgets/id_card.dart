@@ -20,11 +20,12 @@ class IdCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: AppColors.border),
+          // No outline: a border would inset the photo and leave white
+          // strips down the sides. The shadow marks the card's edge.
           boxShadow: const [
             BoxShadow(
-              color: Color(0x1A000000),
-              blurRadius: 6,
+              color: Color(0x2E000000),
+              blurRadius: 8,
               offset: Offset(0, 2),
             ),
           ],
@@ -35,7 +36,10 @@ class IdCard extends StatelessWidget {
             // Header, portrait and ID number sit on the campus photo, which
             // fades up into white behind the logo.
             Stack(
+              alignment: Alignment.topCenter,
               children: [
+                // Spans the full card width so the photo reaches both edges.
+                const SizedBox(width: double.infinity),
                 Positioned.fill(
                   child: Image.asset(
                     AppAssets.campusPhoto,
@@ -74,11 +78,7 @@ class IdCard extends StatelessWidget {
                     Container(
                       width: 64,
                       height: 76,
-                      clipBehavior: Clip.hardEdge,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFB0BEC5),
-                        border: Border.all(color: Colors.white, width: 2),
-                      ),
+                      color: const Color(0xFFB0BEC5),
                       child: user.photoAsset == null
                           ? const Icon(
                               Icons.person,
