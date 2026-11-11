@@ -21,10 +21,16 @@ class ExportResult {
 typedef FileSharer = Future<bool> Function(String path, {Rect? origin});
 
 Future<bool> shareWithSystemSheet(String path, {Rect? origin}) async {
+  final name = path.split(Platform.pathSeparator).last;
   final result = await SharePlus.instance.share(
     ShareParams(
-      files: [XFile(path, mimeType: 'text/plain')],
-      subject: FileExportService.fileName,
+      files: [
+        XFile(
+          path,
+          mimeType: name.endsWith('.csv') ? 'text/csv' : 'text/plain',
+        ),
+      ],
+      subject: name,
       sharePositionOrigin: origin,
     ),
   );
@@ -42,6 +48,7 @@ class FileExportService {
        _share = share ?? shareWithSystemSheet;
 
   static const fileName = 'student_info.txt';
+  static const directoryFileName = 'student_directory.csv';
 
   final Future<Directory> Function() _documentsDirectory;
   final FileSharer _share;
@@ -53,6 +60,48 @@ class FileExportService {
     await file.writeAsString(content);
     return ExportResult(path: file.path, content: content);
   }
+
+  /// Faculty Student Directory export: one row per student. [withGrades]
+  /// adds the Grade column (Week 4).
+  Future<ExportResult> exportDirectoryCsv(
+    List<Student> students, {
+    bool withGrades = false,
+  }) async {
+    final rows = [
+      [
+        'Student ID',
+        'Name',
+        'Email',
+        'Program',
+        'Year Level',
+        'Contact Number',
+        'Address',
+        if (withGrades) 'Grade',
+      ],
+      for (final s in students)
+        [
+          s.id,
+          s.name,
+          s.email,
+          s.program,
+          s.yearLevel,
+          s.contact,
+          s.address,
+          if (withGrades) s.grade.toStringAsFixed(1),
+        ],
+    ];
+    final content =
+        '${rows.map((r) => r.map(_csvField).join(',')).join('\r\n')}\r\n';
+    final dir = await _documentsDirectory();
+    final file = File('${dir.path}${Platform.pathSeparator}$directoryFileName');
+    await file.writeAsString(content);
+    return ExportResult(path: file.path, content: content);
+  }
+
+  /// Quotes a CSV field when it holds a comma, quote or line break.
+  static String _csvField(String value) => RegExp(r'[",\r\n]').hasMatch(value)
+      ? '"${value.replaceAll('"', '""')}"'
+      : value;
 
   /// Shows the Share sheet for an exported file.
   Future<bool> share(ExportResult result, {Rect? origin}) =>

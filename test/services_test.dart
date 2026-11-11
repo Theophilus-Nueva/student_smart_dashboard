@@ -35,6 +35,27 @@ void main() {
     await dir.delete(recursive: true);
   });
 
+  test('Directory export writes student_directory.csv', () async {
+    final dir = await Directory.systemTemp.createTemp('export');
+    final service = FileExportService(documentsDirectory: () async => dir);
+    final students = sampleStudents.take(2).toList();
+    final result = await service.exportDirectoryCsv(students);
+
+    expect(result.fileName, 'student_directory.csv');
+    final lines = (await File(result.path).readAsString()).split('\r\n');
+    expect(
+      lines.first,
+      'Student ID,Name,Email,Program,Year Level,Contact Number,Address',
+    );
+    expect(lines, hasLength(students.length + 2)); // header + rows + ''
+    // "Last, First" names contain a comma, so they are quoted.
+    expect(lines[1], startsWith('${students[0].id},"${students[0].name}",'));
+
+    final graded = await service.exportDirectoryCsv(students, withGrades: true);
+    expect(graded.content.split('\r\n').first, endsWith(',Grade'));
+    await dir.delete(recursive: true);
+  });
+
   test('Students persist as JSON under "students"', () async {
     final services = await makeServices();
     await services.students.add(

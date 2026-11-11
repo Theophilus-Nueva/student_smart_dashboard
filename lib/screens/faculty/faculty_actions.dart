@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../config/lab_week.dart';
 import '../../models/activity_item.dart';
 import '../../models/student.dart';
 import '../../services/app_services.dart';
@@ -53,6 +54,36 @@ Future<void> exportStudentRecord(BuildContext context, Student student) async {
       ActivityKind.export,
       'Record exported',
       '${student.name} · ${result.fileName}',
+    );
+    if (!context.mounted) return;
+    final shared = await services.files.share(
+      result,
+      origin: shareOrigin(context),
+    );
+    if (shared && context.mounted) {
+      showAppSnack(context, '${result.fileName} shared');
+    }
+  } on Exception catch (e) {
+    if (context.mounted) {
+      showAppSnack(context, 'Could not export the file: $e', error: true);
+    }
+  }
+}
+
+/// Student Directory: every student to student_directory.csv, then the
+/// Share sheet (Files, Messenger, Gmail…).
+Future<void> exportStudentDirectory(BuildContext context) async {
+  final services = AppScope.of(context);
+  final students = services.students.all;
+  try {
+    final result = await services.files.exportDirectoryCsv(
+      students,
+      withGrades: Feature.grades.on,
+    );
+    await services.activity.add(
+      ActivityKind.export,
+      'Directory exported',
+      '${students.length} students · ${result.fileName}',
     );
     if (!context.mounted) return;
     final shared = await services.files.share(

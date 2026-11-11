@@ -104,6 +104,17 @@ class _StudentRecordsScreenState extends State<StudentRecordsScreen> {
                   icon: const Icon(Icons.add),
                   label: const Text('Add Student'),
                 ),
+                // Week 3 file export: the whole list as CSV, then Share.
+                if (Feature.fileExport.on) ...[
+                  const SizedBox(height: 8),
+                  OutlinedButton.icon(
+                    onPressed: repo.total == 0
+                        ? null
+                        : () => exportStudentDirectory(context),
+                    icon: const Icon(Icons.ios_share),
+                    label: const Text('Export to student_directory.csv'),
+                  ),
+                ],
               ],
             );
           },

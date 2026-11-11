@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -202,5 +204,37 @@ void main() {
       await tester.tap(find.text('Back to Home'));
       await tester.pumpAndSettle();
     }
+  });
+
+  testWidgets('Student Directory exports a CSV and opens the Share sheet', (
+    tester,
+  ) async {
+    final shared = <String>[];
+    await pumpApp(tester, services: await makeServices(sharedFiles: shared));
+    await signInAs(tester, 'faculty', 'faculty123');
+    await pushRoute(tester, AppRoutes.studentRecords);
+    final export = find.text('Export to student_directory.csv');
+    await tester.scrollUntilVisible(
+      export,
+      300,
+      scrollable: find.byType(Scrollable).hitTestable().first,
+    );
+    await tester.ensureVisible(export);
+    await tester.pumpAndSettle();
+    await tester.tap(export);
+    // The file write is real I/O, which needs real time to finish.
+    for (var i = 0; i < 50 && shared.isEmpty; i++) {
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 20)),
+      );
+      await tester.pump();
+    }
+    await tester.pumpAndSettle();
+
+    expect(shared.single, endsWith('student_directory.csv'));
+    final csv = File(shared.single).readAsStringSync();
+    expect(csv, startsWith('Student ID,Name,'));
+    expect(csv, contains('2024-2-02401'));
+    expect(find.text('student_directory.csv shared'), findsOneWidget);
   });
 }
