@@ -8,8 +8,10 @@ import '../../widgets/action_tile.dart';
 import '../../widgets/common.dart';
 import '../../widgets/current_location_card.dart';
 import '../../widgets/id_card.dart';
+import '../../widgets/kpi_grid.dart';
 import '../../widgets/tour_progress_card.dart';
 import '../../widgets/world_clock.dart';
+import '../shared/dashboard_tiles.dart';
 import '../shared/home_scaffold.dart';
 import '../../config/lab_week.dart';
 
@@ -23,6 +25,7 @@ class StudentHome extends StatelessWidget {
     final user = services.session.user!;
     void open(String route) => Navigator.of(context).pushNamed(route);
     final hasActions = const [
+      Feature.dashboardTiles,
       Feature.myRecord,
       Feature.campusTour,
       Feature.cloudTasks,
@@ -47,10 +50,15 @@ class StudentHome extends StatelessWidget {
             const SizedBox(height: 16),
           ],
           IdCard(user: user),
+          if (Feature.kpiCards.on) ...[
+            const SectionHeader('Status'),
+            const KpiGrid(),
+          ],
           if (hasActions) ...[
             const SectionHeader('Quick Actions'),
             ActionGrid(
               children: [
+                if (Feature.dashboardTiles.on) ...dashboardTiles(context),
                 if (Feature.myRecord.on)
                   ActionTile(
                     icon: Icons.person,

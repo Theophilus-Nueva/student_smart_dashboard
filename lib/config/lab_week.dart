@@ -31,13 +31,24 @@ class LabWeek {
 }
 
 /// Each feature and the lab week that introduces it. A feature is shown when
-/// [LabWeek.current] is that week or later.
+/// [LabWeek.current] is that week or later, and before [Feature.replacedIn]
+/// if it has one.
 ///
 /// Always shown (Week 1 or app frame): login with password and the
 /// Student/Faculty roles, Access Denied, header with notification badge,
 /// Home / Analytics / Device / Settings tabs, Dashboard / Recent Activity
 /// tabs, ID card, quick-action grid, world clock, account header and Log out.
 enum Feature {
+  // Week 1 – dashboard shell. Weeks 1–6 only: the final Home (Week 7, the
+  // Figma design) shows network status and the location card instead, and
+  // the bottom nav already opens Device, Analytics and Settings.
+  kpiCards(1, 'KPI cards: Network, GPS, API, Storage status', replacedIn: 7),
+  dashboardTiles(
+    1,
+    'Action tiles: Device, Network, Reports, Settings',
+    replacedIn: 7,
+  ),
+
   // Week 2 – API integration.
   apiDirectory(2, 'Online Directory: API users with loading and error states'),
   facultyDirectory(2, 'Faculty Directory card'),
@@ -77,10 +88,15 @@ enum Feature {
   tourProgress(7, 'Tour progress card'),
   arGuide(7, 'AR campus guide (optional)');
 
-  const Feature(this.week, this.description);
+  const Feature(this.week, this.description, {this.replacedIn});
 
   final int week;
   final String description;
 
-  bool get on => LabWeek.current >= week;
+  /// The week whose screens replace this feature (hidden from then on).
+  final int? replacedIn;
+
+  bool get on =>
+      LabWeek.current >= week &&
+      (replacedIn == null || LabWeek.current < replacedIn!);
 }

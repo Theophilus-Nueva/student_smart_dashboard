@@ -10,10 +10,12 @@ import '../../widgets/action_tile.dart';
 import '../../widgets/common.dart';
 import '../../widgets/current_location_card.dart';
 import '../../widgets/id_card.dart';
+import '../../widgets/kpi_grid.dart';
 import '../../widgets/pull_to_sync.dart';
 import '../../widgets/stat_card.dart';
 import '../../widgets/tour_progress_card.dart';
 import '../../widgets/world_clock.dart';
+import '../shared/dashboard_tiles.dart';
 import '../shared/home_scaffold.dart';
 import 'faculty_actions.dart';
 
@@ -44,6 +46,7 @@ class _FacultyHomeState extends State<FacultyHome> {
     void open(String route) => Navigator.of(context).pushNamed(route);
 
     final hasActions = const [
+      Feature.dashboardTiles,
       Feature.studentRecords,
       Feature.registrationForm,
       Feature.apiDirectory,
@@ -72,6 +75,10 @@ class _FacultyHomeState extends State<FacultyHome> {
           const SizedBox(height: 16),
         ],
         IdCard(user: user),
+        if (Feature.kpiCards.on) ...[
+          const SectionHeader('Status'),
+          const KpiGrid(),
+        ],
         if (Feature.classStats.on) ...[
           const SectionHeader('Class Overview'),
           ListenableBuilder(
@@ -108,6 +115,7 @@ class _FacultyHomeState extends State<FacultyHome> {
           const SectionHeader('Quick Actions'),
           ActionGrid(
             children: [
+              if (Feature.dashboardTiles.on) ...dashboardTiles(context),
               if (Feature.studentRecords.on)
                 ActionTile(
                   icon: Icons.people,

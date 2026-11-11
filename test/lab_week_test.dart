@@ -20,24 +20,68 @@ Finder textOnHome(String text) => find.descendant(
 Future<void> scrollHomeTo(WidgetTester tester, String text) =>
     tester.scrollUntilVisible(find.text(text), 150, scrollable: homeScrollable);
 
+Future<void> tapHomeTile(WidgetTester tester, Finder tile) async {
+  await tester.ensureVisible(tile);
+  await tester.pumpAndSettle();
+  await tester.tap(tile);
+  await tester.pumpAndSettle();
+}
+
 void main() {
-  test('Every feature belongs to a week from 2 to 7', () {
+  test('Every feature belongs to a week from 1 to 7', () {
     for (final f in Feature.values) {
-      expect(f.week, inInclusiveRange(2, 7), reason: f.name);
+      expect(f.week, inInclusiveRange(1, 7), reason: f.name);
+      if (f.replacedIn != null) {
+        expect(f.replacedIn, greaterThan(f.week), reason: f.name);
+      }
+    }
+  });
+
+  test('Week 1 KPI cards and tiles show in Weeks 1-6 only', () {
+    for (var week = 1; week <= 7; week++) {
+      useWeek(week);
+      expect(Feature.kpiCards.on, week < 7, reason: 'week $week');
+      expect(Feature.dashboardTiles.on, week < 7, reason: 'week $week');
     }
   });
 
   testWidgets('Week 1: dashboard shell only', (tester) async {
     useWeek(1);
-    await pumpApp(tester);
+    final services = await pumpApp(tester);
     expect(find.text('LPU Smart Campus Dashboard'), findsOneWidget);
     expect(find.text('Sign in with fingerprint'), findsNothing);
 
     await signInAs(tester, 'student', 'student123');
+    expect(services.tracker.running, isFalse); // no GPS prompt before Week 6
     expect(find.text('LPU Smart Campus Dashboard'), findsOneWidget);
     expect(find.text('Current Location'), findsNothing);
-    expect(find.text('Quick Actions'), findsNothing);
     expect(find.text('AR Guide'), findsNothing);
+
+    // KPI cards: Network, GPS, API, Storage.
+    await scrollHomeTo(tester, 'Storage');
+    expect(textOnHome('Status'), findsOneWidget);
+    expect(textOnHome('Connected'), findsOneWidget);
+    expect(textOnHome('GPS'), findsOneWidget);
+    expect(textOnHome('Campus location'), findsOneWidget);
+    expect(textOnHome('API'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('home.dashboard')),
+        matching: find.textContaining('Updated '),
+      ),
+      findsOneWidget,
+    );
+    expect(textOnHome('Saved on this phone'), findsOneWidget);
+
+    // Action tiles: Device, Network, Reports, Settings; nothing later.
+    await scrollHomeTo(tester, 'Reports');
+    expect(textOnHome('Quick Actions'), findsOneWidget);
+    expect(textOnHome('Device'), findsOneWidget);
+    expect(textOnHome('Network'), findsNWidgets(2)); // KPI card and tile
+    expect(textOnHome('Settings'), findsOneWidget);
+    expect(textOnHome('My Record'), findsNothing);
+    expect(textOnHome('Faculty Directory'), findsNothing);
+
     await scrollHomeTo(tester, 'World Clock');
     expect(find.text('World Clock'), findsOneWidget);
 
@@ -52,6 +96,34 @@ void main() {
     expect(find.text('Security Center'), findsNothing);
     expect(find.text('About LPU'), findsNothing);
     expect(find.text('Log out'), findsOneWidget);
+  });
+
+  testWidgets('Week 1: tiles open the tabs and check the network', (
+    tester,
+  ) async {
+    useWeek(1);
+    await pumpApp(tester);
+    await signInAs(tester, 'faculty', 'faculty123');
+    await tapHomeTile(tester, textOnHome('Reports'));
+    expect(
+      find.text('Class stats will appear here in a later lab week.'),
+      findsOneWidget,
+    );
+
+    await tapNav(tester, 'Home');
+    await tapHomeTile(tester, textOnHome('Settings'));
+    expect(find.text('Log out'), findsOneWidget);
+
+    await tapNav(tester, 'Home');
+    await tapHomeTile(tester, textOnHome('Device'));
+    expect(
+      find.text('This screen is coming in a later lab week.'),
+      findsOneWidget,
+    );
+
+    await tapNav(tester, 'Home');
+    await tapHomeTile(tester, textOnHome('Network').last); // the tile
+    expect(find.text('You are online.'), findsOneWidget);
   });
 
   testWidgets('Week 1: a later screen opened directly is a placeholder', (
@@ -138,9 +210,10 @@ void main() {
     tester,
   ) async {
     useWeek(6);
-    await pumpApp(tester);
+    final services = await pumpApp(tester);
     expect(find.text('Sign in with fingerprint'), findsOneWidget);
     await signInAs(tester, 'student', 'student123');
+    expect(services.tracker.running, isTrue);
     expect(find.text('Smart Connected Dashboard'), findsOneWidget);
     expect(find.text('Current Location'), findsOneWidget);
     expect(find.text('AR Guide'), findsNothing);
@@ -159,6 +232,9 @@ void main() {
     expect(find.text('AR Guide'), findsOneWidget);
     await scrollHomeTo(tester, 'Campus Tour');
     expect(textOnHome('Campus Tour'), findsWidgets);
+    // The Week 1 KPI cards and tiles are replaced by the final Home.
+    expect(textOnHome('Reports'), findsNothing);
+    expect(textOnHome('Storage'), findsNothing);
   });
 
   for (var week = 1; week <= 7; week++) {

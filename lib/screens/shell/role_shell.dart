@@ -16,6 +16,14 @@ class RoleShell extends StatefulWidget {
 
   final AppUser user;
 
+  static const analyticsTab = 1;
+  static const deviceTab = 2;
+  static const settingsTab = 3;
+
+  /// Switches the bottom-nav tab from inside a tab (Week 1 action tiles).
+  static void selectTab(BuildContext context, int index) =>
+      context.findAncestorStateOfType<_RoleShellState>()?._select(index);
+
   @override
   State<RoleShell> createState() => _RoleShellState();
 }
@@ -26,16 +34,27 @@ class _RoleShellState extends State<RoleShell> {
       ? facultyTabs()
       : studentTabs();
 
-  static const deviceTab = 2;
   LocationTracker? _tracker;
   DeviceService? _device;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // GPS updates for the Current Location card and the map while signed in.
-    _tracker ??= AppScope.of(context).tracker..start();
+    // GPS updates for the Current Location card and the map while signed in
+    // (Week 6; earlier weeks never ask for location permission).
+    if (Feature.location.on) _tracker ??= AppScope.of(context).tracker..start();
     _device ??= AppScope.of(context).device;
+  }
+
+  void _select(int i) {
+    // Week 5 sensors run only while the Device tab is showing.
+    final device = AppScope.of(context).device;
+    if (i == RoleShell.deviceTab && Feature.device.on) {
+      device.startSensors();
+    } else {
+      device.stopSensors();
+    }
+    setState(() => _index = i);
   }
 
   @override
@@ -49,19 +68,7 @@ class _RoleShellState extends State<RoleShell> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: IndexedStack(index: _index, children: _tabs),
-      bottomNavigationBar: AppBottomNav(
-        currentIndex: _index,
-        onTap: (i) {
-          // Week 5 sensors run only while the Device tab is showing.
-          final device = AppScope.of(context).device;
-          if (i == deviceTab && Feature.device.on) {
-            device.startSensors();
-          } else {
-            device.stopSensors();
-          }
-          setState(() => _index = i);
-        },
-      ),
+      bottomNavigationBar: AppBottomNav(currentIndex: _index, onTap: _select),
     );
   }
 }
