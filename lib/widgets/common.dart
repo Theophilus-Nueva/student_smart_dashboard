@@ -236,13 +236,19 @@ class StateMessage extends StatelessWidget {
   }
 }
 
-void showAppSnack(BuildContext context, String message, {bool error = false}) {
+void showAppSnack(
+  BuildContext context,
+  String message, {
+  bool error = false,
+  Duration duration = const Duration(seconds: 4),
+}) {
   ScaffoldMessenger.of(context)
     ..hideCurrentSnackBar()
     ..showSnackBar(
       SnackBar(
         content: Text(message),
         backgroundColor: error ? AppColors.brand : null,
+        duration: duration,
       ),
     );
 }

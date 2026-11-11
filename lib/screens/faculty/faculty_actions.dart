@@ -88,5 +88,9 @@ Future<void> runSyncNow(BuildContext context) async {
     context,
     ok ? 'Sync successful' : 'Sync failed · you are offline',
     error: !ok,
+    // Success is a quick confirmation; failures stay longer to be read.
+    duration: ok
+        ? const Duration(milliseconds: 1500)
+        : const Duration(seconds: 4),
   );
 }
