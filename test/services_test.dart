@@ -42,7 +42,7 @@ void main() {
         id: '2026-1-00001',
         name: 'Test, Student',
         email: 'test@lpu.example',
-        program: 'BSIS',
+        program: 'BSLIS',
         yearLevel: '1st Year',
         grade: 80,
       ),

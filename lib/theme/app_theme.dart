@@ -92,6 +92,13 @@ ThemeData buildAppTheme() {
       unselectedLabelStyle: TextStyle(fontSize: 15),
     ),
     snackBarTheme: const SnackBarThemeData(behavior: SnackBarBehavior.floating),
+    // White pop-ups with a soft shadow (no pink M3 surface tint).
+    dialogTheme: const DialogThemeData(
+      backgroundColor: Colors.white,
+      surfaceTintColor: Colors.transparent,
+      elevation: 12,
+      shadowColor: Colors.black54,
+    ),
     dividerTheme: const DividerThemeData(color: AppColors.border, space: 1),
   );
 }

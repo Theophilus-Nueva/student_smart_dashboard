@@ -21,7 +21,7 @@ class FacultyDirectoryScreen extends StatefulWidget {
     ),
     (
       'Prof. Ana Villanueva',
-      'Information Systems',
+      'Library and Information Science',
       'ana.villanueva@lpu.example',
       '+63 912 345 6722',
     ),

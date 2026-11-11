@@ -51,7 +51,8 @@ class _RegistrationFormBodyState extends State<RegistrationFormBody> {
   }
 
   Future<void> _submitForm() async {
-    final isEmpty = _nameController.text.trim().isEmpty ||
+    final isEmpty =
+        _nameController.text.trim().isEmpty ||
         _idController.text.trim().isEmpty ||
         _emailController.text.trim().isEmpty ||
         _programController.text.trim().isEmpty ||
@@ -97,73 +98,53 @@ class _RegistrationFormBodyState extends State<RegistrationFormBody> {
         children: [
           const Text(
             "Student Registration",
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 20),
           const Text("Student Name:"),
           TextField(
             controller: _nameController,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-            ),
+            decoration: const InputDecoration(border: OutlineInputBorder()),
           ),
           const SizedBox(height: 20),
           const Text("Student ID:"),
           TextField(
             controller: _idController,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-            ),
+            decoration: const InputDecoration(border: OutlineInputBorder()),
           ),
           const SizedBox(height: 20),
           const Text("Email Address:"),
           TextField(
             controller: _emailController,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-            ),
+            decoration: const InputDecoration(border: OutlineInputBorder()),
           ),
           const SizedBox(height: 20),
           const Text("Program:"),
           TextField(
             controller: _programController,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-            ),
+            decoration: const InputDecoration(border: OutlineInputBorder()),
           ),
           const SizedBox(height: 20),
           const Text("Year Level:"),
           TextField(
             controller: _yearController,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-            ),
+            decoration: const InputDecoration(border: OutlineInputBorder()),
           ),
           const SizedBox(height: 20),
           const Text("Contact Number:"),
           TextField(
             controller: _contactController,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-            ),
+            decoration: const InputDecoration(border: OutlineInputBorder()),
           ),
           const SizedBox(height: 20),
           const Text("Address:"),
           TextField(
             controller: _addressController,
             maxLines: 3,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-            ),
+            decoration: const InputDecoration(border: OutlineInputBorder()),
           ),
           const SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: _submitForm,
-            child: const Text("Submit"),
-          ),
+          ElevatedButton(onPressed: _submitForm, child: const Text("Submit")),
         ],
       ),
     );

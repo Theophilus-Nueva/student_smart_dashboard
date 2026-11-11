@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../config/feature_flags.dart';
+
 import '../../routes/app_routes.dart';
 import '../../services/app_services.dart';
 import '../../widgets/action_tile.dart';
@@ -24,7 +26,12 @@ class StudentHome extends StatelessWidget {
       dashboard: ListView(
         key: const Key('home.dashboard'),
         // Extra bottom space so the AR Guide button never covers content.
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 88),
+        padding: EdgeInsets.fromLTRB(
+          16,
+          16,
+          16,
+          FeatureFlags.showArGuideButton ? 88 : 16,
+        ),
         children: [
           const CurrentLocationCard(),
           const SizedBox(height: 16),
@@ -64,8 +71,11 @@ class StudentHome extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          TourProgressCard(tour: services.tour),
+          // Hidden for now; see FeatureFlags.showHomeTourProgress.
+          if (FeatureFlags.showHomeTourProgress) ...[
+            const SizedBox(height: 12),
+            TourProgressCard(tour: services.tour),
+          ],
           const SectionHeader('World Clock'),
           const WorldClock(),
         ],

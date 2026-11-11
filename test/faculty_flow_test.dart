@@ -6,14 +6,29 @@ import 'package:smart_dashboard/routes/app_routes.dart';
 import 'test_helpers.dart';
 
 void main() {
-  testWidgets('Faculty home shows sync status, class stats and Sync Now', (
+  testWidgets('Faculty home shows sync status, class stats and pull to sync', (
     tester,
   ) async {
     await pumpApp(tester);
     await signInAs(tester, 'faculty', 'faculty123');
 
     expect(find.text('Sync Status'), findsOneWidget);
-    expect(find.text('Sync Now'), findsOneWidget);
+    expect(find.text('Sync Now'), findsNothing);
+
+    // Pull down from the top and let go: spinner shows, then it syncs.
+    await tester.fling(
+      find.byKey(const Key('home.dashboard')),
+      const Offset(0, 300),
+      1000,
+    );
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.byType(RefreshProgressIndicator), findsOneWidget);
+    await tester.pumpAndSettle();
+    expect(find.text('Sync successful'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pumpAndSettle();
+
     await tester.scrollUntilVisible(
       find.text('Total Students'),
       200,
@@ -43,6 +58,16 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('1 student · sorted by name'), findsOneWidget);
     expect(find.text('Nueva, Theophilus T.'), findsOneWidget);
+  });
+
+  testWidgets('Online Directory uses pull to sync, not a Sync button', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    await signInAs(tester, 'faculty', 'faculty123');
+    await pushRoute(tester, AppRoutes.onlineDirectory);
+    expect(find.byTooltip('Sync now'), findsNothing);
+    expect(find.byType(RefreshIndicator), findsOneWidget);
   });
 
   testWidgets('Add Student validates, then saves and lists the record', (
@@ -75,7 +100,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('form.program')));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('BSIS').last);
+    await tester.tap(find.text('BS Library and Information Science').last);
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.byKey(const Key('form.year')));
     await tester.pumpAndSettle();
@@ -93,7 +118,7 @@ void main() {
 
     final added = services.students.byId('2026-1-00007');
     expect(added?.name, 'Reyes, Ana');
-    expect(added?.program, 'BSIS');
+    expect(added?.program, 'BSLIS');
     expect(added?.grade, 88.5);
   });
 

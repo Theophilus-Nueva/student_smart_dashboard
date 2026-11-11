@@ -57,10 +57,7 @@ class _SummaryPageState extends State<SummaryPage> {
           const Center(
             child: Text(
               "Summary Page",
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
           ),
           const SizedBox(height: 20),

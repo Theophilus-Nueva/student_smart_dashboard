@@ -25,14 +25,10 @@ class StudentRepository extends ChangeNotifier implements Syncable {
       _students = [...sampleStudents];
       return;
     }
-    try {
-      final list = jsonDecode(raw) as List<dynamic>;
-      _students = list
-          .map((e) => Student.fromJson(e as Map<String, dynamic>))
-          .toList();
-    } on FormatException {
-      _students = [...sampleStudents];
-    }
+    final list = jsonDecode(raw) as List<dynamic>;
+    _students = list
+        .map((e) => Student.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   Future<void> _save() async {

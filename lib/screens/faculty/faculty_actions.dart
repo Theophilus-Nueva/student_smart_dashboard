@@ -20,11 +20,15 @@ Future<bool> confirmDeleteStudent(BuildContext context, Student student) async {
       ),
       actions: [
         TextButton(
+          style: TextButton.styleFrom(foregroundColor: Colors.black),
           onPressed: () => Navigator.pop(context, false),
           child: const Text('Cancel'),
         ),
         TextButton(
-          style: TextButton.styleFrom(foregroundColor: AppColors.brand),
+          style: TextButton.styleFrom(
+            foregroundColor: AppColors.brand,
+            textStyle: const TextStyle(fontWeight: FontWeight.bold),
+          ),
           onPressed: () => Navigator.pop(context, true),
           child: const Text('Delete'),
         ),
@@ -62,7 +66,19 @@ Future<void> exportStudentRecord(BuildContext context, Student student) async {
   }
 }
 
-/// Sync Now (Weeks 4 and 7) with result feedback.
+/// Pull-to-refresh on faculty screens: reload the API users, then sync
+/// pending records (Weeks 4 and 7), with result feedback.
+Future<void> refreshAndSync(BuildContext context) async {
+  final ok = await AppScope.of(context).directory.refresh();
+  if (!context.mounted) return;
+  if (!ok) {
+    showAppSnack(context, 'Sync failed · API Error', error: true);
+    return;
+  }
+  await runSyncNow(context);
+}
+
+/// Sync pending records (Weeks 4 and 7) with result feedback.
 Future<void> runSyncNow(BuildContext context) async {
   final sync = AppScope.of(context).sync;
   await sync.checkConnection();

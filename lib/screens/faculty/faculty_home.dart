@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../config/feature_flags.dart';
+
 import '../../routes/app_routes.dart';
 import '../../services/app_services.dart';
 import '../../utils/format.dart';
@@ -7,13 +9,14 @@ import '../../widgets/action_tile.dart';
 import '../../widgets/common.dart';
 import '../../widgets/current_location_card.dart';
 import '../../widgets/id_card.dart';
+import '../../widgets/pull_to_sync.dart';
 import '../../widgets/stat_card.dart';
 import '../../widgets/tour_progress_card.dart';
 import '../../widgets/world_clock.dart';
 import '../shared/home_scaffold.dart';
 import 'faculty_actions.dart';
 
-/// Faculty / Home: sync status with Sync Now, class stats, management
+/// Faculty / Home: sync status (pull down to sync), class stats, management
 /// shortcuts, plus the shared location / ID / tour / clock sections.
 class FacultyHome extends StatefulWidget {
   const FacultyHome({super.key});
@@ -40,86 +43,100 @@ class _FacultyHomeState extends State<FacultyHome> {
     void open(String route) => Navigator.of(context).pushNamed(route);
 
     return HomeScaffold(
-      dashboard: ListView(
-        key: const Key('home.dashboard'),
-        // Extra bottom space so the AR Guide button never covers content.
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 88),
-        children: [
-          const _SyncStatusCard(),
-          const SizedBox(height: 12),
-          const CurrentLocationCard(),
-          const SizedBox(height: 16),
-          IdCard(user: user),
-          const SectionHeader('Class Overview'),
-          ListenableBuilder(
-            listenable: Listenable.merge([
-              services.students,
-              services.directory,
-            ]),
-            builder: (context, _) {
-              final students = services.students;
-              final top = students.topPerformer;
-              return StatGrid(
-                children: [
-                  StatCard(label: 'Total Students', value: '${students.total}'),
-                  StatCard(
-                    label: 'Average Grade',
-                    value: students.averageGrade.toStringAsFixed(1),
-                  ),
-                  StatCard(
-                    label: 'Top Performer',
-                    value: top?.grade.toStringAsFixed(1) ?? '—',
-                    note: top?.name,
-                  ),
-                  StatCard(
-                    label: 'Online Users',
-                    value: '${services.directory.users.length}',
-                    note: 'from the API',
-                  ),
-                ],
-              );
-            },
+      dashboard: PullToSync(
+        onRefresh: () => refreshAndSync(context),
+        child: ListView(
+          key: const Key('home.dashboard'),
+          // Extra bottom space so the AR Guide button never covers content.
+          padding: EdgeInsets.fromLTRB(
+            16,
+            16,
+            16,
+            FeatureFlags.showArGuideButton ? 88 : 16,
           ),
-          const SectionHeader('Quick Actions'),
-          ActionGrid(
-            children: [
-              ActionTile(
-                icon: Icons.people,
-                label: 'Student Records',
-                onTap: () => open(AppRoutes.studentRecords),
-              ),
-              ActionTile(
-                icon: Icons.cloud_done,
-                label: 'Online Directory',
-                onTap: () => open(AppRoutes.onlineDirectory),
-              ),
-              ActionTile(
-                icon: Icons.flag,
-                label: 'Campus Tour',
-                onTap: () => open(AppRoutes.campusTour),
-              ),
-              ActionTile(
-                icon: Icons.assignment,
-                label: 'Cloud Tasks',
-                onTap: () => open(AppRoutes.cloudTasks),
-              ),
-              ActionTile(
-                icon: Icons.call,
-                label: 'Emergency Contacts',
-                onTap: () => open(AppRoutes.emergencyContacts),
-              ),
-              ActionTile(
-                icon: Icons.school,
-                label: 'Faculty Directory',
-                onTap: () => open(AppRoutes.facultyDirectory),
-              ),
+          children: [
+            const _SyncStatusCard(),
+            const SizedBox(height: 12),
+            const CurrentLocationCard(),
+            const SizedBox(height: 16),
+            IdCard(user: user),
+            const SectionHeader('Class Overview'),
+            ListenableBuilder(
+              listenable: Listenable.merge([
+                services.students,
+                services.directory,
+              ]),
+              builder: (context, _) {
+                final students = services.students;
+                final top = students.topPerformer;
+                return StatGrid(
+                  children: [
+                    StatCard(
+                      label: 'Total Students',
+                      value: '${students.total}',
+                    ),
+                    StatCard(
+                      label: 'Average Grade',
+                      value: students.averageGrade.toStringAsFixed(1),
+                    ),
+                    StatCard(
+                      label: 'Top Performer',
+                      value: top?.grade.toStringAsFixed(1) ?? '—',
+                      note: top?.name,
+                    ),
+                    StatCard(
+                      label: 'Online Users',
+                      value: '${services.directory.users.length}',
+                      note: 'from the API',
+                    ),
+                  ],
+                );
+              },
+            ),
+            const SectionHeader('Quick Actions'),
+            ActionGrid(
+              children: [
+                ActionTile(
+                  icon: Icons.people,
+                  label: 'Student Records',
+                  onTap: () => open(AppRoutes.studentRecords),
+                ),
+                ActionTile(
+                  icon: Icons.cloud_done,
+                  label: 'Online Directory',
+                  onTap: () => open(AppRoutes.onlineDirectory),
+                ),
+                ActionTile(
+                  icon: Icons.flag,
+                  label: 'Campus Tour',
+                  onTap: () => open(AppRoutes.campusTour),
+                ),
+                ActionTile(
+                  icon: Icons.assignment,
+                  label: 'Cloud Tasks',
+                  onTap: () => open(AppRoutes.cloudTasks),
+                ),
+                ActionTile(
+                  icon: Icons.call,
+                  label: 'Emergency Contacts',
+                  onTap: () => open(AppRoutes.emergencyContacts),
+                ),
+                ActionTile(
+                  icon: Icons.school,
+                  label: 'Faculty Directory',
+                  onTap: () => open(AppRoutes.facultyDirectory),
+                ),
+              ],
+            ),
+            // Hidden for now; see FeatureFlags.showHomeTourProgress.
+            if (FeatureFlags.showHomeTourProgress) ...[
+              const SizedBox(height: 12),
+              TourProgressCard(tour: services.tour),
             ],
-          ),
-          const SizedBox(height: 12),
-          TourProgressCard(tour: services.tour),
-          const SectionHeader('World Clock'),
-          const WorldClock(),
-        ],
+            const SectionHeader('World Clock'),
+            const WorldClock(),
+          ],
+        ),
       ),
     );
   }
@@ -176,12 +193,6 @@ class _SyncStatusCard extends StatelessWidget {
                   value: '${sync.completedSyncs}',
                 ),
                 DetailLine(label: 'Total records', value: '${sync.totalCount}'),
-                const SizedBox(height: 8),
-                ElevatedButton.icon(
-                  onPressed: sync.syncing ? null : () => runSyncNow(context),
-                  icon: const Icon(Icons.sync),
-                  label: const Text('Sync Now'),
-                ),
               ],
             ),
           ),

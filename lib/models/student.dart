@@ -1,4 +1,3 @@
-/// Student record (Week 3 form fields + Week 4 grade, Week 7 `synced` flag).
 class Student {
   const Student({
     required this.id,
@@ -12,7 +11,12 @@ class Student {
     this.synced = false,
   });
 
-  static const programs = ['BSIT', 'BSCS', 'BSIS'];
+  static const programs = ['BSIT', 'BSCS', 'BSLIS'];
+  static const programNames = {
+    'BSIT': 'BS Information Technology',
+    'BSCS': 'BS Computer Science',
+    'BSLIS': 'BS Library and Information Science',
+  };
   static const yearLevels = ['1st Year', '2nd Year', '3rd Year', '4th Year'];
 
   final String id;
@@ -65,7 +69,10 @@ class Student {
     id: json['id'] as String,
     name: json['name'] as String,
     email: json['email'] as String? ?? '',
-    program: json['program'] as String? ?? 'BSIT',
+    program: switch (json['program'] as String? ?? 'BSIT') {
+      'BSIS' => 'BSLIS',
+      final p => p,
+    },
     yearLevel: json['yearLevel'] as String? ?? '1st Year',
     grade: (json['grade'] as num?)?.toDouble() ?? 0,
     contact: json['contact'] as String? ?? '',
@@ -100,7 +107,7 @@ const sampleStudents = <Student>[
     id: '2024-2-00210',
     name: 'Garcia, Jose',
     email: 'jose.garcia@lpu.example',
-    program: 'BSIS',
+    program: 'BSLIS',
     yearLevel: '2nd Year',
     grade: 84.3,
     contact: '+63 912 345 6702',

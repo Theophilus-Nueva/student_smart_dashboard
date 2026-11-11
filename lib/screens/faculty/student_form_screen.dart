@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../widgets/app_dropdown_field.dart';
+
 import '../../models/activity_item.dart';
 import '../../models/student.dart';
 import '../../services/app_services.dart';
@@ -150,24 +152,20 @@ class _StudentFormScreenState extends State<StudentFormScreen> {
                     },
                   ),
                   _label('Program'),
-                  DropdownButtonFormField<String>(
+                  AppDropdownField<String>(
                     key: const Key('form.program'),
                     initialValue: _program,
-                    items: [
-                      for (final p in Student.programs)
-                        DropdownMenuItem(value: p, child: Text(p)),
-                    ],
+                    values: Student.programs,
+                    labelOf: (p) => Student.programNames[p] ?? p,
                     onChanged: (v) => setState(() => _program = v),
                     validator: (v) => v == null ? 'Choose a program.' : null,
                   ),
                   _label('Year Level'),
-                  DropdownButtonFormField<String>(
+                  AppDropdownField<String>(
                     key: const Key('form.year'),
                     initialValue: _year,
-                    items: [
-                      for (final y in Student.yearLevels)
-                        DropdownMenuItem(value: y, child: Text(y)),
-                    ],
+                    values: Student.yearLevels,
+                    labelOf: (y) => y,
                     onChanged: (v) => setState(() => _year = v),
                     validator: (v) => v == null ? 'Choose a year level.' : null,
                   ),

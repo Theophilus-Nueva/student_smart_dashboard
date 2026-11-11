@@ -15,17 +15,13 @@ class DashboardTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-        child: SizedBox(
+      child: SizedBox(
         height: 100,
         child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon,size:40),
-          Text(title),
-          Text(description)
-        ],
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [Icon(icon, size: 40), Text(title), Text(description)],
+        ),
       ),
-     ),
     );
   }
 }
