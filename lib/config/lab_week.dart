@@ -7,7 +7,7 @@
 library;
 
 /// The lab week this build represents (1–7). `master` is 7 (everything).
-const int defaultLabWeek = 7;
+const int defaultLabWeek = 5;
 
 class LabWeek {
   LabWeek._();
