@@ -18,6 +18,7 @@ Future<AppServices> makeServices({
   bool online = true,
   bool apiFails = false,
   BiometricService biometric = const UnavailableBiometricService(),
+  List<String>? sharedFiles,
 }) async {
   SharedPreferences.setMockInitialValues(prefs);
   final services = AppServices(
@@ -31,6 +32,11 @@ Future<AppServices> makeServices({
     useNativeCamera: false,
     sensors: const FakeSensors(),
     documentsDirectory: () async => Directory.systemTemp.createTemp('scg'),
+    // Records shared paths instead of opening the Share sheet.
+    shareFile: (path, {origin}) async {
+      sharedFiles?.add(path);
+      return true;
+    },
     usersFetcher: () async {
       if (apiFails) throw Exception('API Error');
       return sampleApiUsers;

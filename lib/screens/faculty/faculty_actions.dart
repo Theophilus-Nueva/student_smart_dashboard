@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../models/activity_item.dart';
 import '../../models/student.dart';
-import '../../routes/app_routes.dart';
 import '../../services/app_services.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/common.dart';
@@ -55,13 +54,17 @@ Future<void> exportStudentRecord(BuildContext context, Student student) async {
       'Record exported',
       '${student.name} · ${result.fileName}',
     );
-    if (context.mounted) {
-      await Navigator.of(context)
-          .pushNamed(AppRoutes.fileSaved, arguments: result);
+    if (!context.mounted) return;
+    final shared = await services.files.share(
+      result,
+      origin: shareOrigin(context),
+    );
+    if (shared && context.mounted) {
+      showAppSnack(context, '${result.fileName} shared');
     }
   } on Exception catch (e) {
     if (context.mounted) {
-      showAppSnack(context, 'Could not save the file: $e', error: true);
+      showAppSnack(context, 'Could not export the file: $e', error: true);
     }
   }
 }

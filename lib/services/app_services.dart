@@ -32,6 +32,7 @@ class AppServices {
     this.connectivityChanges = deviceConnectivityChanges,
     Future<Directory> Function()? documentsDirectory,
     UsersFetcher? usersFetcher,
+    FileSharer? shareFile,
     this.location = const GpsLocationService(),
     this.useNativeMaps = true,
     this.useNativeCamera = true,
@@ -45,7 +46,10 @@ class AppServices {
        students = StudentRepository(prefs),
        tour = TourService(prefs),
        tasks = TaskService(prefs),
-       files = FileExportService(documentsDirectory: documentsDirectory),
+       files = FileExportService(
+         documentsDirectory: documentsDirectory,
+         share: shareFile,
+       ),
        device = DeviceService(
          prefs,
          sensors: sensors,

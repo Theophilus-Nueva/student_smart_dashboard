@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../models/activity_item.dart';
-import '../../routes/app_routes.dart';
 import '../../services/app_services.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/common.dart';
@@ -32,11 +31,15 @@ class _MyRecordScreenState extends State<MyRecordScreen> {
         result.fileName,
       );
       if (!mounted) return;
-      await Navigator.of(context)
-          .pushNamed(AppRoutes.fileSaved, arguments: result);
+      // Week 3 export: open the Share sheet (Files, Messenger, Gmail…).
+      final shared = await services.files.share(
+        result,
+        origin: shareOrigin(context),
+      );
+      if (shared && mounted) showAppSnack(context, '${result.fileName} shared');
     } on Exception catch (e) {
       if (mounted) {
-        showAppSnack(context, 'Could not save the file: $e', error: true);
+        showAppSnack(context, 'Could not export the file: $e', error: true);
       }
     } finally {
       if (mounted) setState(() => _exporting = false);

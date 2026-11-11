@@ -252,3 +252,10 @@ void showAppSnack(
       ),
     );
 }
+
+/// Screen area of [context], used to anchor the Share sheet on iPad.
+Rect? shareOrigin(BuildContext context) {
+  final box = context.findRenderObject();
+  if (box is! RenderBox || !box.hasSize) return null;
+  return box.localToGlobal(Offset.zero) & box.size;
+}

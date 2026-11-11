@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -58,6 +60,32 @@ void main() {
       200,
     );
     expect(find.text('Export to student_info.txt'), findsOneWidget);
+  });
+
+  testWidgets('Export opens the Share sheet with student_info.txt', (
+    tester,
+  ) async {
+    final shared = <String>[];
+    await pumpApp(tester, services: await makeServices(sharedFiles: shared));
+    await signInAs(tester, 'student', 'student123');
+    await pushRoute(tester, AppRoutes.myRecord);
+    final export = find.text('Export to student_info.txt');
+    await tester.scrollUntilVisible(export, 200);
+    await tester.tap(export);
+    // The file write is real I/O, which needs real time to finish.
+    for (var i = 0; i < 50 && shared.isEmpty; i++) {
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 20)),
+      );
+      await tester.pump();
+    }
+    await tester.pumpAndSettle();
+
+    expect(shared, hasLength(1));
+    expect(shared.single, endsWith('student_info.txt'));
+    expect(File(shared.single).readAsStringSync(), contains('2024-2-02401'));
+    expect(find.text('student_info.txt shared'), findsOneWidget);
+    expect(find.text('File Saved'), findsNothing);
   });
 
   testWidgets('Student analytics and settings have no faculty controls', (
