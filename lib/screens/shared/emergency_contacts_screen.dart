@@ -7,6 +7,7 @@ import '../../services/app_services.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/common.dart';
 import '../../widgets/list_row.dart';
+import '../../config/lab_week.dart';
 
 /// Shared / Emergency Contacts (Week 6): tel:, sms: and mailto: links via
 /// `url_launcher`. Sample numbers from the Figma prototype.
@@ -72,7 +73,7 @@ class EmergencyContactsScreen extends StatelessWidget {
     final fix = await AppScope.of(context).location.current();
     if (!context.mounted) return;
     final body =
-        'SOS from Smart Campus Tour Guide. I need help. My location: '
+        'SOS from ${LabWeek.appName}. I need help. My location: '
         '${fix.latitude.toStringAsFixed(5)}, ${fix.longitude.toStringAsFixed(5)}'
         ' https://maps.google.com/?q=${fix.latitude},${fix.longitude}';
     await _open(

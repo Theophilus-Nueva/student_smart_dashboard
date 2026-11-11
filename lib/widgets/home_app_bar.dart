@@ -2,17 +2,19 @@ import 'package:flutter/material.dart';
 
 import 'notification_badge.dart';
 import '../theme/app_assets.dart';
+import '../config/lab_week.dart';
 
 /// Red header used on the tab roots: LPU logo, app name, notification bell.
 class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
   const HomeAppBar({
     super.key,
-    this.title = 'Smart Campus Tour Guide',
+    this.title,
     this.unread = 0,
     this.onNotifications,
   });
 
-  final String title;
+  /// Defaults to the current lab week's app name.
+  final String? title;
   final int unread;
   final VoidCallback? onNotifications;
 
@@ -36,7 +38,12 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
             ),
           ),
           const SizedBox(width: 10),
-          Expanded(child: Text(title, overflow: TextOverflow.ellipsis)),
+          Expanded(
+            child: Text(
+              title ?? LabWeek.appName,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
         ],
       ),
       actions: [

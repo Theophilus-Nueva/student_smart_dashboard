@@ -7,6 +7,7 @@ import '../../widgets/common.dart';
 import '../../widgets/connectivity_log_list.dart';
 import '../../widgets/network_status.dart';
 import '../../widgets/stat_card.dart';
+import '../../config/lab_week.dart';
 
 /// Student / Analytics: personal stats only (Weeks 6–7).
 class StudentAnalytics extends StatelessWidget {
@@ -41,6 +42,50 @@ class StudentAnalytics extends StatelessWidget {
             NetworkState.pending => '${sync.pendingCount} pending',
             NetworkState.offline => 'Offline',
           };
+          final cards = [
+            if (Feature.tourProgress.on)
+              StatCard(
+                label: 'Tour Progress',
+                value:
+                    '${tour.visitedCount} / ${tour.locations.length} · $pct%',
+              ),
+            if (Feature.grades.on)
+              StatCard(
+                label: 'Current Grade',
+                value: me == null ? '—' : me.grade.toStringAsFixed(1),
+                note: me?.program,
+              ),
+            if (Feature.offlineSync.on) ...[
+              StatCard(
+                label: 'Last sync',
+                value: formatLastSync(sync.lastSync),
+              ),
+              StatCard(label: 'Pending records', value: '${sync.pendingCount}'),
+              StatCard(label: 'Total records', value: '${sync.totalCount}'),
+              StatCard(
+                label: 'Cloud sync status',
+                value: cloudStatus,
+                valueColor: sync.state.color,
+              ),
+            ],
+            if (Feature.campusTour.on)
+              StatCard(
+                label: 'Bookmarked places',
+                value:
+                    '${tour.locations.where((l) => tour.isBookmarked(l.id)).length}',
+              ),
+            if (Feature.appActivity.on)
+              StatCard(label: 'Sign-ins logged', value: '$logins'),
+          ];
+          // Week 1 allows a placeholder Analytics tab; stats arrive with
+          // later weeks.
+          if (cards.isEmpty) {
+            return const StateMessage(
+              icon: Icons.insert_chart,
+              title: 'Analytics',
+              message: 'Your stats will appear here in a later lab week.',
+            );
+          }
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
@@ -50,42 +95,11 @@ class StudentAnalytics extends StatelessWidget {
                 style: TextStyle(fontSize: 13, color: AppColors.muted),
               ),
               const SizedBox(height: 12),
-              StatGrid(
-                children: [
-                  StatCard(
-                    label: 'Tour Progress',
-                    value:
-                        '${tour.visitedCount} / ${tour.locations.length} · $pct%',
-                  ),
-                  StatCard(
-                    label: 'Current Grade',
-                    value: me == null ? '—' : me.grade.toStringAsFixed(1),
-                    note: me?.program,
-                  ),
-                  StatCard(
-                    label: 'Last sync',
-                    value: formatLastSync(sync.lastSync),
-                  ),
-                  StatCard(
-                    label: 'Pending records',
-                    value: '${sync.pendingCount}',
-                  ),
-                  StatCard(label: 'Total records', value: '${sync.totalCount}'),
-                  StatCard(
-                    label: 'Cloud sync status',
-                    value: cloudStatus,
-                    valueColor: sync.state.color,
-                  ),
-                  StatCard(
-                    label: 'Bookmarked places',
-                    value:
-                        '${tour.locations.where((l) => tour.isBookmarked(l.id)).length}',
-                  ),
-                  StatCard(label: 'Sign-ins logged', value: '$logins'),
-                ],
-              ),
-              const SectionHeader('Connectivity log'),
-              ConnectivityLogList(sync: sync),
+              StatGrid(children: cards),
+              if (Feature.connectivityLog.on) ...[
+                const SectionHeader('Connectivity log'),
+                ConnectivityLogList(sync: sync),
+              ],
             ],
           );
         },

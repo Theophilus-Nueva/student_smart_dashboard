@@ -1,0 +1,180 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+import 'package:smart_dashboard/config/lab_week.dart';
+import 'package:smart_dashboard/routes/app_routes.dart';
+
+import 'test_helpers.dart';
+
+/// Shows the app as it should look for [week].
+void useWeek(int week) {
+  LabWeek.current = week;
+  addTearDown(() => LabWeek.current = 7);
+}
+
+Finder textOnHome(String text) => find.descendant(
+  of: find.byKey(const Key('home.dashboard')),
+  matching: find.text(text),
+);
+
+Future<void> scrollHomeTo(WidgetTester tester, String text) =>
+    tester.scrollUntilVisible(find.text(text), 150, scrollable: homeScrollable);
+
+void main() {
+  test('Every feature belongs to a week from 2 to 7', () {
+    for (final f in Feature.values) {
+      expect(f.week, inInclusiveRange(2, 7), reason: f.name);
+    }
+  });
+
+  testWidgets('Week 1: dashboard shell only', (tester) async {
+    useWeek(1);
+    await pumpApp(tester);
+    expect(find.text('LPU Smart Campus Dashboard'), findsOneWidget);
+    expect(find.text('Sign in with fingerprint'), findsNothing);
+
+    await signInAs(tester, 'student', 'student123');
+    expect(find.text('LPU Smart Campus Dashboard'), findsOneWidget);
+    expect(find.text('Current Location'), findsNothing);
+    expect(find.text('Quick Actions'), findsNothing);
+    expect(find.text('AR Guide'), findsNothing);
+    await scrollHomeTo(tester, 'World Clock');
+    expect(find.text('World Clock'), findsOneWidget);
+
+    await tapNav(tester, 'Analytics');
+    expect(
+      find.text('Your stats will appear here in a later lab week.'),
+      findsOneWidget,
+    );
+    await tapNav(tester, 'Device');
+    expect(find.text('Take Photo'), findsNothing);
+    await tapNav(tester, 'Settings');
+    expect(find.text('Security Center'), findsNothing);
+    expect(find.text('About LPU'), findsNothing);
+    expect(find.text('Log out'), findsOneWidget);
+  });
+
+  testWidgets('Week 1: a later screen opened directly is a placeholder', (
+    tester,
+  ) async {
+    useWeek(1);
+    await pumpApp(tester);
+    await signInAs(tester, 'faculty', 'faculty123');
+    await pushRoute(tester, AppRoutes.studentRecords);
+    expect(
+      find.text('Not part of Week 1. This screen is added in Week 4.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('Week 2: API directory and faculty directory', (tester) async {
+    useWeek(2);
+    await pumpApp(tester);
+    await signInAs(tester, 'faculty', 'faculty123');
+    expect(find.text('LPU Dashboard'), findsOneWidget);
+    expect(find.text('Sync Status'), findsNothing);
+    expect(find.text('Class Overview'), findsNothing);
+    await scrollHomeTo(tester, 'Faculty Directory');
+    expect(find.text('Online Directory'), findsOneWidget);
+    expect(find.text('Student Records'), findsNothing);
+    expect(find.text('Add Student'), findsNothing);
+
+    await tapNav(tester, 'Analytics');
+    expect(find.text('API summary'), findsOneWidget);
+    expect(find.text('Students by program'), findsNothing);
+  });
+
+  testWidgets('Week 3: registration form, My Record and About LPU', (
+    tester,
+  ) async {
+    useWeek(3);
+    await pumpApp(tester);
+    await signInAs(tester, 'faculty', 'faculty123');
+    await scrollHomeTo(tester, 'Add Student');
+    expect(find.text('Add Student'), findsOneWidget);
+    expect(find.text('Student Records'), findsNothing);
+
+    await pushRoute(tester, AppRoutes.studentForm);
+    expect(find.byKey(const Key('form.name')), findsOneWidget);
+    expect(find.byKey(const Key('form.grade')), findsNothing);
+  });
+
+  testWidgets('Week 3: student My Record without grades', (tester) async {
+    useWeek(3);
+    await pumpApp(tester);
+    await signInAs(tester, 'student', 'student123');
+    await scrollHomeTo(tester, 'About LPU');
+    expect(textOnHome('My Record'), findsOneWidget);
+    await pushRoute(tester, AppRoutes.myRecord);
+    expect(find.text('Current Grade'), findsNothing);
+  });
+
+  testWidgets('Week 4: student management and sync status', (tester) async {
+    useWeek(4);
+    await pumpApp(tester);
+    await signInAs(tester, 'faculty', 'faculty123');
+    expect(find.text('Sync Status'), findsOneWidget);
+    expect(find.text('Pending records'), findsNothing); // Week 7
+    await scrollHomeTo(tester, 'Student Records');
+    expect(find.text('Class Overview'), findsOneWidget);
+    expect(find.text('Add Student'), findsNothing);
+
+    await tapNav(tester, 'Settings');
+    expect(find.text('Data Management'), findsOneWidget);
+    expect(find.text('Auto-sync when online'), findsNothing); // Week 7
+    expect(find.text('Security Center'), findsNothing); // Week 6
+  });
+
+  testWidgets('Week 5: Device tab', (tester) async {
+    useWeek(5);
+    await pumpApp(tester);
+    await signInAs(tester, 'student', 'student123');
+    await tapNav(tester, 'Device');
+    expect(find.text('Take Photo'), findsOneWidget);
+    expect(find.text('Current Location'), findsNothing);
+  });
+
+  testWidgets('Week 6: location, fingerprint and security center', (
+    tester,
+  ) async {
+    useWeek(6);
+    await pumpApp(tester);
+    expect(find.text('Sign in with fingerprint'), findsOneWidget);
+    await signInAs(tester, 'student', 'student123');
+    expect(find.text('Smart Connected Dashboard'), findsOneWidget);
+    expect(find.text('Current Location'), findsOneWidget);
+    expect(find.text('AR Guide'), findsNothing);
+    await scrollHomeTo(tester, 'Emergency Contacts');
+    expect(textOnHome('Campus Tour'), findsNothing);
+
+    await tapNav(tester, 'Settings');
+    expect(find.text('Security Center'), findsOneWidget);
+  });
+
+  testWidgets('Week 7: everything, including the AR guide', (tester) async {
+    useWeek(7);
+    await pumpApp(tester);
+    await signInAs(tester, 'student', 'student123');
+    expect(find.text('Smart Campus Tour Guide'), findsOneWidget);
+    expect(find.text('AR Guide'), findsOneWidget);
+    await scrollHomeTo(tester, 'Campus Tour');
+    expect(textOnHome('Campus Tour'), findsWidgets);
+  });
+
+  for (var week = 1; week <= 7; week++) {
+    for (final (user, password) in [
+      ('student', 'student123'),
+      ('faculty', 'faculty123'),
+    ]) {
+      testWidgets('Week $week: every tab opens for $user', (tester) async {
+        useWeek(week);
+        await pumpApp(tester);
+        await signInAs(tester, user, password);
+        for (final tab in ['Analytics', 'Device', 'Settings', 'Home']) {
+          await tapNav(tester, tab);
+          expect(tester.takeException(), isNull, reason: '$tab, week $week');
+        }
+      });
+    }
+  }
+}

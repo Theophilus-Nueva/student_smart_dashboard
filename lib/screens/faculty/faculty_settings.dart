@@ -9,6 +9,7 @@ import '../../widgets/list_row.dart';
 import '../../widgets/pull_to_sync.dart';
 import '../../widgets/settings_sections.dart';
 import 'faculty_actions.dart';
+import '../../config/lab_week.dart';
 
 /// Faculty / Settings: security center, Data Management (refresh, sync,
 /// auto-refresh, reset database), notifications, log out.
@@ -75,50 +76,53 @@ class FacultySettings extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           children: [
             AccountHeaderCard(user: services.session.user!),
-            const SecurityCenterSection(),
-            const SectionHeader('Data Management'),
-            ListRow(
-              icon: Icons.refresh,
-              title: 'Refresh Dashboard',
-              subtitle: 'Reload API users and recalculate stats',
-              onTap: () => _refresh(context),
-            ),
-            const SizedBox(height: 8),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
-                child: ListenableBuilder(
-                  listenable: Listenable.merge([settings, sync]),
-                  builder: (context, _) => Column(
-                    children: [
-                      ToggleRow(
-                        title: 'Auto-refresh',
-                        subtitle:
-                            'Reload the Online Directory every 15 seconds',
-                        value: settings.get(AppSettings.autoRefresh),
-                        onChanged: (v) =>
-                            settings.set(AppSettings.autoRefresh, v),
-                      ),
-                      ToggleRow(
-                        title: 'Auto-sync when online',
-                        subtitle: 'Upload changes as soon as they are made',
-                        value: sync.autoSync,
-                        onChanged: sync.setAutoSync,
-                      ),
-                    ],
+            if (Feature.securityCenter.on) const SecurityCenterSection(),
+            if (Feature.dataManagement.on) ...[
+              const SectionHeader('Data Management'),
+              ListRow(
+                icon: Icons.refresh,
+                title: 'Refresh Dashboard',
+                subtitle: 'Reload API users and recalculate stats',
+                onTap: () => _refresh(context),
+              ),
+              const SizedBox(height: 8),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
+                  child: ListenableBuilder(
+                    listenable: Listenable.merge([settings, sync]),
+                    builder: (context, _) => Column(
+                      children: [
+                        ToggleRow(
+                          title: 'Auto-refresh',
+                          subtitle:
+                              'Reload the Online Directory every 15 seconds',
+                          value: settings.get(AppSettings.autoRefresh),
+                          onChanged: (v) =>
+                              settings.set(AppSettings.autoRefresh, v),
+                        ),
+                        if (Feature.offlineSync.on)
+                          ToggleRow(
+                            title: 'Auto-sync when online',
+                            subtitle: 'Upload changes as soon as they are made',
+                            value: sync.autoSync,
+                            onChanged: sync.setAutoSync,
+                          ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: 8),
-            ListRow(
-              icon: Icons.delete_forever,
-              iconColor: AppColors.brand,
-              title: 'Reset Database',
-              subtitle: 'Restore Student Records to the sample list',
-              onTap: () => _reset(context),
-            ),
-            const NotificationTogglesSection(),
+              const SizedBox(height: 8),
+              ListRow(
+                icon: Icons.delete_forever,
+                iconColor: AppColors.brand,
+                title: 'Reset Database',
+                subtitle: 'Restore Student Records to the sample list',
+                onTap: () => _reset(context),
+              ),
+            ],
+            if (Feature.notifications.on) const NotificationTogglesSection(),
             const SettingsFooter(),
           ],
         ),

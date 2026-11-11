@@ -6,6 +6,7 @@ import '../../models/activity_item.dart';
 import '../../models/student.dart';
 import '../../services/app_services.dart';
 import '../../widgets/common.dart';
+import '../../config/lab_week.dart';
 
 /// Faculty / Add Student, also used for Edit (Week 3 form → Week 4 CRUD).
 /// Required: name, ID, email, programme, year level. Optional: grade,
@@ -169,21 +170,24 @@ class _StudentFormScreenState extends State<StudentFormScreen> {
                     onChanged: (v) => setState(() => _year = v),
                     validator: (v) => v == null ? 'Choose a year level.' : null,
                   ),
-                  _label('Grade', required: false),
-                  TextFormField(
-                    key: const Key('form.grade'),
-                    controller: _grade,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
+                  // Grades are Week 4 (the Week 3 form has no grade).
+                  if (Feature.grades.on) ...[
+                    _label('Grade', required: false),
+                    TextFormField(
+                      key: const Key('form.grade'),
+                      controller: _grade,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      validator: (v) {
+                        if (v == null || v.trim().isEmpty) return null;
+                        final g = double.tryParse(v.trim());
+                        return g == null || g < 0 || g > 100
+                            ? 'Enter a grade from 0 to 100.'
+                            : null;
+                      },
                     ),
-                    validator: (v) {
-                      if (v == null || v.trim().isEmpty) return null;
-                      final g = double.tryParse(v.trim());
-                      return g == null || g < 0 || g > 100
-                          ? 'Enter a grade from 0 to 100.'
-                          : null;
-                    },
-                  ),
+                  ],
                   _label('Contact Number', required: false),
                   TextFormField(
                     controller: _contact,

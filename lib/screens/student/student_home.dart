@@ -11,6 +11,7 @@ import '../../widgets/id_card.dart';
 import '../../widgets/tour_progress_card.dart';
 import '../../widgets/world_clock.dart';
 import '../shared/home_scaffold.dart';
+import '../../config/lab_week.dart';
 
 /// Student / Home.
 class StudentHome extends StatelessWidget {
@@ -21,6 +22,14 @@ class StudentHome extends StatelessWidget {
     final services = AppScope.of(context);
     final user = services.session.user!;
     void open(String route) => Navigator.of(context).pushNamed(route);
+    final hasActions = const [
+      Feature.myRecord,
+      Feature.campusTour,
+      Feature.cloudTasks,
+      Feature.emergencyContacts,
+      Feature.facultyDirectory,
+      Feature.aboutLpu,
+    ].any((f) => f.on);
 
     return HomeScaffold(
       dashboard: ListView(
@@ -30,49 +39,59 @@ class StudentHome extends StatelessWidget {
           16,
           16,
           16,
-          FeatureFlags.showArGuideButton ? 88 : 16,
+          HomeScaffold.showsArButton ? 88 : 16,
         ),
         children: [
-          const CurrentLocationCard(),
-          const SizedBox(height: 16),
+          if (Feature.location.on) ...[
+            const CurrentLocationCard(),
+            const SizedBox(height: 16),
+          ],
           IdCard(user: user),
-          const SectionHeader('Quick Actions'),
-          ActionGrid(
-            children: [
-              ActionTile(
-                icon: Icons.person,
-                label: 'My Record',
-                onTap: () => open(AppRoutes.myRecord),
-              ),
-              ActionTile(
-                icon: Icons.flag,
-                label: 'Campus Tour',
-                onTap: () => open(AppRoutes.campusTour),
-              ),
-              ActionTile(
-                icon: Icons.assignment,
-                label: 'Cloud Tasks',
-                onTap: () => open(AppRoutes.cloudTasks),
-              ),
-              ActionTile(
-                icon: Icons.call,
-                label: 'Emergency Contacts',
-                onTap: () => open(AppRoutes.emergencyContacts),
-              ),
-              ActionTile(
-                icon: Icons.people,
-                label: 'Faculty Directory',
-                onTap: () => open(AppRoutes.facultyDirectory),
-              ),
-              ActionTile(
-                icon: Icons.info,
-                label: 'About LPU',
-                onTap: () => open(AppRoutes.about),
-              ),
-            ],
-          ),
+          if (hasActions) ...[
+            const SectionHeader('Quick Actions'),
+            ActionGrid(
+              children: [
+                if (Feature.myRecord.on)
+                  ActionTile(
+                    icon: Icons.person,
+                    label: 'My Record',
+                    onTap: () => open(AppRoutes.myRecord),
+                  ),
+                if (Feature.campusTour.on)
+                  ActionTile(
+                    icon: Icons.flag,
+                    label: 'Campus Tour',
+                    onTap: () => open(AppRoutes.campusTour),
+                  ),
+                if (Feature.cloudTasks.on)
+                  ActionTile(
+                    icon: Icons.assignment,
+                    label: 'Cloud Tasks',
+                    onTap: () => open(AppRoutes.cloudTasks),
+                  ),
+                if (Feature.emergencyContacts.on)
+                  ActionTile(
+                    icon: Icons.call,
+                    label: 'Emergency Contacts',
+                    onTap: () => open(AppRoutes.emergencyContacts),
+                  ),
+                if (Feature.facultyDirectory.on)
+                  ActionTile(
+                    icon: Icons.people,
+                    label: 'Faculty Directory',
+                    onTap: () => open(AppRoutes.facultyDirectory),
+                  ),
+                if (Feature.aboutLpu.on)
+                  ActionTile(
+                    icon: Icons.info,
+                    label: 'About LPU',
+                    onTap: () => open(AppRoutes.about),
+                  ),
+              ],
+            ),
+          ],
           // Hidden for now; see FeatureFlags.showHomeTourProgress.
-          if (FeatureFlags.showHomeTourProgress) ...[
+          if (FeatureFlags.showHomeTourProgress && Feature.tourProgress.on) ...[
             const SizedBox(height: 12),
             TourProgressCard(tour: services.tour),
           ],

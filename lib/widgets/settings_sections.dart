@@ -8,6 +8,7 @@ import '../theme/app_colors.dart';
 import '../utils/format.dart';
 import 'common.dart';
 import 'list_row.dart';
+import '../config/lab_week.dart';
 
 /// Account row at the top of Settings with the role pill.
 class AccountHeaderCard extends StatelessWidget {
@@ -193,13 +194,15 @@ class SettingsFooter extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const SizedBox(height: 12),
-        ListRow(
-          icon: Icons.info,
-          title: 'About LPU',
-          subtitle: 'Mission, vision and core values',
-          onTap: () => Navigator.of(context).pushNamed(AppRoutes.about),
-        ),
+        if (Feature.aboutLpu.on) ...[
+          const SizedBox(height: 12),
+          ListRow(
+            icon: Icons.info,
+            title: 'About LPU',
+            subtitle: 'Mission, vision and core values',
+            onTap: () => Navigator.of(context).pushNamed(AppRoutes.about),
+          ),
+        ],
         const SizedBox(height: 12),
         OutlinedButton.icon(
           style: OutlinedButton.styleFrom(

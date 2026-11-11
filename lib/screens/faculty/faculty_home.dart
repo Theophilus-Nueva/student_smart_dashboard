@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../config/feature_flags.dart';
+import '../../config/lab_week.dart';
 
 import '../../routes/app_routes.dart';
 import '../../services/app_services.dart';
@@ -42,102 +43,133 @@ class _FacultyHomeState extends State<FacultyHome> {
     final user = services.session.user!;
     void open(String route) => Navigator.of(context).pushNamed(route);
 
-    return HomeScaffold(
-      dashboard: PullToSync(
-        onRefresh: () => refreshAndSync(context),
-        child: ListView(
-          key: const Key('home.dashboard'),
-          // Extra bottom space so the AR Guide button never covers content.
-          padding: EdgeInsets.fromLTRB(
-            16,
-            16,
-            16,
-            FeatureFlags.showArGuideButton ? 88 : 16,
+    final hasActions = const [
+      Feature.studentRecords,
+      Feature.registrationForm,
+      Feature.apiDirectory,
+      Feature.campusTour,
+      Feature.cloudTasks,
+      Feature.emergencyContacts,
+      Feature.facultyDirectory,
+    ].any((f) => f.on);
+
+    final list = ListView(
+      key: const Key('home.dashboard'),
+      // Extra bottom space so the AR Guide button never covers content.
+      padding: EdgeInsets.fromLTRB(
+        16,
+        16,
+        16,
+        HomeScaffold.showsArButton ? 88 : 16,
+      ),
+      children: [
+        if (Feature.syncStatus.on) ...[
+          const _SyncStatusCard(),
+          const SizedBox(height: 12),
+        ],
+        if (Feature.location.on) ...[
+          const CurrentLocationCard(),
+          const SizedBox(height: 16),
+        ],
+        IdCard(user: user),
+        if (Feature.classStats.on) ...[
+          const SectionHeader('Class Overview'),
+          ListenableBuilder(
+            listenable: Listenable.merge([
+              services.students,
+              services.directory,
+            ]),
+            builder: (context, _) {
+              final students = services.students;
+              final top = students.topPerformer;
+              return StatGrid(
+                children: [
+                  StatCard(label: 'Total Students', value: '${students.total}'),
+                  StatCard(
+                    label: 'Average Grade',
+                    value: students.averageGrade.toStringAsFixed(1),
+                  ),
+                  StatCard(
+                    label: 'Top Performer',
+                    value: top?.grade.toStringAsFixed(1) ?? '—',
+                    note: top?.name,
+                  ),
+                  StatCard(
+                    label: 'Online Users',
+                    value: '${services.directory.users.length}',
+                    note: 'from the API',
+                  ),
+                ],
+              );
+            },
           ),
-          children: [
-            const _SyncStatusCard(),
-            const SizedBox(height: 12),
-            const CurrentLocationCard(),
-            const SizedBox(height: 16),
-            IdCard(user: user),
-            const SectionHeader('Class Overview'),
-            ListenableBuilder(
-              listenable: Listenable.merge([
-                services.students,
-                services.directory,
-              ]),
-              builder: (context, _) {
-                final students = services.students;
-                final top = students.topPerformer;
-                return StatGrid(
-                  children: [
-                    StatCard(
-                      label: 'Total Students',
-                      value: '${students.total}',
-                    ),
-                    StatCard(
-                      label: 'Average Grade',
-                      value: students.averageGrade.toStringAsFixed(1),
-                    ),
-                    StatCard(
-                      label: 'Top Performer',
-                      value: top?.grade.toStringAsFixed(1) ?? '—',
-                      note: top?.name,
-                    ),
-                    StatCard(
-                      label: 'Online Users',
-                      value: '${services.directory.users.length}',
-                      note: 'from the API',
-                    ),
-                  ],
-                );
-              },
-            ),
-            const SectionHeader('Quick Actions'),
-            ActionGrid(
-              children: [
+        ],
+        if (hasActions) ...[
+          const SectionHeader('Quick Actions'),
+          ActionGrid(
+            children: [
+              if (Feature.studentRecords.on)
                 ActionTile(
                   icon: Icons.people,
                   label: 'Student Records',
                   onTap: () => open(AppRoutes.studentRecords),
                 ),
+              // Week 3 only: open the registration form directly (Week 4
+              // reaches it through Student Records instead).
+              if (Feature.registrationForm.on && !Feature.studentRecords.on)
+                ActionTile(
+                  icon: Icons.person_add,
+                  label: 'Add Student',
+                  onTap: () => open(AppRoutes.studentForm),
+                ),
+              if (Feature.apiDirectory.on)
                 ActionTile(
                   icon: Icons.cloud_done,
                   label: 'Online Directory',
                   onTap: () => open(AppRoutes.onlineDirectory),
                 ),
+              if (Feature.campusTour.on)
                 ActionTile(
                   icon: Icons.flag,
                   label: 'Campus Tour',
                   onTap: () => open(AppRoutes.campusTour),
                 ),
+              if (Feature.cloudTasks.on)
                 ActionTile(
                   icon: Icons.assignment,
                   label: 'Cloud Tasks',
                   onTap: () => open(AppRoutes.cloudTasks),
                 ),
+              if (Feature.emergencyContacts.on)
                 ActionTile(
                   icon: Icons.call,
                   label: 'Emergency Contacts',
                   onTap: () => open(AppRoutes.emergencyContacts),
                 ),
+              if (Feature.facultyDirectory.on)
                 ActionTile(
                   icon: Icons.school,
                   label: 'Faculty Directory',
                   onTap: () => open(AppRoutes.facultyDirectory),
                 ),
-              ],
-            ),
-            // Hidden for now; see FeatureFlags.showHomeTourProgress.
-            if (FeatureFlags.showHomeTourProgress) ...[
-              const SizedBox(height: 12),
-              TourProgressCard(tour: services.tour),
             ],
-            const SectionHeader('World Clock'),
-            const WorldClock(),
-          ],
-        ),
-      ),
+          ),
+        ],
+        // Hidden for now; see FeatureFlags.showHomeTourProgress.
+        if (FeatureFlags.showHomeTourProgress && Feature.tourProgress.on) ...[
+          const SizedBox(height: 12),
+          TourProgressCard(tour: services.tour),
+        ],
+        const SectionHeader('World Clock'),
+        const WorldClock(),
+      ],
+    );
+
+    return HomeScaffold(
+      // Pull down to refresh and sync (Week 4).
+      dashboard: Feature.syncStatus.on
+          ? PullToSync(onRefresh: () => refreshAndSync(context), child: list)
+          : list,
     );
   }
 }
@@ -184,15 +216,20 @@ class _SyncStatusCard extends StatelessWidget {
                   label: 'Users retrieved (API)',
                   value: '${services.directory.users.length}',
                 ),
-                DetailLine(
-                  label: 'Pending records',
-                  value: '${sync.pendingCount}',
-                ),
-                DetailLine(
-                  label: 'Completed syncs',
-                  value: '${sync.completedSyncs}',
-                ),
-                DetailLine(label: 'Total records', value: '${sync.totalCount}'),
+                if (Feature.offlineSync.on) ...[
+                  DetailLine(
+                    label: 'Pending records',
+                    value: '${sync.pendingCount}',
+                  ),
+                  DetailLine(
+                    label: 'Completed syncs',
+                    value: '${sync.completedSyncs}',
+                  ),
+                  DetailLine(
+                    label: 'Total records',
+                    value: '${sync.totalCount}',
+                  ),
+                ],
               ],
             ),
           ),

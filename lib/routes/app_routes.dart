@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../auth/role_guard.dart';
+import '../config/lab_week.dart';
 import '../screens/faculty/online_directory_screen.dart';
 import '../screens/faculty/student_details_screen.dart';
 import '../screens/faculty/student_form_screen.dart';
@@ -70,7 +71,35 @@ class AppRoutes {
     onlineDirectory,
   };
 
+  /// Lab week feature each screen belongs to (per-week builds).
+  static const _features = <String, Feature>{
+    studentRecords: Feature.studentRecords,
+    studentForm: Feature.registrationForm,
+    studentDetails: Feature.studentRecords,
+    onlineDirectory: Feature.apiDirectory,
+    myRecord: Feature.myRecord,
+    fileSaved: Feature.fileExport,
+    about: Feature.aboutLpu,
+    campusTour: Feature.campusTour,
+    locationDetail: Feature.campusTour,
+    arGuide: Feature.arGuide,
+    map: Feature.map,
+    cloudTasks: Feature.cloudTasks,
+    notifications: Feature.notifications,
+    emergencyContacts: Feature.emergencyContacts,
+    facultyDirectory: Feature.facultyDirectory,
+  };
+
   static Widget _screenFor(String name, Object? args, String title) {
+    final feature = _features[name];
+    if (feature != null && !feature.on) {
+      return PlaceholderScreen(
+        title: title,
+        message:
+            'Not part of Week ${LabWeek.current}. '
+            'This screen is added in Week ${feature.week}.',
+      );
+    }
     return switch (name) {
       studentRecords => const StudentRecordsScreen(),
       studentForm => StudentFormScreen(studentId: args as String?),

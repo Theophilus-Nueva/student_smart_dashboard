@@ -7,6 +7,7 @@ import '../../theme/app_colors.dart';
 import '../../utils/format.dart';
 import '../../widgets/common.dart';
 import '../../widgets/sync_status_banner.dart';
+import '../../config/lab_week.dart';
 
 /// Shared / Cloud Tasks (Week 6): add, edit, delete, complete.
 class CloudTasksScreen extends StatefulWidget {
@@ -71,8 +72,11 @@ class _CloudTasksScreenState extends State<CloudTasksScreen> {
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              SyncStatusBanner(sync: services.sync),
-              const SizedBox(height: 12),
+              // Network status is Week 7.
+              if (Feature.networkStatus.on) ...[
+                SyncStatusBanner(sync: services.sync),
+                const SizedBox(height: 12),
+              ],
               Row(
                 children: [
                   Expanded(

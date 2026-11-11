@@ -5,6 +5,7 @@ import '../../routes/app_routes.dart';
 import '../../services/app_services.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/common.dart';
+import '../../config/lab_week.dart';
 
 /// Student / My Record: the signed-in student's own record, read-only,
 /// with export to `student_info.txt` (Weeks 3–4).
@@ -67,7 +68,8 @@ class _MyRecordScreenState extends State<MyRecordScreen> {
             ('Email Address', s.email),
             ('Program', s.program),
             ('Year Level', s.yearLevel),
-            ('Current Grade', s.grade.toStringAsFixed(1)),
+            if (Feature.grades.on)
+              ('Current Grade', s.grade.toStringAsFixed(1)),
             ('Contact Number', s.contact.isEmpty ? '—' : s.contact),
             ('Address', s.address.isEmpty ? '—' : s.address),
           ];

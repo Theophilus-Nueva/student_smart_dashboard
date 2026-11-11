@@ -6,13 +6,22 @@ import '../theme/app_colors.dart';
 /// Sync buttons). A loading spinner follows the finger and runs [onRefresh]
 /// when released; it stays until the sync finishes.
 class PullToSync extends StatelessWidget {
-  const PullToSync({super.key, required this.onRefresh, required this.child});
+  const PullToSync({
+    super.key,
+    required this.onRefresh,
+    required this.child,
+    this.enabled = true,
+  });
 
   final Future<void> Function() onRefresh;
   final Widget child;
 
+  /// When false the child is shown as is, with no pull-to-refresh.
+  final bool enabled;
+
   @override
   Widget build(BuildContext context) {
+    if (!enabled) return child;
     return RefreshIndicator(
       onRefresh: onRefresh,
       color: AppColors.brand,

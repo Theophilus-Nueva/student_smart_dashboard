@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import '../models/app_user.dart';
 import '../services/auth_service.dart';
 import '../services/biometric_service.dart';
+import '../config/lab_week.dart';
 
 /// The signed-in user and their role. Screens read `isFaculty` to decide
 /// what to show; faculty-only routes go through `FacultyOnly`.
@@ -44,7 +45,7 @@ class Session extends ChangeNotifier {
       return 'Sign in with your password once to turn on fingerprint login.';
     }
     final result = await _biometric.authenticate(
-      'Place your finger on the sensor to open Smart Campus Tour Guide.',
+      'Place your finger on the sensor to open ${LabWeek.appName}.',
     );
     switch (result) {
       case BiometricResult.success:

@@ -7,6 +7,7 @@ import 'screens/shell/role_shell.dart';
 import 'services/app_services.dart';
 import 'services/firebase_service.dart';
 import 'theme/app_theme.dart';
+import 'config/lab_week.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,7 +28,7 @@ class SmartCampusApp extends StatelessWidget {
     return AppScope(
       services: services,
       child: MaterialApp(
-        title: 'Smart Campus Tour Guide',
+        title: LabWeek.appName,
         debugShowCheckedModeBanner: false,
         theme: buildAppTheme(),
         onGenerateRoute: AppRoutes.onGenerateRoute,

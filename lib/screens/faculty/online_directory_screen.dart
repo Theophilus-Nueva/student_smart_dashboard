@@ -11,6 +11,7 @@ import '../../widgets/common.dart';
 import '../../widgets/pull_to_sync.dart';
 import '../../widgets/stat_card.dart';
 import 'faculty_actions.dart';
+import '../../config/lab_week.dart';
 
 /// Faculty / Online Directory (+ Loading, Error, empty states). API users
 /// with a 15-second auto-refresh (Week 4) and a sync button.
@@ -34,7 +35,9 @@ class _OnlineDirectoryScreenState extends State<OnlineDirectoryScreen> {
       if (!mounted) return;
       final services = AppScope.of(context);
       services.directory.refresh();
-      if (services.settings.get(AppSettings.autoRefresh)) {
+      // 15-second auto-refresh is Week 4.
+      if (Feature.syncStatus.on &&
+          services.settings.get(AppSettings.autoRefresh)) {
         _timer = Timer.periodic(
           OnlineDirectoryScreen.refreshEvery,
           (_) => services.directory.refresh(),
@@ -57,26 +60,31 @@ class _OnlineDirectoryScreenState extends State<OnlineDirectoryScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Online Directory')),
       body: PullToSync(
+        // Pull to refresh and sync is Week 4.
+        enabled: Feature.syncStatus.on,
         onRefresh: () => refreshAndSync(context),
         child: ListenableBuilder(
           listenable: Listenable.merge([directory, services.sync, _search]),
           builder: (context, _) {
             final header = <Widget>[
-              StatGrid(
-                children: [
-                  StatCard(
-                    label: 'Last updated',
-                    value: directory.lastUpdated == null
-                        ? '—'
-                        : formatTime(directory.lastUpdated!),
-                  ),
-                  StatCard(
-                    label: 'Users retrieved',
-                    value: '${directory.users.length}',
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
+              // Last updated / users retrieved is Week 4's Sync Status.
+              if (Feature.syncStatus.on) ...[
+                StatGrid(
+                  children: [
+                    StatCard(
+                      label: 'Last updated',
+                      value: directory.lastUpdated == null
+                          ? '—'
+                          : formatTime(directory.lastUpdated!),
+                    ),
+                    StatCard(
+                      label: 'Users retrieved',
+                      value: '${directory.users.length}',
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+              ],
             ];
 
             // Loading with nothing cached yet.

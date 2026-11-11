@@ -5,6 +5,7 @@ import '../../services/app_settings.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/common.dart';
 import '../../theme/app_assets.dart';
+import '../../config/lab_week.dart';
 
 /// Shared / Login and Shared / Biometric Login (Week 6).
 class LoginScreen extends StatefulWidget {
@@ -26,7 +27,7 @@ class _LoginScreenState extends State<LoginScreen> {
     super.initState();
     // Settings › Fingerprint Login: prompt straight away for the last account.
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      if (!mounted) return;
+      if (!mounted || !Feature.fingerprint.on) return;
       final services = AppScope.of(context);
       if (!services.settings.get(AppSettings.fingerprintLogin)) return;
       if (services.session.rememberedUser == null) return;
@@ -82,10 +83,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   children: [
                     Image.asset(AppAssets.logo, height: 120),
                     const SizedBox(height: 16),
-                    const Text(
-                      'Smart Campus Tour Guide',
+                    Text(
+                      LabWeek.appName,
                       textAlign: TextAlign.center,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w400,
                       ),
@@ -134,12 +135,15 @@ class _LoginScreenState extends State<LoginScreen> {
                             )
                           : const Text('Sign In'),
                     ),
-                    const SizedBox(height: 12),
-                    OutlinedButton.icon(
-                      onPressed: _busy ? null : _fingerprint,
-                      icon: const Icon(Icons.fingerprint),
-                      label: const Text('Sign in with fingerprint'),
-                    ),
+                    // Fingerprint login is Week 6.
+                    if (Feature.fingerprint.on) ...[
+                      const SizedBox(height: 12),
+                      OutlinedButton.icon(
+                        onPressed: _busy ? null : _fingerprint,
+                        icon: const Icon(Icons.fingerprint),
+                        label: const Text('Sign in with fingerprint'),
+                      ),
+                    ],
                     const SizedBox(height: 16),
                     const Text(
                       'Your role (Student or Faculty) comes from your LPU account.',
@@ -188,10 +192,10 @@ class _BiometricSheetState extends State<_BiometricSheet> {
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),
-          const Text(
-            'Place your finger on the sensor to open Smart Campus Tour Guide.',
+          Text(
+            'Place your finger on the sensor to open ${LabWeek.appName}.',
             textAlign: TextAlign.center,
-            style: TextStyle(color: AppColors.muted),
+            style: const TextStyle(color: AppColors.muted),
           ),
           const SizedBox(height: 24),
           IconButton(

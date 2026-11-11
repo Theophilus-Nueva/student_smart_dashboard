@@ -7,6 +7,7 @@ import '../../services/location_service.dart';
 import '../../widgets/app_bottom_nav.dart';
 import '../faculty/faculty_tabs.dart';
 import '../student/student_tabs.dart';
+import '../../config/lab_week.dart';
 
 /// Bottom-nav shell. Both roles get the same four tabs; the content of each
 /// tab comes from the role's own tab list (student/ or faculty/).
@@ -53,7 +54,7 @@ class _RoleShellState extends State<RoleShell> {
         onTap: (i) {
           // Week 5 sensors run only while the Device tab is showing.
           final device = AppScope.of(context).device;
-          if (i == deviceTab) {
+          if (i == deviceTab && Feature.device.on) {
             device.startSensors();
           } else {
             device.stopSensors();
