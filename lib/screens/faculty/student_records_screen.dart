@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../config/feature_flags.dart';
+import '../../config/lab_week.dart';
 import '../../models/student.dart';
 import '../../routes/app_routes.dart';
 import '../../services/app_services.dart';
@@ -11,6 +12,7 @@ import '../../widgets/grade_pill.dart';
 import 'faculty_actions.dart';
 
 /// Faculty / Student Records: search, programme filter, edit and delete (W4).
+/// In Week 3 it is the Student Directory: the saved students and Add Student.
 class StudentRecordsScreen extends StatefulWidget {
   const StudentRecordsScreen({super.key});
 
@@ -31,9 +33,14 @@ class _StudentRecordsScreenState extends State<StudentRecordsScreen> {
   @override
   Widget build(BuildContext context) {
     final repo = AppScope.of(context).students;
+    // Week 4 adds search, filter, edit, delete, details and grades.
+    final full = Feature.studentRecords.on;
     return Scaffold(
-      appBar: AppBar(title: const Text('Student Records')),
+      appBar: AppBar(
+        title: Text(full ? 'Student Records' : 'Student Directory'),
+      ),
       body: PullToSync(
+        enabled: Feature.syncStatus.on,
         onRefresh: () => refreshAndSync(context),
         child: ListenableBuilder(
           listenable: Listenable.merge([repo, _search]),
@@ -42,15 +49,16 @@ class _StudentRecordsScreenState extends State<StudentRecordsScreen> {
             return ListView(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
               children: [
-                TextField(
-                  controller: _search,
-                  decoration: const InputDecoration(
-                    hintText: 'Search by student ID or name',
-                    prefixIcon: Icon(Icons.search),
+                if (full)
+                  TextField(
+                    controller: _search,
+                    decoration: const InputDecoration(
+                      hintText: 'Search by student ID or name',
+                      prefixIcon: Icon(Icons.search),
+                    ),
                   ),
-                ),
                 // Hidden for now; see FeatureFlags.showRecordsProgramFilter.
-                if (FeatureFlags.showRecordsProgramFilter) ...[
+                if (full && FeatureFlags.showRecordsProgramFilter) ...[
                   const SizedBox(height: 12),
                   Wrap(
                     spacing: 8,
@@ -73,7 +81,7 @@ class _StudentRecordsScreenState extends State<StudentRecordsScreen> {
                 const SizedBox(height: 12),
                 Text(
                   '${results.length} ${results.length == 1 ? 'student' : 'students'}'
-                  ' · sorted by name',
+                  '${full ? ' · sorted by name' : ''}',
                   style: const TextStyle(fontSize: 13, color: AppColors.muted),
                 ),
                 const SizedBox(height: 8),
@@ -86,7 +94,7 @@ class _StudentRecordsScreenState extends State<StudentRecordsScreen> {
                         : 'Try another name, ID or programme.',
                   ),
                 for (final s in results) ...[
-                  _StudentCard(student: s),
+                  _StudentCard(student: s, full: full),
                   const SizedBox(height: 10),
                 ],
                 const SizedBox(height: 4),
@@ -106,9 +114,12 @@ class _StudentRecordsScreenState extends State<StudentRecordsScreen> {
 }
 
 class _StudentCard extends StatelessWidget {
-  const _StudentCard({required this.student});
+  const _StudentCard({required this.student, required this.full});
 
   final Student student;
+
+  /// Week 4: tap for details, edit, delete and the grade pill.
+  final bool full;
 
   @override
   Widget build(BuildContext context) {
@@ -116,9 +127,11 @@ class _StudentCard extends StatelessWidget {
     return Card(
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: () =>
-            Navigator.of(context)
-                .pushNamed(AppRoutes.studentDetails, arguments: s.id),
+        onTap: full
+            ? () =>
+                  Navigator.of(context)
+                      .pushNamed(AppRoutes.studentDetails, arguments: s.id)
+            : null,
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 4, 4),
           child: Column(
@@ -158,10 +171,11 @@ class _StudentCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.only(right: 12),
-                    child: GradePill(grade: s.grade),
-                  ),
+                  if (Feature.grades.on)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 12),
+                      child: GradePill(grade: s.grade),
+                    ),
                 ],
               ),
               Row(
@@ -176,18 +190,20 @@ class _StudentCard extends StatelessWidget {
                           )
                         : const SizedBox.shrink(),
                   ),
-                  IconButton(
-                    tooltip: 'Edit ${s.name}',
-                    icon: const Icon(Icons.edit, color: AppColors.muted),
-                    onPressed: () =>
-                        Navigator.of(context)
-                            .pushNamed(AppRoutes.studentForm, arguments: s.id),
-                  ),
-                  IconButton(
-                    tooltip: 'Delete ${s.name}',
-                    icon: const Icon(Icons.delete, color: AppColors.brand),
-                    onPressed: () => confirmDeleteStudent(context, s),
-                  ),
+                  if (full) ...[
+                    IconButton(
+                      tooltip: 'Edit ${s.name}',
+                      icon: const Icon(Icons.edit, color: AppColors.muted),
+                      onPressed: () => Navigator.of(context)
+                          .pushNamed(AppRoutes.studentForm, arguments: s.id),
+                    ),
+                    IconButton(
+                      tooltip: 'Delete ${s.name}',
+                      icon: const Icon(Icons.delete, color: AppColors.brand),
+                      onPressed: () => confirmDeleteStudent(context, s),
+                    ),
+                  ] else
+                    const SizedBox(height: 12),
                 ],
               ),
             ],

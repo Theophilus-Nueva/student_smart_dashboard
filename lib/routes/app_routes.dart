@@ -73,7 +73,7 @@ class AppRoutes {
 
   /// Lab week feature each screen belongs to (per-week builds).
   static const _features = <String, Feature>{
-    studentRecords: Feature.studentRecords,
+    studentRecords: Feature.studentDirectory, // Week 3 list, full in W4
     studentForm: Feature.registrationForm,
     studentDetails: Feature.studentRecords,
     onlineDirectory: Feature.apiDirectory,

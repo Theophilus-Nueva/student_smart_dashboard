@@ -56,6 +56,10 @@ enum Feature {
 
   // Week 3 – forms, navigation, local storage, file export.
   registrationForm(3, 'Registration form (Add Student)'),
+  studentDirectory(
+    3,
+    'Student Directory: saved students list with Add Student',
+  ),
   myRecord(3, 'My Record: summary page with saved data'),
   fileExport(3, 'Export to student_info.txt and File Saved'),
   aboutLpu(3, 'About LPU page'),

@@ -48,7 +48,7 @@ class _FacultyHomeState extends State<FacultyHome> {
     final hasActions = const [
       Feature.dashboardTiles,
       Feature.studentRecords,
-      Feature.registrationForm,
+      Feature.studentDirectory,
       Feature.apiDirectory,
       Feature.campusTour,
       Feature.cloudTasks,
@@ -122,13 +122,13 @@ class _FacultyHomeState extends State<FacultyHome> {
                   label: 'Student Records',
                   onTap: () => open(AppRoutes.studentRecords),
                 ),
-              // Week 3 only: open the registration form directly (Week 4
-              // reaches it through Student Records instead).
-              if (Feature.registrationForm.on && !Feature.studentRecords.on)
+              // Week 3: the same screen as the Student Directory (saved
+              // students and Add Student); Week 4 turns it into Records.
+              if (Feature.studentDirectory.on && !Feature.studentRecords.on)
                 ActionTile(
-                  icon: Icons.person_add,
-                  label: 'Add Student',
-                  onTap: () => open(AppRoutes.studentForm),
+                  icon: Icons.people,
+                  label: 'Student Directory',
+                  onTap: () => open(AppRoutes.studentRecords),
                 ),
               if (Feature.apiDirectory.on)
                 ActionTile(

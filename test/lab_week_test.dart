@@ -134,7 +134,7 @@ void main() {
     await signInAs(tester, 'faculty', 'faculty123');
     await pushRoute(tester, AppRoutes.studentRecords);
     expect(
-      find.text('Not part of Week 1. This screen is added in Week 4.'),
+      find.text('Not part of Week 1. This screen is added in Week 3.'),
       findsOneWidget,
     );
   });
@@ -156,19 +156,60 @@ void main() {
     expect(find.text('Students by program'), findsNothing);
   });
 
-  testWidgets('Week 3: registration form, My Record and About LPU', (
+  testWidgets('Week 3: Student Directory lists students and adds one', (
     tester,
   ) async {
     useWeek(3);
     await pumpApp(tester);
     await signInAs(tester, 'faculty', 'faculty123');
-    await scrollHomeTo(tester, 'Add Student');
-    expect(find.text('Add Student'), findsOneWidget);
-    expect(find.text('Student Records'), findsNothing);
+    await scrollHomeTo(tester, 'Student Directory');
+    expect(textOnHome('Add Student'), findsNothing); // not a tile any more
+    expect(textOnHome('Student Records'), findsNothing);
 
-    await pushRoute(tester, AppRoutes.studentForm);
-    expect(find.byKey(const Key('form.name')), findsOneWidget);
+    await tapHomeTile(tester, textOnHome('Student Directory'));
+    expect(find.widgetWithText(AppBar, 'Student Directory'), findsOneWidget);
+    expect(find.text('Search by student ID or name'), findsNothing);
+    expect(find.byIcon(Icons.edit), findsNothing);
+    expect(find.byIcon(Icons.delete), findsNothing);
+
+    final add = find.text('Add Student');
+    await tester.ensureVisible(add);
+    await tester.pumpAndSettle();
+    await tester.tap(add);
+    await tester.pumpAndSettle();
     expect(find.byKey(const Key('form.grade')), findsNothing);
+
+    await tester.enterText(find.byKey(const Key('form.name')), 'Reyes, Ana');
+    await tester.enterText(find.byKey(const Key('form.id')), '2026-1-00007');
+    await tester.enterText(
+      find.byKey(const Key('form.email')),
+      'ana.reyes@lpu.example',
+    );
+    for (final (field, option) in [
+      ('form.program', 'BS Library and Information Science'),
+      ('form.year', '1st Year'),
+    ]) {
+      await tester.ensureVisible(find.byKey(Key(field)));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(Key(field)));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(option).last);
+      await tester.pumpAndSettle();
+    }
+    final save = find.byKey(const Key('form.save'));
+    await tester.ensureVisible(save);
+    await tester.pumpAndSettle();
+    await tester.tap(save);
+    await tester.pumpAndSettle();
+
+    // Back on the directory, with the new student listed.
+    expect(find.widgetWithText(AppBar, 'Student Directory'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Reyes, Ana'),
+      200,
+      scrollable: find.byType(Scrollable).last,
+    );
+    expect(find.text('Reyes, Ana'), findsOneWidget);
   });
 
   testWidgets('Week 3: student My Record without grades', (tester) async {
