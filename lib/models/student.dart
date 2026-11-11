@@ -68,7 +68,11 @@ class Student {
   factory Student.fromJson(Map<String, dynamic> json) => Student(
     id: json['id'] as String,
     name: json['name'] as String,
-    email: json['email'] as String? ?? '',
+    email: switch (json['email'] as String? ?? '') {
+      // Saved before the LPU student email domain was set.
+      'theophilus.nueva@lpu.example' => '2024-2-02401@lpunetwork.edu.ph',
+      final e => e,
+    },
     program: switch (json['program'] as String? ?? 'BSIT') {
       'BSIS' => 'BSLIS',
       final p => p,
@@ -128,7 +132,7 @@ const sampleStudents = <Student>[
   Student(
     id: '2024-2-02401',
     name: 'Nueva, Theophilus T.',
-    email: 'theophilus.nueva@lpu.example',
+    email: '2024-2-02401@lpunetwork.edu.ph',
     program: 'BSIT',
     yearLevel: '3rd Year',
     grade: 91.2,

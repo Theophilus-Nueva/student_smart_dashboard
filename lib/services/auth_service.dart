@@ -7,8 +7,8 @@ import '../theme/app_assets.dart';
 /// the labs, so two demo accounts are seeded here.
 ///
 /// Demo accounts (prototype only, not real credentials):
-///   Student  username: student   (or theophilus.nueva@lpu.example)  password: student123
-///   Faculty  username: faculty   (or alyssa.pocaan@lpu.example)     password: faculty123
+///   Student  username: student   (or 2024-2-02401@lpunetwork.edu.ph)  password: student123
+///   Faculty  username: faculty   (or alyssa.pocaan@lpu.edu.ph)     password: faculty123
 class AuthService {
   AuthService(this._prefs);
 
@@ -19,10 +19,10 @@ class AuthService {
 
   static const _accounts = <_Account>[
     _Account(
-      aliases: ['student', 'theophilus.nueva@lpu.example'],
+      aliases: ['student', '2024-2-02401@lpunetwork.edu.ph'],
       password: 'student123',
       user: AppUser(
-        username: 'theophilus.nueva@lpu.example',
+        username: '2024-2-02401@lpunetwork.edu.ph',
         displayName: 'Nueva, Theophilus T.',
         role: Role.student,
         idNumber: '2024-2-02401',
@@ -31,10 +31,10 @@ class AuthService {
       ),
     ),
     _Account(
-      aliases: ['faculty', 'alyssa.pocaan@lpu.example'],
+      aliases: ['faculty', 'alyssa.pocaan@lpu.edu.ph'],
       password: 'faculty123',
       user: AppUser(
-        username: 'alyssa.pocaan@lpu.example',
+        username: 'alyssa.pocaan@lpu.edu.ph',
         displayName: 'Pocaan, Alyssa Paola D.',
         role: Role.faculty,
         idNumber: '',
