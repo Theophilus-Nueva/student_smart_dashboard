@@ -40,8 +40,7 @@ class _RoleShellState extends State<RoleShell> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // GPS updates for the Current Location card and the map while signed in
-    // (Week 6; earlier weeks never ask for location permission).
+    // GPS updates for the Current Location card and the map while signed in.
     if (Feature.location.on) _tracker ??= AppScope.of(context).tracker..start();
     _device ??= AppScope.of(context).device;
   }

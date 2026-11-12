@@ -65,18 +65,11 @@ abstract class LocationService {
 
   Future<LocationFix> current();
   Stream<LocationFix> watch();
-
-  /// GPS status for the Week 1 KPI card. Never asks for permission.
-  Future<({String value, String note})> status();
 }
 
 /// Always returns the campus sample (tests, and devices without GPS).
 class SampleLocationService implements LocationService {
   const SampleLocationService();
-
-  @override
-  Future<({String value, String note})> status() async =>
-      (value: 'Sample', note: 'Campus location');
 
   @override
   Future<LocationFix> current() async => LocationService.campus;
@@ -89,23 +82,6 @@ class SampleLocationService implements LocationService {
 /// the Week 6 LocationService.
 class GpsLocationService implements LocationService {
   const GpsLocationService();
-
-  @override
-  Future<({String value, String note})> status() async {
-    try {
-      if (!await Geolocator.isLocationServiceEnabled()) {
-        return (value: 'Off', note: 'Location services off');
-      }
-      final note = switch (await Geolocator.checkPermission()) {
-        LocationPermission.denied => 'App not allowed yet',
-        LocationPermission.deniedForever => 'Blocked in Settings',
-        _ => 'Allowed',
-      };
-      return (value: 'On', note: note);
-    } on Exception {
-      return (value: 'Unknown', note: 'Could not check GPS');
-    }
-  }
 
   /// Returns null when GPS can be used, otherwise the reason it can't.
   Future<String?> _ensureAccess() async {

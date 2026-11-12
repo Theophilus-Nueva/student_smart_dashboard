@@ -4,8 +4,8 @@ import '../services/app_services.dart';
 import '../utils/format.dart';
 import 'stat_card.dart';
 
-/// Week 1 KPI cards (2×2, four across on tablets): Network, GPS, API and
-/// Storage status, read from the app's own services.
+/// Week 1 KPI cards: Network, API and Storage status, read from the app's
+/// own services. GPS status is the Current Location card above.
 class KpiGrid extends StatefulWidget {
   const KpiGrid({super.key});
 
@@ -14,14 +14,14 @@ class KpiGrid extends StatefulWidget {
 }
 
 class _KpiGridState extends State<KpiGrid> {
-  Future<({String value, String note})>? _gps;
+  bool _checked = false;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (_gps != null) return;
+    if (_checked) return;
+    _checked = true;
     final services = AppScope.of(context);
-    _gps = services.location.status();
     // Check the API once each time the dashboard opens (refresh() ignores
     // the call if a check is already running).
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -51,14 +51,6 @@ class _KpiGridState extends State<KpiGrid> {
               label: 'Network',
               value: online ? 'Online' : 'Offline',
               note: online ? 'Connected' : 'No connection',
-            ),
-            FutureBuilder(
-              future: _gps,
-              builder: (context, snapshot) => StatCard(
-                label: 'GPS',
-                value: snapshot.data?.value ?? 'Checking',
-                note: snapshot.data?.note,
-              ),
             ),
             StatCard(label: 'API', value: apiValue, note: apiNote),
             const StatCard(

@@ -52,17 +52,16 @@ void main() {
     expect(find.text('Sign in with fingerprint'), findsNothing);
 
     await signInAs(tester, 'student', 'student123');
-    expect(services.tracker.running, isFalse); // no GPS prompt before Week 6
+    expect(services.tracker.running, isTrue); // GPS card from Week 1
     expect(find.text('LPU Smart Campus Dashboard'), findsOneWidget);
-    expect(find.text('Current Location'), findsNothing);
+    expect(find.text('Current Location'), findsOneWidget); // replaces GPS KPI
     expect(find.text('AR Guide'), findsNothing);
 
-    // KPI cards: Network, GPS, API, Storage.
+    // KPI cards: Network, API, Storage (no GPS card).
     await scrollHomeTo(tester, 'Storage');
     expect(textOnHome('Status'), findsOneWidget);
     expect(textOnHome('Connected'), findsOneWidget);
-    expect(textOnHome('GPS'), findsOneWidget);
-    expect(textOnHome('Campus location'), findsOneWidget);
+    expect(textOnHome('GPS'), findsNothing);
     expect(textOnHome('API'), findsOneWidget);
     expect(
       find.descendant(
@@ -104,6 +103,7 @@ void main() {
     useWeek(1);
     await pumpApp(tester);
     await signInAs(tester, 'faculty', 'faculty123');
+    await scrollHomeTo(tester, 'Reports');
     await tapHomeTile(tester, textOnHome('Reports'));
     expect(
       find.text('Class stats will appear here in a later lab week.'),
@@ -124,6 +124,15 @@ void main() {
     await tapNav(tester, 'Home');
     await tapHomeTile(tester, textOnHome('Network').last); // the tile
     expect(find.text('You are online.'), findsOneWidget);
+  });
+
+  testWidgets('Week 1: Current Location card opens the map', (tester) async {
+    useWeek(1);
+    await pumpApp(tester);
+    await signInAs(tester, 'student', 'student123');
+    await tapHomeTile(tester, find.text('Open Map'));
+    expect(find.textContaining('Not part of Week 1'), findsNothing);
+    expect(find.textContaining('School'), findsWidgets);
   });
 
   testWidgets('Week 1: a later screen opened directly is a placeholder', (
@@ -244,7 +253,6 @@ void main() {
     await signInAs(tester, 'student', 'student123');
     await tapNav(tester, 'Device');
     expect(find.text('Take Photo'), findsOneWidget);
-    expect(find.text('Current Location'), findsNothing);
   });
 
   testWidgets('Week 6: location, fingerprint and security center', (

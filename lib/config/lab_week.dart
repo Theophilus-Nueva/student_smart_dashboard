@@ -42,12 +42,16 @@ enum Feature {
   // Week 1 – dashboard shell. Weeks 1–6 only: the final Home (Week 7, the
   // Figma design) shows network status and the location card instead, and
   // the bottom nav already opens Device, Analytics and Settings.
-  kpiCards(1, 'KPI cards: Network, GPS, API, Storage status', replacedIn: 7),
+  kpiCards(1, 'KPI cards: Network, API, Storage status', replacedIn: 7),
   dashboardTiles(
     1,
     'Action tiles: Device, Network, Reports, Settings',
     replacedIn: 7,
   ),
+  // GPS status: the Week 6 Current Location card and Map stand in for the
+  // Week 1 GPS KPI card, so they show from Week 1.
+  location(1, 'Current Location card (Week 6, shown from Week 1)'),
+  map(1, 'Map with Home, School and Workplace markers (Week 6)'),
 
   // Week 2 – API integration.
   apiDirectory(2, 'Online Directory: API users with loading and error states'),
@@ -75,8 +79,6 @@ enum Feature {
   device(5, 'Device tab: camera, gallery, accelerometer, gyroscope, compass'),
 
   // Week 6 – device services and cloud.
-  location(6, 'Current Location card'),
-  map(6, 'Map with Home, School and Workplace markers'),
   emergencyContacts(6, 'Emergency Contacts (call, SMS, email)'),
   cloudTasks(6, 'Cloud Tasks (Firestore)'),
   notifications(6, 'Notifications screen and reminder categories'),
