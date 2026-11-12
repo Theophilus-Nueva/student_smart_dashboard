@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
+import 'package:geocoding/geocoding.dart' as geo;
 import 'package:geolocator/geolocator.dart';
 
 /// A position reading for the Current Location card (Week 6).
@@ -30,8 +31,19 @@ class LocationFix {
   /// Why GPS isn't live (service off, permission denied…), if known.
   final String? problem;
 
+  LocationFix withAddress(String value) => LocationFix(
+    latitude: latitude,
+    longitude: longitude,
+    accuracyMeters: accuracyMeters,
+    speedKmh: speedKmh,
+    altitudeMeters: altitudeMeters,
+    address: value,
+    live: live,
+    problem: problem,
+  );
+
   /// Short place name for the Home card: the campus name when on campus,
-  /// otherwise the address (coordinates).
+  /// otherwise the looked-up place name (or coordinates when offline).
   String get placeName => address == LocationService.campusAddress
       ? LocationService.campusName
       : address;
@@ -108,6 +120,55 @@ class GpsLocationService implements LocationService {
     };
   }
 
+  /// Last place-name lookup; reused until the phone moves 150 m, so the
+  /// phone's geocoder (which limits how often it can be asked) isn't
+  /// called on every GPS update.
+  static ({double lat, double lng, String name})? _lastPlace;
+
+  /// Replaces the coordinates with the place name from the phone's map
+  /// service (Apple or Google). Keeps the coordinates if that fails, e.g.
+  /// offline.
+  static Future<LocationFix> _withPlaceName(LocationFix fix) async {
+    if (fix.address == LocationService.campusAddress) return fix;
+    final last = _lastPlace;
+    if (last != null &&
+        _distanceMeters(last.lat, last.lng, fix.latitude, fix.longitude) <
+            150) {
+      return fix.withAddress(last.name);
+    }
+    try {
+      final marks = await geo.Geocoding().placemarkFromCoordinates(
+        fix.latitude,
+        fix.longitude,
+      );
+      final name = marks.isEmpty ? null : placeLabel(marks.first);
+      if (name == null) return fix;
+      _lastPlace = (lat: fix.latitude, lng: fix.longitude, name: name);
+      return fix.withAddress(name);
+    } on Object {
+      return fix;
+    }
+  }
+
+  /// e.g. "SM City Rosario, Rosario, Cavite": place, town, province.
+  @visibleForTesting
+  static String? placeLabel(geo.Placemark m) {
+    final parts = <String>[];
+    bool usable(String? v) =>
+        v != null && v.trim().isNotEmpty && !RegExp(r'^[0-9 -]+$').hasMatch(v);
+    for (final part in [
+      // The street stands in when the place has no name of its own.
+      usable(m.name) ? m.name : m.thoroughfare,
+      m.locality ?? m.subAdministrativeArea,
+      m.administrativeArea,
+    ]) {
+      final p = part?.trim() ?? '';
+      if (!usable(p) || parts.contains(p)) continue;
+      parts.add(p);
+    }
+    return parts.isEmpty ? null : parts.join(', ');
+  }
+
   static LocationFix _fromPosition(Position p) {
     final nearCampus =
         _distanceMeters(
@@ -152,7 +213,7 @@ class GpsLocationService implements LocationService {
           timeLimit: Duration(seconds: 15),
         ),
       );
-      return _fromPosition(p);
+      return await _withPlaceName(_fromPosition(p));
     } on Exception {
       return _fallback('Could not get a GPS fix');
     }
@@ -170,7 +231,7 @@ class GpsLocationService implements LocationService {
         accuracy: LocationAccuracy.high,
         distanceFilter: 5,
       ),
-    ).map(_fromPosition).handleError((Object _) {});
+    ).map(_fromPosition).asyncMap(_withPlaceName).handleError((Object _) {});
   }
 }
 

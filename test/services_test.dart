@@ -2,9 +2,11 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:geocoding/geocoding.dart';
 
 import 'package:smart_dashboard/models/student.dart';
 import 'package:smart_dashboard/services/file_export_service.dart';
+import 'package:smart_dashboard/services/location_service.dart';
 import 'package:smart_dashboard/services/task_service.dart';
 import 'package:smart_dashboard/widgets/id_card.dart';
 import 'package:smart_dashboard/widgets/network_status.dart';
@@ -33,6 +35,32 @@ void main() {
     );
     expect(text, contains('Program: BSIT'));
     await dir.delete(recursive: true);
+  });
+
+  test('Place label: place, town and province, without house numbers', () {
+    expect(
+      GpsLocationService.placeLabel(
+        const Placemark(
+          name: 'SM City Rosario',
+          thoroughfare: 'General Trias Drive',
+          locality: 'Rosario',
+          administrativeArea: 'Cavite',
+        ),
+      ),
+      'SM City Rosario, Rosario, Cavite',
+    );
+    expect(
+      GpsLocationService.placeLabel(
+        const Placemark(
+          name: '123',
+          thoroughfare: 'Governor’s Drive',
+          locality: 'General Trias',
+          administrativeArea: 'Cavite',
+        ),
+      ),
+      'Governor’s Drive, General Trias, Cavite',
+    );
+    expect(GpsLocationService.placeLabel(const Placemark()), isNull);
   });
 
   test('Directory export writes student_directory.csv', () async {

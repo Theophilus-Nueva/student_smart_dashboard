@@ -55,7 +55,8 @@ class CurrentLocationCard extends StatelessWidget {
                 TextButton.icon(
                   onPressed: () =>
                       Navigator.of(context).pushNamed(AppRoutes.map),
-                  icon: const Icon(Icons.map, size: 18),
+                  icon: const Icon(Icons.arrow_forward, size: 18),
+                  iconAlignment: IconAlignment.end,
                   label: const Text('Open Map'),
                 ),
               ],
