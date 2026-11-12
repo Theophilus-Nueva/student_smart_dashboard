@@ -6,7 +6,7 @@ import 'package:smart_dashboard/routes/app_routes.dart';
 import 'test_helpers.dart';
 
 const _sharedRoutes = {
-  AppRoutes.about: 'Mission',
+  AppRoutes.about: 'Vision',
   AppRoutes.campusTour: 'Campus Locations',
   AppRoutes.map: 'Markers',
   AppRoutes.cloudTasks: 'No tasks yet',
