@@ -323,6 +323,28 @@ void main() {
     expect(find.text('Reyes, Ana'), findsOneWidget);
   });
 
+  testWidgets('Week 3: pull to refresh on faculty Home, without sync', (
+    tester,
+  ) async {
+    useWeek(3);
+    final services = await pumpApp(tester);
+    await signInAs(tester, 'faculty', 'faculty123');
+    expect(find.byType(RefreshIndicator), findsOneWidget);
+    final before = services.directory.lastUpdated;
+    await tester.fling(homeScrollable, const Offset(0, 400), 1000);
+    await tester.pumpAndSettle();
+    expect(find.text('Refreshed'), findsOneWidget);
+    expect(find.text('Sync successful'), findsNothing); // Week 4
+    expect(services.directory.lastUpdated, isNot(before));
+  });
+
+  testWidgets('Week 2: no pull to refresh yet', (tester) async {
+    useWeek(2);
+    await pumpApp(tester);
+    await signInAs(tester, 'faculty', 'faculty123');
+    expect(find.byType(RefreshIndicator), findsNothing);
+  });
+
   testWidgets('Week 3: student My Record without grades', (tester) async {
     useWeek(3);
     await pumpApp(tester);

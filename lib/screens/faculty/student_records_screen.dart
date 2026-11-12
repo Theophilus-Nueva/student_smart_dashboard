@@ -40,7 +40,7 @@ class _StudentRecordsScreenState extends State<StudentRecordsScreen> {
         title: Text(full ? 'Student Records' : 'Student Directory'),
       ),
       body: PullToSync(
-        enabled: Feature.syncStatus.on,
+        enabled: Feature.pullToRefresh.on,
         onRefresh: () => refreshAndSync(context),
         child: ListenableBuilder(
           listenable: Listenable.merge([repo, _search]),

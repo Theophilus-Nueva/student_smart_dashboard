@@ -100,11 +100,24 @@ Future<void> exportStudentDirectory(BuildContext context) async {
   }
 }
 
-/// Pull-to-refresh on faculty screens: reload the API users, then sync
-/// pending records (Weeks 4 and 7), with result feedback.
+/// Pull-to-refresh on faculty screens: reload the API users (Week 3), then
+/// sync pending records (Weeks 4 and 7), with result feedback.
 Future<void> refreshAndSync(BuildContext context) async {
-  final ok = await AppScope.of(context).directory.refresh();
+  final services = AppScope.of(context);
+  final ok = await services.directory.refresh();
   if (!context.mounted) return;
+  if (!Feature.syncStatus.on) {
+    // Week 3: no sync yet, just reload.
+    showAppSnack(
+      context,
+      ok ? 'Refreshed' : 'Refresh failed · API Error',
+      error: !ok,
+      duration: ok
+          ? const Duration(milliseconds: 1500)
+          : const Duration(seconds: 4),
+    );
+    return;
+  }
   if (!ok) {
     showAppSnack(context, 'Sync failed · API Error', error: true);
     return;

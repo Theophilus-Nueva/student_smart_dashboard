@@ -60,8 +60,8 @@ class _OnlineDirectoryScreenState extends State<OnlineDirectoryScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Online Directory')),
       body: PullToSync(
-        // Pull to refresh and sync is Week 4.
-        enabled: Feature.syncStatus.on,
+        // Pull to refresh is Week 3; it also syncs from Week 4.
+        enabled: Feature.pullToRefresh.on,
         onRefresh: () => refreshAndSync(context),
         child: ListenableBuilder(
           listenable: Listenable.merge([directory, services.sync, _search]),

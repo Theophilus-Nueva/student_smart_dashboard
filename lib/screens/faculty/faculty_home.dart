@@ -195,8 +195,8 @@ class _FacultyHomeState extends State<FacultyHome> {
     );
 
     return HomeScaffold(
-      // Pull down to refresh and sync (Week 4).
-      dashboard: Feature.syncStatus.on
+      // Pull down to refresh (Week 3); from Week 4 it also syncs.
+      dashboard: Feature.pullToRefresh.on
           ? PullToSync(onRefresh: () => refreshAndSync(context), child: list)
           : list,
     );

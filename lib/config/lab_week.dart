@@ -75,6 +75,8 @@ enum Feature {
   myRecord(3, 'My Record: summary page with saved data'),
   fileExport(3, 'Export to student_info.txt and File Saved'),
   aboutLpu(3, 'About LPU page, opened from the AppBar'),
+  // Pull down to reload; Week 4 adds Sync to it.
+  pullToRefresh(3, 'Pull to refresh: faculty Home and directories'),
   infoCards(
     3,
     'Dashboard cards: Students, Programs, Campus (Column / Row)',
