@@ -100,18 +100,9 @@ void main() {
     expect(textOnHome('CCS Programmes'), findsNothing); // Week 2
     expect(textOnHome('Overview'), findsNothing); // Week 3
 
-    // Challenge 1: campus icons.
-    await scrollHomeTo(tester, 'Facilities');
-    for (final label in [
-      'Academics',
-      'Student Services',
-      'Campus Announcements',
-    ]) {
-      expect(textOnHome(label), findsOneWidget, reason: label);
-    }
-
     await scrollHomeTo(tester, 'World Clock');
     expect(find.text('World Clock'), findsOneWidget);
+    expect(textOnHome('Facilities'), findsNothing); // campus icons removed
 
     await tapNav(tester, 'Analytics');
     expect(
@@ -416,7 +407,6 @@ void main() {
     expect(find.textContaining('Welcome, '), findsNothing);
     expect(textOnHome('CCS Programmes'), findsNothing);
     expect(textOnHome('Overview'), findsNothing);
-    expect(textOnHome('Facilities'), findsNothing);
   });
 
   // Week 1 asks for portrait and landscape without overflow errors.

@@ -53,8 +53,8 @@ enum Feature {
   location(1, 'Current Location card (Week 6, shown from Week 1)'),
   map(1, 'Map with Home, School and Workplace markers (Week 6)'),
   // Week 1 Challenge 1 (LPU theme): welcome banner with name, programme
-  // and LPU Cavite, plus the campus icons.
-  campusWelcome(1, 'Welcome banner and campus icons', replacedIn: 7),
+  // and LPU Cavite. The optional campus icons were left out on purpose.
+  campusWelcome(1, 'Welcome banner', replacedIn: 7),
 
   // Week 2 – API integration.
   apiDirectory(2, 'Online Directory: API users with loading and error states'),

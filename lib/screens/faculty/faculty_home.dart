@@ -180,10 +180,6 @@ class _FacultyHomeState extends State<FacultyHome> {
             ],
           ),
         ],
-        if (Feature.campusWelcome.on) ...[
-          const SectionHeader('Campus'),
-          const CampusIcons(),
-        ],
         // Hidden for now; see FeatureFlags.showHomeTourProgress.
         if (FeatureFlags.showHomeTourProgress && Feature.tourProgress.on) ...[
           const SizedBox(height: 12),
