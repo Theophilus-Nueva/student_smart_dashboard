@@ -44,6 +44,9 @@ class MapScreen extends StatelessWidget {
                 ),
               ],
               const SectionHeader('Current location'),
+              Text(fix.address, style: const TextStyle(fontSize: 13)),
+              const SizedBox(height: 10),
+              // Moved here from the Home card.
               Row(
                 children: [
                   Expanded(
@@ -57,6 +60,31 @@ class MapScreen extends StatelessWidget {
                     child: InfoField(
                       label: 'Longitude',
                       value: fix.longitude.toStringAsFixed(4),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: InfoField(
+                      label: 'Accuracy',
+                      value: '±${fix.accuracyMeters.round()} m',
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: InfoField(
+                      label: 'Speed',
+                      value: '${fix.speedKmh.round()} km/h',
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: InfoField(
+                      label: 'Altitude',
+                      value: '${fix.altitudeMeters.round()} m',
                     ),
                   ),
                 ],

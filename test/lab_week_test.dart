@@ -54,7 +54,10 @@ void main() {
     await signInAs(tester, 'student', 'student123');
     expect(services.tracker.running, isTrue); // GPS card from Week 1
     expect(find.text('LPU Smart Campus Dashboard'), findsOneWidget);
-    expect(find.text('Current Location'), findsOneWidget); // replaces GPS KPI
+    expect(
+      find.text('Lyceum of the Philippines University Cavite'),
+      findsOneWidget,
+    ); // replaces GPS KPI
     expect(find.text('AR Guide'), findsNothing);
 
     // KPI cards: Network, API, Storage (no GPS card).
@@ -133,6 +136,15 @@ void main() {
     await tapHomeTile(tester, find.text('Open Map'));
     expect(find.textContaining('Not part of Week 1'), findsNothing);
     expect(find.textContaining('School'), findsWidgets);
+    for (final label in [
+      'Latitude',
+      'Longitude',
+      'Accuracy',
+      'Speed',
+      'Altitude',
+    ]) {
+      expect(find.text(label), findsOneWidget, reason: label);
+    }
   });
 
   testWidgets('Week 1: a later screen opened directly is a placeholder', (
@@ -265,7 +277,10 @@ void main() {
     await signInAs(tester, 'student', 'student123');
     expect(services.tracker.running, isTrue);
     expect(find.text('Smart Connected Dashboard'), findsOneWidget);
-    expect(find.text('Current Location'), findsOneWidget);
+    expect(
+      find.text('Lyceum of the Philippines University Cavite'),
+      findsOneWidget,
+    );
     expect(find.text('AR Guide'), findsNothing);
     await scrollHomeTo(tester, 'Emergency Contacts');
     expect(textOnHome('Campus Tour'), findsNothing);

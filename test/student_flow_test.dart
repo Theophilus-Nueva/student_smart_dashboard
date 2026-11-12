@@ -15,8 +15,14 @@ void main() {
     expect(find.text('Dashboard'), findsOneWidget);
     expect(find.text('Recent Activity'), findsOneWidget);
     expect(find.text('ONLINE'), findsNothing); // no status bar on Home
-    expect(find.text('Current Location'), findsOneWidget);
+    expect(
+      find.text('Lyceum of the Philippines University Cavite'),
+      findsOneWidget,
+    );
     expect(find.text('Open Map'), findsOneWidget);
+    expect(find.text('Live'), findsNothing); // sample location in tests
+    expect(find.text('Campus'), findsOneWidget);
+    expect(find.text('Latitude'), findsNothing); // only on the Map screen
     // ID card: role and last name in capitals.
     expect(find.text('NUEVA, Theophilus T.'), findsOneWidget);
     expect(find.text('STUDENT'), findsOneWidget);

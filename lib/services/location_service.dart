@@ -29,6 +29,12 @@ class LocationFix {
 
   /// Why GPS isn't live (service off, permission denied…), if known.
   final String? problem;
+
+  /// Short place name for the Home card: the campus name when on campus,
+  /// otherwise the address (coordinates).
+  String get placeName => address == LocationService.campusAddress
+      ? LocationService.campusName
+      : address;
 }
 
 /// A labelled map point (Week 6: Home, School and Workplace markers).
@@ -51,6 +57,8 @@ abstract class LocationService {
     address: campusAddress,
     live: false,
   );
+
+  static const campusName = 'Lyceum of the Philippines University Cavite';
 
   static const campusAddress =
       'Lyceum of the Philippines University Cavite, Governor’s Drive, '
