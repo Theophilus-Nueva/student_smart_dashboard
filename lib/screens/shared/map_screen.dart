@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../services/app_services.dart';
 import '../../services/location_service.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/common.dart';
 
-/// Shared / Map (Week 6): Google Map centred on you (zoom 16) with Home,
+/// Shared / Map (Week 6): OpenStreetMap centred on you (zoom 16) with Home,
 /// School and Workplace markers. Widget tests use the schematic instead,
-/// because the native map view can't run there.
+/// because map tiles need the internet.
 class MapScreen extends StatelessWidget {
   const MapScreen({super.key});
 
@@ -124,52 +126,112 @@ class _LiveMap extends StatefulWidget {
 }
 
 class _LiveMapState extends State<_LiveMap> {
-  GoogleMapController? _controller;
+  final _controller = MapController();
+  bool _ready = false;
+
+  LatLng get _me => LatLng(widget.fix.latitude, widget.fix.longitude);
 
   @override
   void didUpdateWidget(_LiveMap old) {
     super.didUpdateWidget(old);
     final f = widget.fix;
-    if (f.latitude != old.fix.latitude || f.longitude != old.fix.longitude) {
-      _controller?.animateCamera(
-        CameraUpdate.newLatLng(LatLng(f.latitude, f.longitude)),
-      );
+    if (_ready &&
+        (f.latitude != old.fix.latitude || f.longitude != old.fix.longitude)) {
+      _controller.move(_me, _controller.camera.zoom);
     }
   }
 
   @override
   void dispose() {
-    _controller?.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final fix = widget.fix;
-    return GoogleMap(
-      initialCameraPosition: CameraPosition(
-        target: LatLng(fix.latitude, fix.longitude),
-        zoom: 16,
+    return FlutterMap(
+      mapController: _controller,
+      options: MapOptions(
+        initialCenter: _me,
+        initialZoom: 16,
+        onMapReady: () => _ready = true,
       ),
-      onMapCreated: (c) => _controller = c,
-      myLocationEnabled: fix.live,
-      myLocationButtonEnabled: fix.live,
-      markers: {
-        for (final m in LocationService.markers)
-          Marker(
-            markerId: MarkerId(m.label),
-            position: LatLng(m.latitude, m.longitude),
-            infoWindow: InfoWindow(title: m.label),
-          ),
-        Marker(
-          markerId: const MarkerId('me'),
-          position: LatLng(fix.latitude, fix.longitude),
-          icon: BitmapDescriptor.defaultMarkerWithHue(
-            BitmapDescriptor.hueAzure,
-          ),
-          infoWindow: const InfoWindow(title: 'You are here'),
+      children: [
+        // OpenStreetMap's standard tiles. Their usage policy asks apps to
+        // identify themselves (userAgentPackageName) and credit OSM.
+        TileLayer(
+          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+          userAgentPackageName: 'com.example.smart_dashboard',
         ),
-      },
+        MarkerLayer(
+          markers: [
+            for (final m in LocationService.markers)
+              Marker(
+                point: LatLng(m.latitude, m.longitude),
+                width: 90,
+                height: 50,
+                alignment: Alignment.topCenter,
+                child: _MapPin(label: m.label),
+              ),
+            Marker(point: _me, width: 22, height: 22, child: const _MeDot()),
+          ],
+        ),
+        RichAttributionWidget(
+          attributions: [
+            TextSourceAttribution(
+              'OpenStreetMap contributors',
+              onTap: () => launchUrl(
+                Uri.parse('https://www.openstreetmap.org/copyright'),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+/// Marker icon with its label (Home, School, Workplace).
+class _MapPin extends StatelessWidget {
+  const _MapPin({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Text(
+            label,
+            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+          ),
+        ),
+        Icon(_iconFor(label), color: AppColors.brand, size: 28),
+      ],
+    );
+  }
+}
+
+/// Blue "you are here" dot.
+class _MeDot extends StatelessWidget {
+  const _MeDot();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E88E5),
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white, width: 3),
+        boxShadow: const [BoxShadow(color: Color(0x551E88E5), blurRadius: 10)],
+      ),
     );
   }
 }
@@ -231,18 +293,7 @@ class _SchematicMap extends StatelessWidget {
             Positioned(
               left: me.dx - 9,
               top: me.dy + 18,
-              child: Container(
-                width: 18,
-                height: 18,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1E88E5),
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 3),
-                  boxShadow: const [
-                    BoxShadow(color: Color(0x551E88E5), blurRadius: 10),
-                  ],
-                ),
-              ),
+              child: const SizedBox(width: 18, height: 18, child: _MeDot()),
             ),
           ],
         );

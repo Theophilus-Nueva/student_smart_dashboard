@@ -74,7 +74,8 @@ class AppServices {
   final DirectoryService directory;
   final LocationService location;
 
-  /// False in widget tests, where the Google Maps platform view can't run.
+  /// False in widget tests, where OpenStreetMap tiles can't load (no
+  /// internet).
   final bool useNativeMaps;
 
   /// False in widget tests, where the live camera (AR guide) can't run.

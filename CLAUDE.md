@@ -28,7 +28,7 @@ Two dashboards, separate access: **Student** and **Faculty**. Shared core plus r
 
 ## Packages named in the labs
 http, shared_preferences, path_provider, geolocator, google_maps_flutter, url_launcher, firebase_core, cloud_firestore, flutter_local_notifications, local_auth, connectivity_plus.
-All of the above are now in pubspec, plus `mobile_scanner` (AR guide camera and QR checkpoints). Not used: `ar_flutter_plugin` (Dart 2 only).
+All of the above are in pubspec except `google_maps_flutter`, removed on 2026-11-12: the Map screen uses OpenStreetMap tiles through `flutter_map` + `latlong2`. Also added: `mobile_scanner` (AR guide camera and QR checkpoints), `share_plus`, `geocoding`. Not used: `ar_flutter_plugin` (Dart 2 only).
 
 ## Existing code (lib/)
 screens: dashboard_screen, dashboard_body, dashboard_cards, activity_feed, file_storage_screen, registration_form_screen, summary_page_screen. widgets: notification_badge, profile_card, dashboard_tile. services: api.dart. Home currently has a profile (ID) card, world clock, and Logged in Devices.
@@ -36,7 +36,7 @@ screens: dashboard_screen, dashboard_body, dashboard_cards, activity_feed, file_
 ## Design notes (Figma)
 - Brand red `#B71C1C`, white surfaces, black icons with no tinted badge behind them (bottom nav icons are white; the circle marks selection).
 - Home order: header, tabs (Dashboard / Recent Activity), network status, current location, ID card, Logged in Devices (e.g. iPhone 13, iOS 27, Online), dashboard actions, tour progress, world clock (Manila, Tokyo, New York), bottom nav.
-- Map screen uses an OpenStreetMap screenshot of the LPU Cavite campus (Governor's Drive, COECSA) with School/Home/Workplace markers and a live current-location dot.
+- Map screen (app) shows live OpenStreetMap tiles; the Figma frame uses an OpenStreetMap screenshot of the LPU Cavite campus (Governor's Drive, COECSA) with School/Home/Workplace markers and a live current-location dot.
 
 ## Known gaps (design side)
 - Login title still reads "Student Information System" (font could not be edited).
