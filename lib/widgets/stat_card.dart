@@ -59,15 +59,17 @@ class StatCard extends StatelessWidget {
   }
 }
 
-/// Lays stat cards out two per row without fixed heights.
+/// Lays stat cards out two per row (four on tablets) without fixed
+/// heights, or [columns] per row when given.
 class StatGrid extends StatelessWidget {
-  const StatGrid({super.key, required this.children});
+  const StatGrid({super.key, required this.children, this.columns});
 
   final List<Widget> children;
+  final int? columns;
 
   @override
   Widget build(BuildContext context) {
-    final perRow = MediaQuery.sizeOf(context).width > 600 ? 4 : 2;
+    final perRow = columns ?? (MediaQuery.sizeOf(context).width > 600 ? 4 : 2);
     final rows = <Widget>[];
     for (var i = 0; i < children.length; i += perRow) {
       final slice = children.sublist(i, (i + perRow).clamp(0, children.length));

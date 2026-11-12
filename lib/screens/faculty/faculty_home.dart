@@ -66,15 +66,16 @@ class _FacultyHomeState extends State<FacultyHome> {
         HomeScaffold.showsArButton ? 88 : 16,
       ),
       children: [
-        if (Feature.syncStatus.on) ...[
-          const _SyncStatusCard(),
-          const SizedBox(height: 12),
-        ],
-        if (Feature.location.on) ...[
-          const CurrentLocationCard(),
-          const SizedBox(height: 16),
-        ],
+        // ID card first, then the location card and Sync Status.
         IdCard(user: user),
+        if (Feature.location.on) ...[
+          const SizedBox(height: 16),
+          const CurrentLocationCard(),
+        ],
+        if (Feature.syncStatus.on) ...[
+          const SizedBox(height: 12),
+          const _SyncStatusCard(),
+        ],
         if (Feature.kpiCards.on) ...[
           const SectionHeader('Status'),
           const KpiGrid(),

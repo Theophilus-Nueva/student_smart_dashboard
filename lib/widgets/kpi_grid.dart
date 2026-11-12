@@ -46,6 +46,7 @@ class _KpiGridState extends State<KpiGrid> {
             ? ('Online', 'Updated ${formatTime(updated)}')
             : ('Not checked', 'JSONPlaceholder');
         return StatGrid(
+          columns: 3,
           children: [
             StatCard(
               label: 'Network',

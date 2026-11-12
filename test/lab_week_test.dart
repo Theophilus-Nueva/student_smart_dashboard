@@ -235,6 +235,7 @@ void main() {
     useWeek(4);
     await pumpApp(tester);
     await signInAs(tester, 'faculty', 'faculty123');
+    await scrollHomeTo(tester, 'Sync Status');
     expect(find.text('Sync Status'), findsOneWidget);
     expect(find.text('Pending records'), findsNothing); // Week 7
     await scrollHomeTo(tester, 'Student Records');

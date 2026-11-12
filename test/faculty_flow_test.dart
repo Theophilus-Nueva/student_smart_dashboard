@@ -14,7 +14,6 @@ void main() {
     await pumpApp(tester);
     await signInAs(tester, 'faculty', 'faculty123');
 
-    expect(find.text('Sync Status'), findsOneWidget);
     expect(find.text('Sync Now'), findsNothing);
 
     // Pull down from the top and let go: spinner shows, then it syncs.
@@ -31,6 +30,13 @@ void main() {
     await tester.pump(const Duration(seconds: 5));
     await tester.pumpAndSettle();
 
+    // Sync Status sits below the ID and location cards.
+    await tester.scrollUntilVisible(
+      find.text('Sync Status'),
+      200,
+      scrollable: homeScrollable,
+    );
+    expect(find.text('Sync Status'), findsOneWidget);
     await tester.scrollUntilVisible(
       find.text('Total Students'),
       200,

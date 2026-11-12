@@ -45,11 +45,12 @@ class StudentHome extends StatelessWidget {
           HomeScaffold.showsArButton ? 88 : 16,
         ),
         children: [
-          if (Feature.location.on) ...[
-            const CurrentLocationCard(),
-            const SizedBox(height: 16),
-          ],
+          // ID card first, then the location card with Open Map.
           IdCard(user: user),
+          if (Feature.location.on) ...[
+            const SizedBox(height: 16),
+            const CurrentLocationCard(),
+          ],
           if (Feature.kpiCards.on) ...[
             const SectionHeader('Status'),
             const KpiGrid(),
