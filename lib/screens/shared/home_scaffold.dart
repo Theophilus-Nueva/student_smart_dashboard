@@ -51,6 +51,9 @@ class HomeScaffold extends StatelessWidget {
                   ? () =>
                         Navigator.of(context).pushNamed(AppRoutes.notifications)
                   : null,
+              onAbout: Feature.aboutLpu.on
+                  ? () => Navigator.of(context).pushNamed(AppRoutes.about)
+                  : null,
             ),
           ),
         ),

@@ -1,13 +1,39 @@
 import 'package:flutter/material.dart';
 
+import '../../services/app_services.dart';
 import '../../services/file_export_service.dart';
 import '../../theme/app_colors.dart';
+import '../../widgets/common.dart';
 
 /// Shared / File Saved: confirmation and preview of `student_info.txt`.
 class FileSavedScreen extends StatelessWidget {
-  const FileSavedScreen({super.key, required this.result});
+  const FileSavedScreen({
+    super.key,
+    required this.result,
+    this.alsoSaved = const [],
+  });
 
   final ExportResult result;
+
+  /// Other files written in the same step (e.g. student_record.txt).
+  final List<String> alsoSaved;
+
+  Future<void> _share(BuildContext context) async {
+    final services = AppScope.of(context);
+    try {
+      final shared = await services.files.share(
+        result,
+        origin: shareOrigin(context),
+      );
+      if (shared && context.mounted) {
+        showAppSnack(context, '${result.fileName} shared');
+      }
+    } on Exception catch (e) {
+      if (context.mounted) {
+        showAppSnack(context, 'Could not share the file: $e', error: true);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -64,7 +90,22 @@ class FileSavedScreen extends StatelessWidget {
             result.path,
             style: const TextStyle(fontSize: 11, color: AppColors.muted),
           ),
+          if (alsoSaved.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              'Also saved: ${alsoSaved.join(', ')}',
+              style: const TextStyle(fontSize: 12, color: AppColors.muted),
+            ),
+          ],
           const SizedBox(height: 20),
+          Builder(
+            builder: (context) => OutlinedButton.icon(
+              onPressed: () => _share(context),
+              icon: const Icon(Icons.share),
+              label: const Text('Share'),
+            ),
+          ),
+          const SizedBox(height: 8),
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(),
             child: const Text('Done'),

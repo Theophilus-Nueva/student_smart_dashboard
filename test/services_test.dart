@@ -9,6 +9,8 @@ import 'package:smart_dashboard/services/file_export_service.dart';
 import 'package:smart_dashboard/services/location_service.dart';
 import 'package:smart_dashboard/services/task_service.dart';
 import 'package:smart_dashboard/widgets/id_card.dart';
+import 'package:smart_dashboard/widgets/info_cards.dart';
+import 'package:smart_dashboard/widgets/welcome_banner.dart';
 import 'package:smart_dashboard/widgets/network_status.dart';
 
 import 'test_helpers.dart';
@@ -35,6 +37,39 @@ void main() {
     );
     expect(text, contains('Program: BSIT'));
     await dir.delete(recursive: true);
+  });
+
+  test(
+    'Week 3 record file: student_record.txt with name, ID, program',
+    () async {
+      final dir = await Directory.systemTemp.createTemp('export');
+      addTearDown(() => dir.delete(recursive: true));
+      final service = FileExportService(documentsDirectory: () async => dir);
+      final s = sampleStudents[3];
+      final result = await service.saveRecord(s);
+      expect(result.fileName, 'student_record.txt');
+      expect(
+        await File(result.path).readAsString(),
+        'Name: ${s.name}\nID: ${s.id}\nProgram: ${s.program}\n',
+      );
+    },
+  );
+
+  test('Current semester follows the school calendar', () {
+    expect(semesterFor(DateTime(2026, 11, 12)), (
+      term: '1st Semester',
+      schoolYear: 'AY 2026–2027',
+    ));
+    expect(semesterFor(DateTime(2027, 2, 1)), (
+      term: '2nd Semester',
+      schoolYear: 'AY 2026–2027',
+    ));
+    expect(semesterFor(DateTime(2027, 6, 15)).term, 'Summer');
+  });
+
+  test('Welcome banner uses the first name', () {
+    expect(firstName('Nueva, Theophilus T.'), 'Theophilus');
+    expect(firstName('Ana Reyes'), 'Ana');
   });
 
   test('Place label: place, town and province, without house numbers', () {

@@ -7,6 +7,7 @@ import '../../models/student.dart';
 import '../../services/app_services.dart';
 import '../../widgets/common.dart';
 import '../../config/lab_week.dart';
+import 'student_summary_screen.dart';
 
 /// Faculty / Add Student, also used for Edit (Week 3 form → Week 4 CRUD).
 /// Required: name, ID, email, programme, year level. Optional: grade,
@@ -100,6 +101,23 @@ class _StudentFormScreenState extends State<StudentFormScreen> {
     );
     if (!mounted) return;
     showAppSnack(context, 'Saved ${student.name}');
+    if (Feature.summaryPage.on && !_isEdit) {
+      // Week 3: Form → Summary Page (data passed through the constructor).
+      await Navigator.of(context).pushReplacement(
+        MaterialPageRoute<void>(
+          builder: (_) => StudentSummaryScreen(
+            studentName: student.name,
+            studentId: student.id,
+            email: student.email,
+            program: student.program,
+            yearLevel: student.yearLevel,
+            contactNumber: student.contact,
+            address: student.address,
+          ),
+        ),
+      );
+      return;
+    }
     Navigator.of(context).pop();
   }
 

@@ -52,11 +52,19 @@ enum Feature {
   // Week 1 GPS KPI card, so they show from Week 1.
   location(1, 'Current Location card (Week 6, shown from Week 1)'),
   map(1, 'Map with Home, School and Workplace markers (Week 6)'),
+  // Week 1 Challenge 1 (LPU theme): welcome banner with name, programme
+  // and LPU Cavite, plus the campus icons.
+  campusWelcome(1, 'Welcome banner and campus icons', replacedIn: 7),
 
   // Week 2 – API integration.
   apiDirectory(2, 'Online Directory: API users with loading and error states'),
   facultyDirectory(2, 'Faculty Directory card'),
   apiSummary(2, 'API summary stats: users, companies, emails, contacts'),
+  programmeCards(
+    2,
+    'CCS programme cards: BSIT-NS, BSIT-WM, BSCS-DS, BSCS-SE',
+    replacedIn: 7,
+  ),
 
   // Week 3 – forms, navigation, local storage, file export.
   registrationForm(3, 'Registration form (Add Student)'),
@@ -66,7 +74,15 @@ enum Feature {
   ),
   myRecord(3, 'My Record: summary page with saved data'),
   fileExport(3, 'Export to student_info.txt and File Saved'),
-  aboutLpu(3, 'About LPU page'),
+  aboutLpu(3, 'About LPU page, opened from the AppBar'),
+  infoCards(
+    3,
+    'Dashboard cards: Students, Programs, Campus (Column / Row)',
+    replacedIn: 7,
+  ),
+  // Week 4 turns the form into Add/Edit Student inside Student Records,
+  // which goes back to the list after saving.
+  summaryPage(3, 'Form → Summary Page → File Saved', replacedIn: 4),
 
   // Week 4 – CRUD, stats, real-time API sync.
   studentRecords(4, 'Student Records: list, search, filter, edit, delete'),

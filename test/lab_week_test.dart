@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:smart_dashboard/config/lab_week.dart';
 import 'package:smart_dashboard/routes/app_routes.dart';
+import 'package:smart_dashboard/widgets/current_location_card.dart';
 
 import 'test_helpers.dart';
 
@@ -16,6 +17,13 @@ Finder textOnHome(String text) => find.descendant(
   of: find.byKey(const Key('home.dashboard')),
   matching: find.text(text),
 );
+
+Finder onLocationCard(String text) => find.descendant(
+  of: find.byType(CurrentLocationCard),
+  matching: find.text(text),
+);
+
+Finder aboutButton() => find.byTooltip('About LPU');
 
 Future<void> scrollHomeTo(WidgetTester tester, String text) =>
     tester.scrollUntilVisible(find.text(text), 150, scrollable: homeScrollable);
@@ -55,10 +63,15 @@ void main() {
     expect(services.tracker.running, isTrue); // GPS card from Week 1
     expect(find.text('LPU Smart Campus Dashboard'), findsOneWidget);
     expect(
-      find.text('Lyceum of the Philippines University Cavite'),
+      onLocationCard('Lyceum of the Philippines University Cavite'),
       findsOneWidget,
     ); // replaces GPS KPI
     expect(find.text('AR Guide'), findsNothing);
+    expect(aboutButton(), findsNothing); // Week 3
+
+    // Challenge 1: welcome banner with name, programme and LPU Cavite.
+    expect(textOnHome('Welcome, Theophilus!'), findsOneWidget);
+    expect(textOnHome('BS Information Technology'), findsOneWidget);
 
     // KPI cards: Network, API, Storage (no GPS card).
     await scrollHomeTo(tester, 'Storage');
@@ -79,10 +92,23 @@ void main() {
     await scrollHomeTo(tester, 'Reports');
     expect(textOnHome('Quick Actions'), findsOneWidget);
     expect(textOnHome('Device'), findsOneWidget);
-    expect(textOnHome('Network'), findsNWidgets(2)); // KPI card and tile
+    expect(textOnHome('Network'), findsWidgets); // KPI card and tile
     expect(textOnHome('Settings'), findsOneWidget);
     expect(textOnHome('My Record'), findsNothing);
     expect(textOnHome('Faculty Directory'), findsNothing);
+
+    expect(textOnHome('CCS Programmes'), findsNothing); // Week 2
+    expect(textOnHome('Overview'), findsNothing); // Week 3
+
+    // Challenge 1: campus icons.
+    await scrollHomeTo(tester, 'Facilities');
+    for (final label in [
+      'Academics',
+      'Student Services',
+      'Campus Announcements',
+    ]) {
+      expect(textOnHome(label), findsOneWidget, reason: label);
+    }
 
     await scrollHomeTo(tester, 'World Clock');
     expect(find.text('World Clock'), findsOneWidget);
@@ -177,6 +203,46 @@ void main() {
     expect(find.text('Students by program'), findsNothing);
   });
 
+  testWidgets('Week 2: CCS programme cards in a 2-column grid', (tester) async {
+    useWeek(2);
+    await pumpApp(tester);
+    await signInAs(tester, 'student', 'student123');
+    await scrollHomeTo(tester, 'BSCS-SE');
+    expect(textOnHome('CCS Programmes'), findsOneWidget);
+    for (final (code, count) in [
+      ('BSIT-NS', '120'),
+      ('BSIT-WM', '150'),
+      ('BSCS-DS', '100'),
+      ('BSCS-SE', '90'),
+    ]) {
+      expect(textOnHome(code), findsOneWidget, reason: code);
+      expect(textOnHome(count), findsOneWidget, reason: code);
+    }
+    final grid = tester.widget<GridView>(find.byType(GridView));
+    final delegate =
+        grid.gridDelegate as SliverGridDelegateWithFixedCrossAxisCount;
+    expect(delegate.crossAxisCount, 2);
+  });
+
+  testWidgets('Week 3: Students, Programs and Campus cards; About LPU', (
+    tester,
+  ) async {
+    useWeek(3);
+    await pumpApp(tester);
+    await signInAs(tester, 'student', 'student123');
+    await scrollHomeTo(tester, 'Active Programs');
+    for (final label in ['Students', 'Programs', 'Campus']) {
+      expect(textOnHome(label), findsWidgets, reason: label);
+    }
+    expect(find.textContaining('Total Students'), findsOneWidget);
+    expect(find.textContaining('Active Programs'), findsOneWidget);
+    expect(find.textContaining('Current Semester · AY '), findsOneWidget);
+
+    await tester.tap(aboutButton());
+    await tester.pumpAndSettle();
+    expect(find.widgetWithText(AppBar, 'About LPU'), findsOneWidget);
+  });
+
   testWidgets('Week 3: Student Directory lists students and adds one', (
     tester,
   ) async {
@@ -223,6 +289,30 @@ void main() {
     await tester.tap(save);
     await tester.pumpAndSettle();
 
+    // Summary Page with the data from the form, then File Saved.
+    expect(find.widgetWithText(AppBar, 'Summary'), findsOneWidget);
+    expect(find.text('Reyes, Ana'), findsOneWidget);
+    expect(find.text('2026-1-00007'), findsOneWidget);
+    final saveFile = find.byKey(const Key('summary.save'));
+    await tester.ensureVisible(saveFile);
+    await tester.pumpAndSettle();
+    await tester.tap(saveFile);
+    for (var i = 0; i < 20 && find.text('File Saved').evaluate().isEmpty; i++) {
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 20)),
+      );
+      await tester.pump();
+    }
+    await tester.pumpAndSettle();
+    expect(find.text('student_info.txt saved'), findsOneWidget);
+    expect(find.text('Also saved: student_record.txt'), findsOneWidget);
+    expect(find.textContaining('Name: Reyes, Ana'), findsOneWidget);
+    final done = find.text('Done');
+    await tester.ensureVisible(done);
+    await tester.pumpAndSettle();
+    await tester.tap(done);
+    await tester.pumpAndSettle();
+
     // Back on the directory, with the new student listed.
     expect(find.widgetWithText(AppBar, 'Student Directory'), findsOneWidget);
     await tester.scrollUntilVisible(
@@ -237,7 +327,7 @@ void main() {
     useWeek(3);
     await pumpApp(tester);
     await signInAs(tester, 'student', 'student123');
-    await scrollHomeTo(tester, 'About LPU');
+    await scrollHomeTo(tester, 'My Record');
     expect(textOnHome('My Record'), findsOneWidget);
     await pushRoute(tester, AppRoutes.myRecord);
     expect(find.text('Current Grade'), findsNothing);
@@ -278,7 +368,7 @@ void main() {
     expect(services.tracker.running, isTrue);
     expect(find.text('Smart Connected Dashboard'), findsOneWidget);
     expect(
-      find.text('Lyceum of the Philippines University Cavite'),
+      onLocationCard('Lyceum of the Philippines University Cavite'),
       findsOneWidget,
     );
     expect(find.text('AR Guide'), findsNothing);
@@ -300,7 +390,31 @@ void main() {
     // The Week 1 KPI cards and tiles are replaced by the final Home.
     expect(textOnHome('Reports'), findsNothing);
     expect(textOnHome('Storage'), findsNothing);
+    // So are the Week 1-3 banner, programme and overview cards.
+    expect(find.textContaining('Welcome, '), findsNothing);
+    expect(textOnHome('CCS Programmes'), findsNothing);
+    expect(textOnHome('Overview'), findsNothing);
+    expect(textOnHome('Facilities'), findsNothing);
   });
+
+  // Week 1 asks for portrait and landscape without overflow errors.
+  for (var week = 1; week <= 3; week++) {
+    for (final (user, password) in [
+      ('student', 'student123'),
+      ('faculty', 'faculty123'),
+    ]) {
+      testWidgets('Week $week: Home in landscape for $user', (tester) async {
+        useWeek(week);
+        tester.view.physicalSize = const Size(844, 390);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        await pumpApp(tester);
+        await signInAs(tester, user, password);
+        await scrollHomeTo(tester, 'World Clock');
+        expect(tester.takeException(), isNull);
+      });
+    }
+  }
 
   for (var week = 1; week <= 7; week++) {
     for (final (user, password) in [

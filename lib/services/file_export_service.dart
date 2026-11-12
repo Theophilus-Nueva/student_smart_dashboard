@@ -49,6 +49,7 @@ class FileExportService {
 
   static const fileName = 'student_info.txt';
   static const directoryFileName = 'student_directory.csv';
+  static const recordFileName = 'student_record.txt';
 
   final Future<Directory> Function() _documentsDirectory;
   final FileSharer _share;
@@ -57,6 +58,19 @@ class FileExportService {
     final dir = await _documentsDirectory();
     final file = File('${dir.path}${Platform.pathSeparator}$fileName');
     final content = student.toExportText();
+    await file.writeAsString(content);
+    return ExportResult(path: file.path, content: content);
+  }
+
+  /// Week 3 first file exercise: `student_record.txt` with the fields kept
+  /// in SharedPreferences (name, ID, programme).
+  Future<ExportResult> saveRecord(Student student) async {
+    final dir = await _documentsDirectory();
+    final file = File('${dir.path}${Platform.pathSeparator}$recordFileName');
+    final content =
+        'Name: ${student.name}\n'
+        'ID: ${student.id}\n'
+        'Program: ${student.program}\n';
     await file.writeAsString(content);
     return ExportResult(path: file.path, content: content);
   }

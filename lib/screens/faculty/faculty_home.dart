@@ -10,10 +10,13 @@ import '../../widgets/action_tile.dart';
 import '../../widgets/common.dart';
 import '../../widgets/current_location_card.dart';
 import '../../widgets/id_card.dart';
+import '../../widgets/info_cards.dart';
 import '../../widgets/kpi_grid.dart';
+import '../../widgets/programme_grid.dart';
 import '../../widgets/pull_to_sync.dart';
 import '../../widgets/stat_card.dart';
 import '../../widgets/tour_progress_card.dart';
+import '../../widgets/welcome_banner.dart';
 import '../../widgets/world_clock.dart';
 import '../shared/dashboard_tiles.dart';
 import '../shared/home_scaffold.dart';
@@ -68,6 +71,10 @@ class _FacultyHomeState extends State<FacultyHome> {
       children: [
         // ID card first, then the location card and Sync Status.
         IdCard(user: user),
+        if (Feature.campusWelcome.on) ...[
+          const SizedBox(height: 16),
+          WelcomeBanner(user: user),
+        ],
         if (Feature.location.on) ...[
           const SizedBox(height: 16),
           const CurrentLocationCard(),
@@ -79,6 +86,15 @@ class _FacultyHomeState extends State<FacultyHome> {
         if (Feature.kpiCards.on) ...[
           const SectionHeader('Status'),
           const KpiGrid(),
+        ],
+        // Week 4's Class Overview takes over Total Students.
+        if (Feature.infoCards.on && !Feature.classStats.on) ...[
+          const SectionHeader('Overview'),
+          const InfoCards(),
+        ],
+        if (Feature.programmeCards.on) ...[
+          const SectionHeader('CCS Programmes'),
+          const ProgrammeGrid(),
         ],
         if (Feature.classStats.on) ...[
           const SectionHeader('Class Overview'),
@@ -163,6 +179,10 @@ class _FacultyHomeState extends State<FacultyHome> {
                 ),
             ],
           ),
+        ],
+        if (Feature.campusWelcome.on) ...[
+          const SectionHeader('Campus'),
+          const CampusIcons(),
         ],
         // Hidden for now; see FeatureFlags.showHomeTourProgress.
         if (FeatureFlags.showHomeTourProgress && Feature.tourProgress.on) ...[

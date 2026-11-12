@@ -11,12 +11,16 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.title,
     this.unread = 0,
     this.onNotifications,
+    this.onAbout,
   });
 
   /// Defaults to the current lab week's app name.
   final String? title;
   final int unread;
   final VoidCallback? onNotifications;
+
+  /// Week 3: About LPU opened from the AppBar. Hidden when null.
+  final VoidCallback? onAbout;
 
   @override
   Size get preferredSize => const Size.fromHeight(64);
@@ -47,6 +51,12 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
         ],
       ),
       actions: [
+        if (onAbout != null)
+          IconButton(
+            tooltip: 'About LPU',
+            onPressed: onAbout,
+            icon: const Icon(Icons.info_outline),
+          ),
         IconButton(
           tooltip: 'Notifications',
           onPressed: onNotifications,
