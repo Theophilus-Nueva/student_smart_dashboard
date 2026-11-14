@@ -419,6 +419,10 @@ void main() {
     final home = tester.getRect(find.byKey(const Key('home.dashboard')));
     expect(home.left, greaterThanOrEqualTo(59));
     expect(home.right, lessThanOrEqualTo(844 - 59));
+    // The Dashboard / Recent Activity bar still spans the full width.
+    final tabs = tester.getRect(find.byType(TabBar));
+    expect(tabs.left, 0);
+    expect(tabs.right, 844);
 
     await pushRoute(tester, AppRoutes.about);
     final about = tester.getRect(find.byType(ListView).last);

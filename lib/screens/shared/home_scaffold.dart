@@ -57,27 +57,29 @@ class HomeScaffold extends StatelessWidget {
             ),
           ),
         ),
-        body: SafeArea(
-          top: false,
-          bottom: false,
-          child: Column(
-            children: [
-              const Material(
-                color: Colors.white,
-                child: TabBar(
-                  tabs: [
-                    Tab(text: 'Dashboard'),
-                    Tab(text: 'Recent Activity'),
-                  ],
-                ),
+        body: Column(
+          children: [
+            // The tab bar spans the full width, like the AppBar; only the
+            // tab content keeps clear of the notch in landscape.
+            const Material(
+              color: Colors.white,
+              child: TabBar(
+                tabs: [
+                  Tab(text: 'Dashboard'),
+                  Tab(text: 'Recent Activity'),
+                ],
               ),
-              Expanded(
+            ),
+            Expanded(
+              child: SafeArea(
+                top: false,
+                bottom: false,
                 child: TabBarView(
                   children: [dashboard, const RecentActivityView()],
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
