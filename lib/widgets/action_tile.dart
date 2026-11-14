@@ -43,23 +43,34 @@ class ActionTile extends StatelessWidget {
   }
 }
 
-/// Two-column grid of [ActionTile]s (four columns on tablets, Week 1).
+/// Two-column grid of [ActionTile]s (four columns on tablets and in
+/// landscape, Week 1). Tiles keep a fixed height so two-line labels fit
+/// however wide the columns are.
 class ActionGrid extends StatelessWidget {
   const ActionGrid({super.key, required this.children});
 
   final List<Widget> children;
 
+  static const tileHeight = 100.0;
+  static const spacing = 10.0;
+
   @override
   Widget build(BuildContext context) {
-    final wide = MediaQuery.sizeOf(context).width > 600;
-    return GridView.count(
-      crossAxisCount: wide ? 4 : 2,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisSpacing: 10,
-      mainAxisSpacing: 10,
-      childAspectRatio: wide ? 2.0 : 1.75,
-      children: children,
+    final columns = MediaQuery.sizeOf(context).width > 600 ? 4 : 2;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final cell = (constraints.maxWidth - spacing * (columns - 1)) / columns;
+        return GridView.count(
+          crossAxisCount: columns,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          padding: EdgeInsets.zero,
+          crossAxisSpacing: spacing,
+          mainAxisSpacing: spacing,
+          childAspectRatio: cell / tileHeight,
+          children: children,
+        );
+      },
     );
   }
 }

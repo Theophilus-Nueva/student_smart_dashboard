@@ -22,10 +22,14 @@ class PlaceholderScreen extends StatelessWidget {
       appBar: showAppBar
           ? AppBar(title: Text(title), automaticallyImplyLeading: true)
           : null,
-      body: StateMessage(
-        icon: Icons.construction,
-        title: title,
-        message: message,
+      body: SafeArea(
+        top: false,
+        bottom: false,
+        child: StateMessage(
+          icon: Icons.construction,
+          title: title,
+          message: message,
+        ),
       ),
     );
   }

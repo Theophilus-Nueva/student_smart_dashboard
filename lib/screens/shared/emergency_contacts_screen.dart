@@ -87,59 +87,63 @@ class EmergencyContactsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Emergency Contacts')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const Text(
-            "Tapping a contact opens your phone's dialer, SMS or email app.",
-            style: TextStyle(color: AppColors.muted),
-          ),
-          const SizedBox(height: 12),
-          ListRow(
-            icon: Icons.call,
-            title: 'Call Security',
-            subtitle: 'Campus security office · +63 912 345 6789',
-            onTap: () => _open(
-              context,
-              'Call Security',
-              Uri(scheme: 'tel', path: securityNumber),
+      body: SafeArea(
+        top: false,
+        bottom: false,
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            const Text(
+              "Tapping a contact opens your phone's dialer, SMS or email app.",
+              style: TextStyle(color: AppColors.muted),
             ),
-          ),
-          const SizedBox(height: 10),
-          ListRow(
-            icon: Icons.call,
-            title: 'Call Adviser',
-            subtitle: 'Your class adviser · +63 912 345 6790',
-            onTap: () => _open(
-              context,
-              'Call Adviser',
-              Uri(scheme: 'tel', path: adviserNumber),
-            ),
-          ),
-          const SizedBox(height: 10),
-          ListRow(
-            icon: Icons.email,
-            title: 'Email Support',
-            subtitle: supportEmail,
-            onTap: () => _open(
-              context,
-              'Email Support',
-              Uri(
-                scheme: 'mailto',
-                path: supportEmail,
-                query: 'subject=Smart%20Campus%20Tour%20Guide%20support',
+            const SizedBox(height: 12),
+            ListRow(
+              icon: Icons.call,
+              title: 'Call Security',
+              subtitle: 'Campus security office · +63 912 345 6789',
+              onTap: () => _open(
+                context,
+                'Call Security',
+                Uri(scheme: 'tel', path: securityNumber),
               ),
             ),
-          ),
-          const SizedBox(height: 10),
-          ListRow(
-            icon: Icons.sms,
-            iconColor: AppColors.brand,
-            title: 'Send SOS SMS',
-            subtitle: 'Texts your location to campus security',
-            onTap: () => _sos(context),
-          ),
-        ],
+            const SizedBox(height: 10),
+            ListRow(
+              icon: Icons.call,
+              title: 'Call Adviser',
+              subtitle: 'Your class adviser · +63 912 345 6790',
+              onTap: () => _open(
+                context,
+                'Call Adviser',
+                Uri(scheme: 'tel', path: adviserNumber),
+              ),
+            ),
+            const SizedBox(height: 10),
+            ListRow(
+              icon: Icons.email,
+              title: 'Email Support',
+              subtitle: supportEmail,
+              onTap: () => _open(
+                context,
+                'Email Support',
+                Uri(
+                  scheme: 'mailto',
+                  path: supportEmail,
+                  query: 'subject=Smart%20Campus%20Tour%20Guide%20support',
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            ListRow(
+              icon: Icons.sms,
+              iconColor: AppColors.brand,
+              title: 'Send SOS SMS',
+              subtitle: 'Texts your location to campus security',
+              onTap: () => _sos(context),
+            ),
+          ],
+        ),
       ),
     );
   }

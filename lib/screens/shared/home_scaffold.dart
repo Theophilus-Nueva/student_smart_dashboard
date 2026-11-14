@@ -57,23 +57,27 @@ class HomeScaffold extends StatelessWidget {
             ),
           ),
         ),
-        body: Column(
-          children: [
-            const Material(
-              color: Colors.white,
-              child: TabBar(
-                tabs: [
-                  Tab(text: 'Dashboard'),
-                  Tab(text: 'Recent Activity'),
-                ],
+        body: SafeArea(
+          top: false,
+          bottom: false,
+          child: Column(
+            children: [
+              const Material(
+                color: Colors.white,
+                child: TabBar(
+                  tabs: [
+                    Tab(text: 'Dashboard'),
+                    Tab(text: 'Recent Activity'),
+                  ],
+                ),
               ),
-            ),
-            Expanded(
-              child: TabBarView(
-                children: [dashboard, const RecentActivityView()],
+              Expanded(
+                child: TabBarView(
+                  children: [dashboard, const RecentActivityView()],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

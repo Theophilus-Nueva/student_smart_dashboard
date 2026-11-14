@@ -21,9 +21,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final label = AppBottomNav.items[_selectedIndex].$2;
     return Scaffold(
       appBar: const HomeAppBar(unread: 8),
-      body: _selectedIndex == 0
-          ? const DashboardBody()
-          : Center(child: Text('$label (coming soon)')),
+      body: SafeArea(
+        top: false,
+        bottom: false,
+        child: _selectedIndex == 0
+            ? const DashboardBody()
+            : Center(child: Text('$label (coming soon)')),
+      ),
       bottomNavigationBar: AppBottomNav(
         currentIndex: _selectedIndex,
         onTap: (i) => setState(() => _selectedIndex = i),

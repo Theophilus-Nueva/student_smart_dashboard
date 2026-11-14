@@ -39,85 +39,92 @@ class _StudentRecordsScreenState extends State<StudentRecordsScreen> {
       appBar: AppBar(
         title: Text(full ? 'Student Records' : 'Student Directory'),
       ),
-      body: PullToSync(
-        enabled: Feature.pullToRefresh.on,
-        onRefresh: () => refreshAndSync(context),
-        child: ListenableBuilder(
-          listenable: Listenable.merge([repo, _search]),
-          builder: (context, _) {
-            final results = repo.search(_search.text, program: _program);
-            return ListView(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-              children: [
-                if (full)
-                  TextField(
-                    controller: _search,
-                    decoration: const InputDecoration(
-                      hintText: 'Search by student ID or name',
-                      prefixIcon: Icon(Icons.search),
+      body: SafeArea(
+        top: false,
+        bottom: false,
+        child: PullToSync(
+          enabled: Feature.pullToRefresh.on,
+          onRefresh: () => refreshAndSync(context),
+          child: ListenableBuilder(
+            listenable: Listenable.merge([repo, _search]),
+            builder: (context, _) {
+              final results = repo.search(_search.text, program: _program);
+              return ListView(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+                children: [
+                  if (full)
+                    TextField(
+                      controller: _search,
+                      decoration: const InputDecoration(
+                        hintText: 'Search by student ID or name',
+                        prefixIcon: Icon(Icons.search),
+                      ),
+                    ),
+                  // Hidden for now; see FeatureFlags.showRecordsProgramFilter.
+                  if (full && FeatureFlags.showRecordsProgramFilter) ...[
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        PillChip(
+                          label: 'All Students',
+                          selected: _program == null,
+                          onTap: () => setState(() => _program = null),
+                        ),
+                        for (final p in Student.programs)
+                          PillChip(
+                            label: p,
+                            selected: _program == p,
+                            onTap: () => setState(() => _program = p),
+                          ),
+                      ],
+                    ),
+                  ],
+                  const SizedBox(height: 12),
+                  Text(
+                    '${results.length} ${results.length == 1 ? 'student' : 'students'}'
+                    '${full ? ' · sorted by name' : ''}',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: AppColors.muted,
                     ),
                   ),
-                // Hidden for now; see FeatureFlags.showRecordsProgramFilter.
-                if (full && FeatureFlags.showRecordsProgramFilter) ...[
-                  const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      PillChip(
-                        label: 'All Students',
-                        selected: _program == null,
-                        onTap: () => setState(() => _program = null),
-                      ),
-                      for (final p in Student.programs)
-                        PillChip(
-                          label: p,
-                          selected: _program == p,
-                          onTap: () => setState(() => _program = p),
-                        ),
-                    ],
-                  ),
-                ],
-                const SizedBox(height: 12),
-                Text(
-                  '${results.length} ${results.length == 1 ? 'student' : 'students'}'
-                  '${full ? ' · sorted by name' : ''}',
-                  style: const TextStyle(fontSize: 13, color: AppColors.muted),
-                ),
-                const SizedBox(height: 8),
-                if (results.isEmpty)
-                  StateMessage(
-                    icon: Icons.person_search,
-                    title: repo.total == 0 ? 'No students yet' : 'No matches',
-                    message: repo.total == 0
-                        ? 'Add a student to get started.'
-                        : 'Try another name, ID or programme.',
-                  ),
-                for (final s in results) ...[
-                  _StudentCard(student: s, full: full),
-                  const SizedBox(height: 10),
-                ],
-                const SizedBox(height: 4),
-                ElevatedButton.icon(
-                  onPressed: () =>
-                      Navigator.of(context).pushNamed(AppRoutes.studentForm),
-                  icon: const Icon(Icons.add),
-                  label: const Text('Add Student'),
-                ),
-                // Week 3 file export: the whole list as CSV, then Share.
-                if (Feature.fileExport.on) ...[
                   const SizedBox(height: 8),
-                  OutlinedButton.icon(
-                    onPressed: repo.total == 0
-                        ? null
-                        : () => exportStudentDirectory(context),
-                    icon: const Icon(Icons.ios_share),
-                    label: const Text('Export to student_directory.csv'),
+                  if (results.isEmpty)
+                    StateMessage(
+                      icon: Icons.person_search,
+                      title: repo.total == 0 ? 'No students yet' : 'No matches',
+                      message: repo.total == 0
+                          ? 'Add a student to get started.'
+                          : 'Try another name, ID or programme.',
+                    ),
+                  for (final s in results) ...[
+                    _StudentCard(student: s, full: full),
+                    const SizedBox(height: 10),
+                  ],
+                  const SizedBox(height: 4),
+                  ElevatedButton.icon(
+                    onPressed: () =>
+                        Navigator.of(context).pushNamed(AppRoutes.studentForm),
+                    icon: const Icon(Icons.add),
+                    label: const Text('Add Student'),
                   ),
+                  // Week 3 file export: the whole list as CSV, then Share.
+                  if (Feature.fileExport.on) ...[
+                    const SizedBox(height: 8),
+                    OutlinedButton.icon(
+                      onPressed: repo.total == 0
+                          ? null
+                          : () => exportStudentDirectory(context),
+                      icon: const Icon(Icons.ios_share),
+                      label: const Text('Export to student_directory.csv'),
+                    ),
+                  ],
                 ],
-              ],
-            );
-          },
+              );
+            },
+          ),
         ),
       ),
     );

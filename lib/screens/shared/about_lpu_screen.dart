@@ -43,48 +43,52 @@ class AboutLpuScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('About LPU')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const SizedBox(height: 8),
-          Image.asset(AppAssets.logo, height: 96),
-          const SizedBox(height: 12),
-          const Text(
-            'Lyceum of the Philippines University – Cavite',
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 4),
-          const Text(
-            'Governor’s Drive, Manggahan, General Trias, Cavite',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: AppColors.muted),
-          ),
-          const SizedBox(height: 16),
-          for (final (title, body) in sections) ...[
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.brand,
+      body: SafeArea(
+        top: false,
+        bottom: false,
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            const SizedBox(height: 8),
+            Image.asset(AppAssets.logo, height: 96),
+            const SizedBox(height: 12),
+            const Text(
+              'Lyceum of the Philippines University – Cavite',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'Governor’s Drive, Manggahan, General Trias, Cavite',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: AppColors.muted),
+            ),
+            const SizedBox(height: 16),
+            for (final (title, body) in sections) ...[
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.brand,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(body, style: const TextStyle(height: 1.4)),
-                  ],
+                      const SizedBox(height: 6),
+                      Text(body, style: const TextStyle(height: 1.4)),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 10),
+              const SizedBox(height: 10),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }

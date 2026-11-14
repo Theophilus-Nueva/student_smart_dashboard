@@ -47,12 +47,24 @@ Future<AppServices> makeServices({
 }
 
 /// Pumps the app on a phone-sized screen (Figma frames are 390x844).
+/// [size] is in logical pixels (default: iPhone 390 x 844 portrait);
+/// [sidePadding] fakes the landscape notch insets.
 Future<AppServices> pumpApp(
   WidgetTester tester, {
   AppServices? services,
+  Size size = const Size(390, 844),
+  double sidePadding = 0,
 }) async {
-  tester.view.physicalSize = const Size(390, 844) * 3;
+  tester.view.physicalSize = size * 3;
   tester.view.devicePixelRatio = 3;
+  if (sidePadding > 0) {
+    final inset = FakeViewPadding(
+      left: sidePadding * 3,
+      right: sidePadding * 3,
+    );
+    tester.view.padding = inset;
+    tester.view.viewPadding = inset;
+  }
   addTearDown(tester.view.reset);
   final s = services ?? await makeServices();
   await tester.pumpWidget(SmartCampusApp(services: s));
@@ -67,6 +79,9 @@ Future<void> signInAs(
 ) async {
   await tester.enterText(find.byKey(const Key('login.username')), username);
   await tester.enterText(find.byKey(const Key('login.password')), password);
+  // In landscape the button is below the fold.
+  await tester.ensureVisible(find.text('Sign In'));
+  await tester.pumpAndSettle();
   await tester.tap(find.text('Sign In'));
   await tester.pumpAndSettle();
 }

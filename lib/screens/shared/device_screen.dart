@@ -48,162 +48,176 @@ class DeviceScreen extends StatelessWidget {
         title: const Text('Device'),
         automaticallyImplyLeading: false,
       ),
-      body: ListenableBuilder(
-        listenable: device,
-        builder: (context, _) {
-          final latest = device.latestPhoto;
-          final heading = device.heading;
-          return ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              const SectionHeader('Camera'),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Container(
-                  height: 180,
-                  color: AppColors.field,
-                  child: latest == null
-                      ? const Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.image, size: 48, color: AppColors.muted),
-                            SizedBox(height: 6),
-                            Text(
-                              'No photo yet',
-                              style: TextStyle(color: AppColors.muted),
-                            ),
-                          ],
-                        )
-                      : Image.file(
-                          File(latest.path),
-                          fit: BoxFit.cover,
-                          width: double.infinity,
-                        ),
-                ),
-              ),
-              if (latest != null) ...[
-                const SizedBox(height: 6),
-                Text(
-                  '${latest.name} · ${latest.sizeLabel} · '
-                  '${latest.fromCamera ? 'Captured' : 'Selected'} '
-                  '${formatWhen(latest.time).toLowerCase()}',
-                  style: const TextStyle(fontSize: 12, color: AppColors.muted),
-                ),
-              ],
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () => _pick(context, fromCamera: true),
-                      icon: const Icon(Icons.camera_alt),
-                      label: const Text('Take Photo'),
-                    ),
+      body: SafeArea(
+        top: false,
+        bottom: false,
+        child: ListenableBuilder(
+          listenable: device,
+          builder: (context, _) {
+            final latest = device.latestPhoto;
+            final heading = device.heading;
+            return ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                const SectionHeader('Camera'),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    height: 180,
+                    color: AppColors.field,
+                    child: latest == null
+                        ? const Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.image,
+                                size: 48,
+                                color: AppColors.muted,
+                              ),
+                              SizedBox(height: 6),
+                              Text(
+                                'No photo yet',
+                                style: TextStyle(color: AppColors.muted),
+                              ),
+                            ],
+                          )
+                        : Image.file(
+                            File(latest.path),
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                          ),
                   ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () => _pick(context, fromCamera: false),
-                      icon: const Icon(Icons.image),
-                      label: const Text('Select Photo'),
-                    ),
-                  ),
-                ],
-              ),
-              if (device.photos.isNotEmpty) ...[
-                const SizedBox(height: 12),
-                const Text(
-                  'Last 3 images',
-                  style: TextStyle(fontWeight: FontWeight.w500),
                 ),
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    for (var i = 0; i < 3; i++) ...[
-                      if (i > 0) const SizedBox(width: 8),
-                      Expanded(
-                        child: i < device.photos.length
-                            ? _Thumb(photo: device.photos[i])
-                            : const SizedBox(),
-                      ),
-                    ],
-                  ],
-                ),
-              ],
-              _sensorHeader('Accelerometer', device.status['Accelerometer']!),
-              _AxisRow(
-                values: device.accel,
-                notes: [
-                  for (final m in device.accelMax.values)
-                    'max ${m.toStringAsFixed(2)}',
-                ],
-              ),
-              if (device.accelHistory.length > 1)
-                Padding(
-                  padding: const EdgeInsets.only(top: 6),
-                  child: Text(
-                    'Movement (X): '
-                    '${device.accelHistory.take(5).map((v) => v.x.toStringAsFixed(1)).join(' → ')}',
+                if (latest != null) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                    '${latest.name} · ${latest.sizeLabel} · '
+                    '${latest.fromCamera ? 'Captured' : 'Selected'} '
+                    '${formatWhen(latest.time).toLowerCase()}',
                     style: const TextStyle(
                       fontSize: 12,
                       color: AppColors.muted,
                     ),
                   ),
-                ),
-              _sensorHeader('Gyroscope', device.status['Gyroscope']!),
-              _AxisRow(
-                values: device.gyro,
-                notes: [
-                  for (final p in device.gyroPrevious.values)
-                    'prev ${p.toStringAsFixed(2)}',
                 ],
-              ),
-              _sensorHeader('Compass', device.status['Compass']!),
-              Card(
-                child: ListTile(
-                  leading: Transform.rotate(
-                    angle: -(heading ?? 0) * math.pi / 180,
-                    child: const Icon(Icons.navigation, color: AppColors.brand),
-                  ),
-                  title: Text(
-                    heading == null
-                        ? 'Heading —'
-                        : '${device.direction} · ${heading.round()}°',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () => _pick(context, fromCamera: true),
+                        icon: const Icon(Icons.camera_alt),
+                        label: const Text('Take Photo'),
+                      ),
                     ),
-                  ),
-                  subtitle: Text(
-                    device.directionHistory.isEmpty
-                        ? 'Hold the phone flat for a steady reading'
-                        : 'Recent: ${device.directionHistory.map((d) => '${d.$1} ${formatTime(d.$2)}').join(' · ')}',
-                  ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () => _pick(context, fromCamera: false),
+                        icon: const Icon(Icons.image),
+                        label: const Text('Select Photo'),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              const SectionHeader('Sensor Status'),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 6,
+                if (device.photos.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Last 3 images',
+                    style: TextStyle(fontWeight: FontWeight.w500),
                   ),
-                  child: Column(
+                  const SizedBox(height: 6),
+                  Row(
                     children: [
-                      for (final MapEntry(key: name, value: s)
-                          in device.status.entries)
-                        DetailLine(
-                          label: name,
-                          value: _statusLabel(s),
-                          valueColor: _statusColor(s),
+                      for (var i = 0; i < 3; i++) ...[
+                        if (i > 0) const SizedBox(width: 8),
+                        Expanded(
+                          child: i < device.photos.length
+                              ? _Thumb(photo: device.photos[i])
+                              : const SizedBox(),
                         ),
+                      ],
                     ],
                   ),
+                ],
+                _sensorHeader('Accelerometer', device.status['Accelerometer']!),
+                _AxisRow(
+                  values: device.accel,
+                  notes: [
+                    for (final m in device.accelMax.values)
+                      'max ${m.toStringAsFixed(2)}',
+                  ],
                 ),
-              ),
-            ],
-          );
-        },
+                if (device.accelHistory.length > 1)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Text(
+                      'Movement (X): '
+                      '${device.accelHistory.take(5).map((v) => v.x.toStringAsFixed(1)).join(' → ')}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.muted,
+                      ),
+                    ),
+                  ),
+                _sensorHeader('Gyroscope', device.status['Gyroscope']!),
+                _AxisRow(
+                  values: device.gyro,
+                  notes: [
+                    for (final p in device.gyroPrevious.values)
+                      'prev ${p.toStringAsFixed(2)}',
+                  ],
+                ),
+                _sensorHeader('Compass', device.status['Compass']!),
+                Card(
+                  child: ListTile(
+                    leading: Transform.rotate(
+                      angle: -(heading ?? 0) * math.pi / 180,
+                      child: const Icon(
+                        Icons.navigation,
+                        color: AppColors.brand,
+                      ),
+                    ),
+                    title: Text(
+                      heading == null
+                          ? 'Heading —'
+                          : '${device.direction} · ${heading.round()}°',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    subtitle: Text(
+                      device.directionHistory.isEmpty
+                          ? 'Hold the phone flat for a steady reading'
+                          : 'Recent: ${device.directionHistory.map((d) => '${d.$1} ${formatTime(d.$2)}').join(' · ')}',
+                    ),
+                  ),
+                ),
+                const SectionHeader('Sensor Status'),
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 6,
+                    ),
+                    child: Column(
+                      children: [
+                        for (final MapEntry(key: name, value: s)
+                            in device.status.entries)
+                          DetailLine(
+                            label: name,
+                            value: _statusLabel(s),
+                            valueColor: _statusColor(s),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }

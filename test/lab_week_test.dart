@@ -409,18 +409,33 @@ void main() {
     expect(textOnHome('Overview'), findsNothing);
   });
 
-  // Week 1 asks for portrait and landscape without overflow errors.
-  for (var week = 1; week <= 3; week++) {
+  testWidgets('Landscape iPhone: content stays clear of the notch', (
+    tester,
+  ) async {
+    // iPhone in landscape: 844 x 390 with 59 px side insets (camera side
+    // and the matching inset on the other side).
+    await pumpApp(tester, size: const Size(844, 390), sidePadding: 59);
+    await signInAs(tester, 'student', 'student123');
+    final home = tester.getRect(find.byKey(const Key('home.dashboard')));
+    expect(home.left, greaterThanOrEqualTo(59));
+    expect(home.right, lessThanOrEqualTo(844 - 59));
+
+    await pushRoute(tester, AppRoutes.about);
+    final about = tester.getRect(find.byType(ListView).last);
+    expect(about.left, greaterThanOrEqualTo(59));
+    expect(tester.takeException(), isNull);
+  });
+
+  // Week 1 asks for portrait and landscape without overflow errors; checked
+  // for every week (iPhone landscape with notch insets).
+  for (var week = 1; week <= 7; week++) {
     for (final (user, password) in [
       ('student', 'student123'),
       ('faculty', 'faculty123'),
     ]) {
       testWidgets('Week $week: Home in landscape for $user', (tester) async {
         useWeek(week);
-        tester.view.physicalSize = const Size(844, 390);
-        tester.view.devicePixelRatio = 1;
-        addTearDown(tester.view.reset);
-        await pumpApp(tester);
+        await pumpApp(tester, size: const Size(844, 390), sidePadding: 59);
         await signInAs(tester, user, password);
         await scrollHomeTo(tester, 'World Clock');
         expect(tester.takeException(), isNull);

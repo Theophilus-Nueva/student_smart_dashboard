@@ -103,80 +103,84 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     final settings = services.settings;
     return Scaffold(
       appBar: AppBar(title: const Text('Notifications')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          ElevatedButton.icon(
-            onPressed: () => _send(
-              ReminderCategory.dashboard,
-              'Dashboard Reminder',
-              'You have pending tasks',
+      body: SafeArea(
+        top: false,
+        bottom: false,
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            ElevatedButton.icon(
+              onPressed: () => _send(
+                ReminderCategory.dashboard,
+                'Dashboard Reminder',
+                'You have pending tasks',
+              ),
+              icon: const Icon(Icons.notifications_active),
+              label: const Text('Send Test Notification'),
             ),
-            icon: const Icon(Icons.notifications_active),
-            label: const Text('Send Test Notification'),
-          ),
-          const NotificationTogglesSection(),
-          const SizedBox(height: 8),
-          ListenableBuilder(
-            listenable: settings,
-            builder: (context, _) => Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                for (final MapEntry(key: category, value: sample)
-                    in NotificationsScreen._samples.entries)
-                  OutlinedButton(
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size(0, 40),
+            const NotificationTogglesSection(),
+            const SizedBox(height: 8),
+            ListenableBuilder(
+              listenable: settings,
+              builder: (context, _) => Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final MapEntry(key: category, value: sample)
+                      in NotificationsScreen._samples.entries)
+                    OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size(0, 40),
+                      ),
+                      onPressed: settings.get(sample.$3)
+                          ? () => _send(category, sample.$1, sample.$2)
+                          : null,
+                      child: Text('Send ${category.label.split(' ').first}'),
                     ),
-                    onPressed: settings.get(sample.$3)
-                        ? () => _send(category, sample.$1, sample.$2)
-                        : null,
-                    child: Text('Send ${category.label.split(' ').first}'),
-                  ),
-              ],
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 4),
-          const Text(
-            'Turn a category off above to stop its reminders.',
-            style: TextStyle(fontSize: 12, color: AppColors.muted),
-          ),
-          const SectionHeader('Recent'),
-          ListenableBuilder(
-            listenable: activity,
-            builder: (context, _) {
-              final items = activity.items.take(10).toList();
-              if (items.isEmpty) {
-                return const Text(
-                  'Nothing yet.',
-                  style: TextStyle(color: AppColors.muted),
-                );
-              }
-              return Card(
-                child: Column(
-                  children: [
-                    for (final i in items)
-                      ListTile(
-                        leading: Icon(i.kind.icon),
-                        title: Text(i.title),
-                        subtitle: i.description.isEmpty
-                            ? null
-                            : Text(i.description),
-                        trailing: Text(
-                          formatTime(i.time),
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: AppColors.muted,
+            const SizedBox(height: 4),
+            const Text(
+              'Turn a category off above to stop its reminders.',
+              style: TextStyle(fontSize: 12, color: AppColors.muted),
+            ),
+            const SectionHeader('Recent'),
+            ListenableBuilder(
+              listenable: activity,
+              builder: (context, _) {
+                final items = activity.items.take(10).toList();
+                if (items.isEmpty) {
+                  return const Text(
+                    'Nothing yet.',
+                    style: TextStyle(color: AppColors.muted),
+                  );
+                }
+                return Card(
+                  child: Column(
+                    children: [
+                      for (final i in items)
+                        ListTile(
+                          leading: Icon(i.kind.icon),
+                          title: Text(i.title),
+                          subtitle: i.description.isEmpty
+                              ? null
+                              : Text(i.description),
+                          trailing: Text(
+                            formatTime(i.time),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppColors.muted,
+                            ),
                           ),
                         ),
-                      ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ],
+                    ],
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
       ),
     );
   }

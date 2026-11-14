@@ -36,96 +36,102 @@ class _CampusTourScreenState extends State<CampusTourScreen> {
     final tour = services.tour;
     return Scaffold(
       appBar: AppBar(title: const Text('Campus Tour')),
-      body: ListenableBuilder(
-        listenable: Listenable.merge([tour, _search]),
-        builder: (context, _) {
-          final q = _search.text.trim().toLowerCase();
-          final locations = tour.locations.where((l) {
-            final matches =
-                q.isEmpty ||
-                l.title.toLowerCase().contains(q) ||
-                l.subtitle.toLowerCase().contains(q);
-            final passes = switch (_filter) {
-              _TourFilter.all => true,
-              _TourFilter.visited => tour.isVisited(l.id),
-              _TourFilter.notVisited => !tour.isVisited(l.id),
-              _TourFilter.bookmarked => tour.isBookmarked(l.id),
-            };
-            return matches && passes;
-          }).toList();
-          final history = tour.visits.take(10).toList();
+      body: SafeArea(
+        top: false,
+        bottom: false,
+        child: ListenableBuilder(
+          listenable: Listenable.merge([tour, _search]),
+          builder: (context, _) {
+            final q = _search.text.trim().toLowerCase();
+            final locations = tour.locations.where((l) {
+              final matches =
+                  q.isEmpty ||
+                  l.title.toLowerCase().contains(q) ||
+                  l.subtitle.toLowerCase().contains(q);
+              final passes = switch (_filter) {
+                _TourFilter.all => true,
+                _TourFilter.visited => tour.isVisited(l.id),
+                _TourFilter.notVisited => !tour.isVisited(l.id),
+                _TourFilter.bookmarked => tour.isBookmarked(l.id),
+              };
+              return matches && passes;
+            }).toList();
+            final history = tour.visits.take(10).toList();
 
-          return ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              SyncStatusBanner(sync: services.sync),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _search,
-                decoration: const InputDecoration(
-                  hintText: 'Search locations',
-                  prefixIcon: Icon(Icons.search),
-                ),
-              ),
-              const SizedBox(height: 10),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  for (final (f, label) in const [
-                    (_TourFilter.all, 'All'),
-                    (_TourFilter.visited, 'Visited'),
-                    (_TourFilter.notVisited, 'Not visited'),
-                    (_TourFilter.bookmarked, 'Bookmarks'),
-                  ])
-                    PillChip(
-                      label: label,
-                      selected: _filter == f,
-                      onTap: () => setState(() => _filter = f),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              TourProgressCard(tour: tour),
-              const SectionHeader('Campus Locations'),
-              if (locations.isEmpty)
-                const StateMessage(
-                  icon: Icons.location_off,
-                  title: 'No locations match',
-                ),
-              for (final l in locations) ...[
-                _LocationRow(location: l),
-                const SizedBox(height: 8),
-              ],
-              const SectionHeader('Visit History'),
-              if (history.isEmpty)
-                const Text(
-                  'No visits yet. Open a location and tap Record Visit.',
-                  style: TextStyle(color: AppColors.muted),
-                ),
-              for (final v in history)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 6),
-                  child: Row(
-                    children: [
-                      Icon(
-                        v.synced ? Icons.cloud_done : Icons.cloud_upload,
-                        size: 18,
-                        color: v.synced ? AppColors.online : AppColors.pending,
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          '${tour.byId(v.locationId)?.title ?? v.locationId}'
-                          ' · ${formatWhen(v.time)}',
-                        ),
-                      ),
-                    ],
+            return ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                SyncStatusBanner(sync: services.sync),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _search,
+                  decoration: const InputDecoration(
+                    hintText: 'Search locations',
+                    prefixIcon: Icon(Icons.search),
                   ),
                 ),
-            ],
-          );
-        },
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    for (final (f, label) in const [
+                      (_TourFilter.all, 'All'),
+                      (_TourFilter.visited, 'Visited'),
+                      (_TourFilter.notVisited, 'Not visited'),
+                      (_TourFilter.bookmarked, 'Bookmarks'),
+                    ])
+                      PillChip(
+                        label: label,
+                        selected: _filter == f,
+                        onTap: () => setState(() => _filter = f),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                TourProgressCard(tour: tour),
+                const SectionHeader('Campus Locations'),
+                if (locations.isEmpty)
+                  const StateMessage(
+                    icon: Icons.location_off,
+                    title: 'No locations match',
+                  ),
+                for (final l in locations) ...[
+                  _LocationRow(location: l),
+                  const SizedBox(height: 8),
+                ],
+                const SectionHeader('Visit History'),
+                if (history.isEmpty)
+                  const Text(
+                    'No visits yet. Open a location and tap Record Visit.',
+                    style: TextStyle(color: AppColors.muted),
+                  ),
+                for (final v in history)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    child: Row(
+                      children: [
+                        Icon(
+                          v.synced ? Icons.cloud_done : Icons.cloud_upload,
+                          size: 18,
+                          color: v.synced
+                              ? AppColors.online
+                              : AppColors.pending,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            '${tour.byId(v.locationId)?.title ?? v.locationId}'
+                            ' · ${formatWhen(v.time)}',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }

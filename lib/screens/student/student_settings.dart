@@ -19,31 +19,35 @@ class StudentSettings extends StatelessWidget {
         title: const Text('Settings'),
         automaticallyImplyLeading: false,
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          AccountHeaderCard(user: services.session.user!),
-          if (Feature.securityCenter.on) const SecurityCenterSection(),
-          if (Feature.notifications.on) const NotificationTogglesSection(),
-          if (Feature.offlineSync.on) ...[
-            const SectionHeader('Sync'),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
-                child: ListenableBuilder(
-                  listenable: sync,
-                  builder: (context, _) => ToggleRow(
-                    title: 'Auto-sync when online',
-                    subtitle: 'Visits and tasks upload automatically',
-                    value: sync.autoSync,
-                    onChanged: sync.setAutoSync,
+      body: SafeArea(
+        top: false,
+        bottom: false,
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            AccountHeaderCard(user: services.session.user!),
+            if (Feature.securityCenter.on) const SecurityCenterSection(),
+            if (Feature.notifications.on) const NotificationTogglesSection(),
+            if (Feature.offlineSync.on) ...[
+              const SectionHeader('Sync'),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
+                  child: ListenableBuilder(
+                    listenable: sync,
+                    builder: (context, _) => ToggleRow(
+                      title: 'Auto-sync when online',
+                      subtitle: 'Visits and tasks upload automatically',
+                      value: sync.autoSync,
+                      onChanged: sync.setAutoSync,
+                    ),
                   ),
                 ),
               ),
-            ),
+            ],
+            const SettingsFooter(),
           ],
-          const SettingsFooter(),
-        ],
+        ),
       ),
     );
   }

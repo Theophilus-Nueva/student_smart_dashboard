@@ -50,75 +50,79 @@ class _FacultyDirectoryScreenState extends State<FacultyDirectoryScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Faculty Directory')),
-      body: ListenableBuilder(
-        listenable: _search,
-        builder: (context, _) {
-          final q = _search.text.trim().toLowerCase();
-          final results = FacultyDirectoryScreen.faculty
-              .where(
-                (f) =>
-                    q.isEmpty ||
-                    f.$1.toLowerCase().contains(q) ||
-                    f.$2.toLowerCase().contains(q),
-              )
-              .toList();
-          return ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              TextField(
-                controller: _search,
-                decoration: const InputDecoration(
-                  hintText: 'Search faculty',
-                  prefixIcon: Icon(Icons.search),
-                ),
-              ),
-              const SizedBox(height: 12),
-              if (results.isEmpty)
-                const StateMessage(
-                  icon: Icons.person_search,
-                  title: 'No matches',
-                  message: 'Try another name or department.',
-                ),
-              for (final (name, dept, email, phone) in results) ...[
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(14),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            const Icon(Icons.school),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    name,
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  Text(dept),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        DetailLine(label: 'Email', value: email),
-                        DetailLine(label: 'Contact', value: phone),
-                      ],
-                    ),
+      body: SafeArea(
+        top: false,
+        bottom: false,
+        child: ListenableBuilder(
+          listenable: _search,
+          builder: (context, _) {
+            final q = _search.text.trim().toLowerCase();
+            final results = FacultyDirectoryScreen.faculty
+                .where(
+                  (f) =>
+                      q.isEmpty ||
+                      f.$1.toLowerCase().contains(q) ||
+                      f.$2.toLowerCase().contains(q),
+                )
+                .toList();
+            return ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                TextField(
+                  controller: _search,
+                  decoration: const InputDecoration(
+                    hintText: 'Search faculty',
+                    prefixIcon: Icon(Icons.search),
                   ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
+                if (results.isEmpty)
+                  const StateMessage(
+                    icon: Icons.person_search,
+                    title: 'No matches',
+                    message: 'Try another name or department.',
+                  ),
+                for (final (name, dept, email, phone) in results) ...[
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(14),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(Icons.school),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      name,
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    Text(dept),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          DetailLine(label: 'Email', value: email),
+                          DetailLine(label: 'Contact', value: phone),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                ],
               ],
-            ],
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }

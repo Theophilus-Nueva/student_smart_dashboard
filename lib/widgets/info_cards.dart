@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/student.dart';
 import '../services/app_services.dart';
+import '../theme/app_colors.dart';
 
 /// Semester for [date], assuming the usual Philippine calendar: 1st
 /// Semester August–December, 2nd Semester January–May, Summer June–July.
@@ -97,15 +98,42 @@ class _InfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Plain layout (not ListTile) so it fits narrow Row cells too.
     return Card(
       margin: EdgeInsets.zero,
-      child: ListTile(
-        leading: Icon(icon, color: Colors.black),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-        subtitle: Text(note == null ? label : '$label · $note'),
-        trailing: Text(
-          value,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Row(
+          children: [
+            Icon(icon, color: Colors.black),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  Text(
+                    value,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  Text(
+                    note == null ? label : '$label · $note',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.muted,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

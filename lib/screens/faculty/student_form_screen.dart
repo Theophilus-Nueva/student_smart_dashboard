@@ -131,97 +131,104 @@ class _StudentFormScreenState extends State<StudentFormScreen> {
     final missing = _isEdit && _original == null;
     return Scaffold(
       appBar: AppBar(title: Text(_isEdit ? 'Edit Student' : 'Add Student')),
-      body: missing
-          ? const StateMessage(
-              icon: Icons.person_off,
-              title: 'Student not found',
-              message: 'This record may have been deleted.',
-            )
-          : Form(
-              key: _formKey,
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
-                children: [
-                  _label('Student Name'),
-                  TextFormField(
-                    key: const Key('form.name'),
-                    controller: _name,
-                    textCapitalization: TextCapitalization.words,
-                    decoration: const InputDecoration(
-                      hintText: 'Last name, First name M.',
-                    ),
-                    validator: (v) => _required(v, 'student name'),
-                  ),
-                  _label('Student ID'),
-                  TextFormField(
-                    key: const Key('form.id'),
-                    controller: _id,
-                    decoration: const InputDecoration(hintText: '2024-1-00123'),
-                    validator: (v) => _required(v, 'student ID'),
-                  ),
-                  _label('Email Address'),
-                  TextFormField(
-                    key: const Key('form.email'),
-                    controller: _email,
-                    keyboardType: TextInputType.emailAddress,
-                    validator: (v) {
-                      final empty = _required(v, 'email address');
-                      if (empty != null) return empty;
-                      return v!.contains('@') ? null : 'Enter a valid email.';
-                    },
-                  ),
-                  _label('Program'),
-                  AppDropdownField<String>(
-                    key: const Key('form.program'),
-                    initialValue: _program,
-                    values: Student.programs,
-                    labelOf: (p) => Student.programNames[p] ?? p,
-                    onChanged: (v) => setState(() => _program = v),
-                    validator: (v) => v == null ? 'Choose a program.' : null,
-                  ),
-                  _label('Year Level'),
-                  AppDropdownField<String>(
-                    key: const Key('form.year'),
-                    initialValue: _year,
-                    values: Student.yearLevels,
-                    labelOf: (y) => y,
-                    onChanged: (v) => setState(() => _year = v),
-                    validator: (v) => v == null ? 'Choose a year level.' : null,
-                  ),
-                  // Grades are Week 4 (the Week 3 form has no grade).
-                  if (Feature.grades.on) ...[
-                    _label('Grade', required: false),
+      body: SafeArea(
+        top: false,
+        bottom: false,
+        child: missing
+            ? const StateMessage(
+                icon: Icons.person_off,
+                title: 'Student not found',
+                message: 'This record may have been deleted.',
+              )
+            : Form(
+                key: _formKey,
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+                  children: [
+                    _label('Student Name'),
                     TextFormField(
-                      key: const Key('form.grade'),
-                      controller: _grade,
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
+                      key: const Key('form.name'),
+                      controller: _name,
+                      textCapitalization: TextCapitalization.words,
+                      decoration: const InputDecoration(
+                        hintText: 'Last name, First name M.',
                       ),
+                      validator: (v) => _required(v, 'student name'),
+                    ),
+                    _label('Student ID'),
+                    TextFormField(
+                      key: const Key('form.id'),
+                      controller: _id,
+                      decoration: const InputDecoration(
+                        hintText: '2024-1-00123',
+                      ),
+                      validator: (v) => _required(v, 'student ID'),
+                    ),
+                    _label('Email Address'),
+                    TextFormField(
+                      key: const Key('form.email'),
+                      controller: _email,
+                      keyboardType: TextInputType.emailAddress,
                       validator: (v) {
-                        if (v == null || v.trim().isEmpty) return null;
-                        final g = double.tryParse(v.trim());
-                        return g == null || g < 0 || g > 100
-                            ? 'Enter a grade from 0 to 100.'
-                            : null;
+                        final empty = _required(v, 'email address');
+                        if (empty != null) return empty;
+                        return v!.contains('@') ? null : 'Enter a valid email.';
                       },
                     ),
+                    _label('Program'),
+                    AppDropdownField<String>(
+                      key: const Key('form.program'),
+                      initialValue: _program,
+                      values: Student.programs,
+                      labelOf: (p) => Student.programNames[p] ?? p,
+                      onChanged: (v) => setState(() => _program = v),
+                      validator: (v) => v == null ? 'Choose a program.' : null,
+                    ),
+                    _label('Year Level'),
+                    AppDropdownField<String>(
+                      key: const Key('form.year'),
+                      initialValue: _year,
+                      values: Student.yearLevels,
+                      labelOf: (y) => y,
+                      onChanged: (v) => setState(() => _year = v),
+                      validator: (v) =>
+                          v == null ? 'Choose a year level.' : null,
+                    ),
+                    // Grades are Week 4 (the Week 3 form has no grade).
+                    if (Feature.grades.on) ...[
+                      _label('Grade', required: false),
+                      TextFormField(
+                        key: const Key('form.grade'),
+                        controller: _grade,
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        validator: (v) {
+                          if (v == null || v.trim().isEmpty) return null;
+                          final g = double.tryParse(v.trim());
+                          return g == null || g < 0 || g > 100
+                              ? 'Enter a grade from 0 to 100.'
+                              : null;
+                        },
+                      ),
+                    ],
+                    _label('Contact Number', required: false),
+                    TextFormField(
+                      controller: _contact,
+                      keyboardType: TextInputType.phone,
+                    ),
+                    _label('Address', required: false),
+                    TextFormField(controller: _address, maxLines: 3),
+                    const SizedBox(height: 24),
+                    ElevatedButton(
+                      key: const Key('form.save'),
+                      onPressed: _save,
+                      child: Text(_isEdit ? 'Save Changes' : 'Save Student'),
+                    ),
                   ],
-                  _label('Contact Number', required: false),
-                  TextFormField(
-                    controller: _contact,
-                    keyboardType: TextInputType.phone,
-                  ),
-                  _label('Address', required: false),
-                  TextFormField(controller: _address, maxLines: 3),
-                  const SizedBox(height: 24),
-                  ElevatedButton(
-                    key: const Key('form.save'),
-                    onPressed: _save,
-                    child: Text(_isEdit ? 'Save Changes' : 'Save Student'),
-                  ),
-                ],
+                ),
               ),
-            ),
+      ),
     );
   }
 }

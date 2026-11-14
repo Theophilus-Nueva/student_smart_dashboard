@@ -97,37 +97,41 @@ class _StudentSummaryScreenState extends State<StudentSummaryScreen> {
     ];
     return Scaffold(
       appBar: AppBar(title: const Text('Summary')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const Text(
-            'Student saved. Review the details below.',
-            style: TextStyle(fontSize: 14),
-          ),
-          const SizedBox(height: 12),
-          for (final (icon, label, value) in fields) ...[
-            Card(
-              child: ListTile(
-                leading: Icon(icon, color: Colors.black),
-                title: Text(label),
-                subtitle: Text(value),
+      body: SafeArea(
+        top: false,
+        bottom: false,
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            const Text(
+              'Student saved. Review the details below.',
+              style: TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 12),
+            for (final (icon, label, value) in fields) ...[
+              Card(
+                child: ListTile(
+                  leading: Icon(icon, color: Colors.black),
+                  title: Text(label),
+                  subtitle: Text(value),
+                ),
               ),
+              const SizedBox(height: 8),
+            ],
+            const SizedBox(height: 12),
+            ElevatedButton.icon(
+              key: const Key('summary.save'),
+              onPressed: _saving ? null : _saveToFile,
+              icon: const Icon(Icons.save),
+              label: const Text('Save to File'),
             ),
             const SizedBox(height: 8),
+            OutlinedButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Back to Student Directory'),
+            ),
           ],
-          const SizedBox(height: 12),
-          ElevatedButton.icon(
-            key: const Key('summary.save'),
-            onPressed: _saving ? null : _saveToFile,
-            icon: const Icon(Icons.save),
-            label: const Text('Save to File'),
-          ),
-          const SizedBox(height: 8),
-          OutlinedButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Back to Student Directory'),
-          ),
-        ],
+        ),
       ),
     );
   }

@@ -70,61 +70,66 @@ class FacultySettings extends StatelessWidget {
         title: const Text('Settings'),
         automaticallyImplyLeading: false,
       ),
-      body: PullToSync(
-        onRefresh: () => refreshAndSync(context),
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            AccountHeaderCard(user: services.session.user!),
-            if (Feature.securityCenter.on) const SecurityCenterSection(),
-            if (Feature.dataManagement.on) ...[
-              const SectionHeader('Data Management'),
-              ListRow(
-                icon: Icons.refresh,
-                title: 'Refresh Dashboard',
-                subtitle: 'Reload API users and recalculate stats',
-                onTap: () => _refresh(context),
-              ),
-              const SizedBox(height: 8),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
-                  child: ListenableBuilder(
-                    listenable: Listenable.merge([settings, sync]),
-                    builder: (context, _) => Column(
-                      children: [
-                        ToggleRow(
-                          title: 'Auto-refresh',
-                          subtitle:
-                              'Reload the Online Directory every 15 seconds',
-                          value: settings.get(AppSettings.autoRefresh),
-                          onChanged: (v) =>
-                              settings.set(AppSettings.autoRefresh, v),
-                        ),
-                        if (Feature.offlineSync.on)
+      body: SafeArea(
+        top: false,
+        bottom: false,
+        child: PullToSync(
+          onRefresh: () => refreshAndSync(context),
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              AccountHeaderCard(user: services.session.user!),
+              if (Feature.securityCenter.on) const SecurityCenterSection(),
+              if (Feature.dataManagement.on) ...[
+                const SectionHeader('Data Management'),
+                ListRow(
+                  icon: Icons.refresh,
+                  title: 'Refresh Dashboard',
+                  subtitle: 'Reload API users and recalculate stats',
+                  onTap: () => _refresh(context),
+                ),
+                const SizedBox(height: 8),
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
+                    child: ListenableBuilder(
+                      listenable: Listenable.merge([settings, sync]),
+                      builder: (context, _) => Column(
+                        children: [
                           ToggleRow(
-                            title: 'Auto-sync when online',
-                            subtitle: 'Upload changes as soon as they are made',
-                            value: sync.autoSync,
-                            onChanged: sync.setAutoSync,
+                            title: 'Auto-refresh',
+                            subtitle:
+                                'Reload the Online Directory every 15 seconds',
+                            value: settings.get(AppSettings.autoRefresh),
+                            onChanged: (v) =>
+                                settings.set(AppSettings.autoRefresh, v),
                           ),
-                      ],
+                          if (Feature.offlineSync.on)
+                            ToggleRow(
+                              title: 'Auto-sync when online',
+                              subtitle:
+                                  'Upload changes as soon as they are made',
+                              value: sync.autoSync,
+                              onChanged: sync.setAutoSync,
+                            ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              ListRow(
-                icon: Icons.delete_forever,
-                iconColor: AppColors.brand,
-                title: 'Reset Database',
-                subtitle: 'Restore Student Records to the sample list',
-                onTap: () => _reset(context),
-              ),
+                const SizedBox(height: 8),
+                ListRow(
+                  icon: Icons.delete_forever,
+                  iconColor: AppColors.brand,
+                  title: 'Reset Database',
+                  subtitle: 'Restore Student Records to the sample list',
+                  onTap: () => _reset(context),
+                ),
+              ],
+              if (Feature.notifications.on) const NotificationTogglesSection(),
+              const SettingsFooter(),
             ],
-            if (Feature.notifications.on) const NotificationTogglesSection(),
-            const SettingsFooter(),
-          ],
+          ),
         ),
       ),
     );

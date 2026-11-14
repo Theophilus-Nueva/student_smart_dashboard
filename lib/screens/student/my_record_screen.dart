@@ -52,67 +52,74 @@ class _MyRecordScreenState extends State<MyRecordScreen> {
     final id = services.session.user!.idNumber;
     return Scaffold(
       appBar: AppBar(title: const Text('My Record')),
-      body: ListenableBuilder(
-        listenable: services.students,
-        builder: (context, _) {
-          final s = services.students.byId(id);
-          if (s == null) {
-            return const StateMessage(
-              icon: Icons.person_off,
-              title: 'No record found',
-              message:
-                  'Your student record is not on this device yet. '
-                  'Ask your adviser to add it.',
-            );
-          }
-          final fields = [
-            ('Student Name', s.name),
-            ('Student ID', s.id),
-            ('Email Address', s.email),
-            ('Program', s.program),
-            ('Year Level', s.yearLevel),
-            if (Feature.grades.on)
-              ('Current Grade', s.grade.toStringAsFixed(1)),
-            ('Contact Number', s.contact.isEmpty ? '—' : s.contact),
-            ('Address', s.address.isEmpty ? '—' : s.address),
-          ];
-          return ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppColors.field,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Row(
-                  children: [
-                    Icon(Icons.lock, size: 18, color: AppColors.muted),
-                    SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'Your record is read-only. Ask your adviser to update '
-                        'any details.',
-                        style: TextStyle(fontSize: 13, color: AppColors.muted),
+      body: SafeArea(
+        top: false,
+        bottom: false,
+        child: ListenableBuilder(
+          listenable: services.students,
+          builder: (context, _) {
+            final s = services.students.byId(id);
+            if (s == null) {
+              return const StateMessage(
+                icon: Icons.person_off,
+                title: 'No record found',
+                message:
+                    'Your student record is not on this device yet. '
+                    'Ask your adviser to add it.',
+              );
+            }
+            final fields = [
+              ('Student Name', s.name),
+              ('Student ID', s.id),
+              ('Email Address', s.email),
+              ('Program', s.program),
+              ('Year Level', s.yearLevel),
+              if (Feature.grades.on)
+                ('Current Grade', s.grade.toStringAsFixed(1)),
+              ('Contact Number', s.contact.isEmpty ? '—' : s.contact),
+              ('Address', s.address.isEmpty ? '—' : s.address),
+            ];
+            return ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.field,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.lock, size: 18, color: AppColors.muted),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Your record is read-only. Ask your adviser to update '
+                          'any details.',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: AppColors.muted,
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              for (final (label, value) in fields) ...[
-                InfoField(label: label, value: value),
-                const SizedBox(height: 8),
+                const SizedBox(height: 12),
+                for (final (label, value) in fields) ...[
+                  InfoField(label: label, value: value),
+                  const SizedBox(height: 8),
+                ],
+                const SizedBox(height: 12),
+                ElevatedButton.icon(
+                  onPressed: _exporting ? null : _export,
+                  icon: const Icon(Icons.download),
+                  label: const Text('Export to student_info.txt'),
+                ),
               ],
-              const SizedBox(height: 12),
-              ElevatedButton.icon(
-                onPressed: _exporting ? null : _export,
-                icon: const Icon(Icons.download),
-                label: const Text('Export to student_info.txt'),
-              ),
-            ],
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }

@@ -20,97 +20,104 @@ class MapScreen extends StatelessWidget {
     final tracker = services.tracker;
     return Scaffold(
       appBar: AppBar(title: const Text('Map')),
-      body: ListenableBuilder(
-        listenable: tracker,
-        builder: (context, _) {
-          final fix = tracker.fix;
-          return ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              AspectRatio(
-                aspectRatio: 1,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: services.useNativeMaps
-                      ? _LiveMap(fix: fix)
-                      : const _SchematicMap(),
-                ),
-              ),
-              if (!fix.live) ...[
-                const SizedBox(height: 8),
-                Text(
-                  fix.problem == null
-                      ? 'Waiting for GPS · showing the campus location.'
-                      : '${fix.problem} · showing the campus location.',
-                  style: const TextStyle(fontSize: 12, color: AppColors.muted),
-                ),
-              ],
-              const SectionHeader('Current location'),
-              Text(fix.address, style: const TextStyle(fontSize: 13)),
-              const SizedBox(height: 10),
-              // Moved here from the Home card.
-              Row(
-                children: [
-                  Expanded(
-                    child: InfoField(
-                      label: 'Latitude',
-                      value: fix.latitude.toStringAsFixed(4),
-                    ),
+      body: SafeArea(
+        top: false,
+        bottom: false,
+        child: ListenableBuilder(
+          listenable: tracker,
+          builder: (context, _) {
+            final fix = tracker.fix;
+            return ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                AspectRatio(
+                  aspectRatio: 1,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: services.useNativeMaps
+                        ? _LiveMap(fix: fix)
+                        : const _SchematicMap(),
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: InfoField(
-                      label: 'Longitude',
-                      value: fix.longitude.toStringAsFixed(4),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: InfoField(
-                      label: 'Accuracy',
-                      value: '±${fix.accuracyMeters.round()} m',
+                ),
+                if (!fix.live) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    fix.problem == null
+                        ? 'Waiting for GPS · showing the campus location.'
+                        : '${fix.problem} · showing the campus location.',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.muted,
                     ),
                   ),
                 ],
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: InfoField(
-                      label: 'Speed',
-                      value: '${fix.speedKmh.round()} km/h',
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: InfoField(
-                      label: 'Altitude',
-                      value: '${fix.altitudeMeters.round()} m',
-                    ),
-                  ),
-                ],
-              ),
-              const SectionHeader('Markers'),
-              for (final m in LocationService.markers)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 6),
-                  child: Row(
-                    children: [
-                      Icon(_iconFor(m.label), size: 20),
-                      const SizedBox(width: 12),
-                      Expanded(child: Text(m.label)),
-                      Text(
-                        '${m.latitude.toStringAsFixed(4)}, '
-                        '${m.longitude.toStringAsFixed(4)}',
-                        style: const TextStyle(color: AppColors.muted),
+                const SectionHeader('Current location'),
+                Text(fix.address, style: const TextStyle(fontSize: 13)),
+                const SizedBox(height: 10),
+                // Moved here from the Home card.
+                Row(
+                  children: [
+                    Expanded(
+                      child: InfoField(
+                        label: 'Latitude',
+                        value: fix.latitude.toStringAsFixed(4),
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: InfoField(
+                        label: 'Longitude',
+                        value: fix.longitude.toStringAsFixed(4),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: InfoField(
+                        label: 'Accuracy',
+                        value: '±${fix.accuracyMeters.round()} m',
+                      ),
+                    ),
+                  ],
                 ),
-            ],
-          );
-        },
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: InfoField(
+                        label: 'Speed',
+                        value: '${fix.speedKmh.round()} km/h',
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: InfoField(
+                        label: 'Altitude',
+                        value: '${fix.altitudeMeters.round()} m',
+                      ),
+                    ),
+                  ],
+                ),
+                const SectionHeader('Markers'),
+                for (final m in LocationService.markers)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    child: Row(
+                      children: [
+                        Icon(_iconFor(m.label), size: 20),
+                        const SizedBox(width: 12),
+                        Expanded(child: Text(m.label)),
+                        Text(
+                          '${m.latitude.toStringAsFixed(4)}, '
+                          '${m.longitude.toStringAsFixed(4)}',
+                          style: const TextStyle(color: AppColors.muted),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
