@@ -90,6 +90,7 @@ enum Feature {
   studentRecords(4, 'Student Records: list, search, filter, edit, delete'),
   grades(4, 'Grades on student records'),
   classStats(4, 'Class stats: total, average, top performer, online users'),
+  analyticsRefresh(4, 'Pull to refresh on the Analytics tab'),
   syncStatus(4, 'Sync Status card, Sync Now, 15-second auto-refresh'),
   dataManagement(4, 'Settings > Data Management: refresh, reset database'),
 

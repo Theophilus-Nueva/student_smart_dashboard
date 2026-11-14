@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:smart_dashboard/config/lab_week.dart';
 import 'package:smart_dashboard/routes/app_routes.dart';
+import 'package:smart_dashboard/screens/faculty/class_analytics.dart';
+import 'package:smart_dashboard/screens/student/student_analytics.dart';
 import 'package:smart_dashboard/widgets/current_location_card.dart';
 
 import 'test_helpers.dart';
@@ -361,6 +363,47 @@ void main() {
     expect(find.text('Data Management'), findsOneWidget);
     expect(find.text('Auto-sync when online'), findsNothing); // Week 7
     expect(find.text('Security Center'), findsNothing); // Week 6
+  });
+
+  Future<void> pullAnalytics(WidgetTester tester, Type screen) async {
+    final list = find
+        .descendant(of: find.byType(screen), matching: find.byType(Scrollable))
+        .first;
+    await tester.fling(list, const Offset(0, 400), 1000);
+    await tester.pumpAndSettle();
+  }
+
+  Finder analyticsRefresh(Type screen) => find.descendant(
+    of: find.byType(screen),
+    matching: find.byType(RefreshIndicator),
+  );
+
+  testWidgets('Week 4: faculty Analytics pull to refresh', (tester) async {
+    useWeek(4);
+    await pumpApp(tester);
+    await signInAs(tester, 'faculty', 'faculty123');
+    await tapNav(tester, 'Analytics');
+    expect(analyticsRefresh(ClassAnalytics), findsOneWidget);
+    await pullAnalytics(tester, ClassAnalytics);
+    expect(find.text('Sync successful'), findsOneWidget);
+  });
+
+  testWidgets('Week 4: student Analytics pull to refresh', (tester) async {
+    useWeek(4);
+    await pumpApp(tester);
+    await signInAs(tester, 'student', 'student123');
+    await tapNav(tester, 'Analytics');
+    expect(analyticsRefresh(StudentAnalytics), findsOneWidget);
+    await pullAnalytics(tester, StudentAnalytics);
+    expect(find.text('Refreshed'), findsOneWidget);
+  });
+
+  testWidgets('Week 3: no pull to refresh on Analytics yet', (tester) async {
+    useWeek(3);
+    await pumpApp(tester);
+    await signInAs(tester, 'faculty', 'faculty123');
+    await tapNav(tester, 'Analytics');
+    expect(analyticsRefresh(ClassAnalytics), findsNothing);
   });
 
   testWidgets('Week 5: Device tab', (tester) async {
