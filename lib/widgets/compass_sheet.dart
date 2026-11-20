@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../services/device_service.dart';
 import '../theme/app_colors.dart';
+import '../utils/format.dart';
 
 /// Slides up a full compass from the Device tab's Compass card. The dial
 /// turns with the phone's live heading while the sheet is open.
@@ -21,17 +22,27 @@ Future<void> showCompassSheet(BuildContext context, DeviceService device) {
     backgroundColor: Colors.white,
     builder: (context) => ListenableBuilder(
       listenable: device,
-      builder: (context, _) =>
-          _CompassSheet(heading: device.heading, direction: device.direction),
+      builder: (context, _) => _CompassSheet(
+        heading: device.heading,
+        direction: device.direction,
+        history: device.directionHistory,
+      ),
     ),
   );
 }
 
 class _CompassSheet extends StatelessWidget {
-  const _CompassSheet({required this.heading, required this.direction});
+  const _CompassSheet({
+    required this.heading,
+    required this.direction,
+    required this.history,
+  });
 
   final double? heading;
   final String? direction;
+
+  /// Latest direction changes, newest first.
+  final List<(String, DateTime)> history;
 
   @override
   Widget build(BuildContext context) {
@@ -81,6 +92,46 @@ class _CompassSheet extends StatelessWidget {
             textAlign: TextAlign.center,
             style: const TextStyle(color: AppColors.muted),
           ),
+          if (history.isNotEmpty) ...[
+            const SizedBox(height: 24),
+            // Kept readable in landscape instead of stretching edge to edge.
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 420),
+              child: Column(
+                key: const Key('compass.recent'),
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Text(
+                    'Recent',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 4),
+                  for (final (dir, time) in history) ...[
+                    const Divider(height: 1),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              dir,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          Text(
+                            formatTime(time),
+                            style: const TextStyle(color: AppColors.muted),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );

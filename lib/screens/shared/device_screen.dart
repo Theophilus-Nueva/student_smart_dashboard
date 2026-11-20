@@ -193,10 +193,9 @@ class DeviceScreen extends StatelessWidget {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    subtitle: Text(
-                      device.directionHistory.isEmpty
-                          ? 'Hold the phone flat for a steady reading'
-                          : 'Recent: ${device.directionHistory.map((d) => '${d.$1} ${formatTime(d.$2)}').join(' · ')}',
+                    // Recent directions are in the slide-up sheet.
+                    subtitle: const Text(
+                      'Hold the phone flat for a steady reading',
                     ),
                   ),
                 ),

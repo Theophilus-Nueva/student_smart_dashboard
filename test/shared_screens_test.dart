@@ -151,6 +151,23 @@ void main() {
     expect(find.byType(CompassDial), findsOneWidget);
     // Fake heading: top of the phone pointing east (90°).
     expect(find.text('90°  E'), findsOneWidget);
+    // Recent directions live at the bottom of the sheet, not on the card.
+    final recent = find.byKey(const Key('compass.recent'));
+    await tester.scrollUntilVisible(
+      recent,
+      100,
+      scrollable: find
+          .descendant(
+            of: find.byType(BottomSheet),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    expect(
+      find.descendant(of: recent, matching: find.text('E')),
+      findsOneWidget,
+    );
+    expect(find.textContaining('Recent:'), findsNothing);
     final rotation = tester.widget<AnimatedRotation>(
       find.descendant(
         of: find.byType(CompassDial),
