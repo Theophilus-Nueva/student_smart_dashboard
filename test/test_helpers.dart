@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -147,6 +148,18 @@ class FakeSensors implements SensorSource {
   @override
   Stream<Vec3> gyroscope() => Stream.value(const Vec3(0.01, 0.03, -0.02));
 
+  /// Like a raw iPhone magnetometer (with the phone's own offset): one
+  /// full turn to calibrate, then the top pointing east.
   @override
-  Stream<Vec3> magnetometer() => Stream.value(const Vec3(-30, 0, -20));
+  Stream<Vec3> magnetometer() {
+    Vec3 at(double h) {
+      final r = h * math.pi / 180;
+      return Vec3(210 - 40 * math.sin(r), -160 + 40 * math.cos(r), -30);
+    }
+
+    return Stream.fromIterable([
+      for (var h = 0; h < 360; h += 15) at(h.toDouble()),
+      for (var i = 0; i < 40; i++) at(90),
+    ]);
+  }
 }
