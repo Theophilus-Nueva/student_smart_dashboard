@@ -65,12 +65,15 @@ class _CompassSheet extends StatelessWidget {
             child: CompassDial(heading: heading ?? 0),
           ),
           const SizedBox(height: 20),
-          Text(
-            heading == null ? '—' : '${heading!.round()}°  $direction',
-            key: const Key('compass.reading'),
-            style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: 6),
+          // No reading yet: show only the "Waiting…" line below.
+          if (heading != null) ...[
+            Text(
+              '${heading!.round()}°  $direction',
+              key: const Key('compass.reading'),
+              style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 6),
+          ],
           Text(
             heading == null
                 ? 'Waiting for the compass…'
