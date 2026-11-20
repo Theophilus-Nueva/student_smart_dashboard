@@ -5,28 +5,18 @@ import 'package:flutter/material.dart';
 import '../services/device_service.dart';
 import '../theme/app_colors.dart';
 import '../utils/format.dart';
+import 'device_sheet.dart';
 
 /// Slides up a full compass from the Device tab's Compass card. The dial
 /// turns with the phone's live heading while the sheet is open.
 Future<void> showCompassSheet(BuildContext context, DeviceService device) {
-  return showModalBottomSheet<void>(
-    context: context,
-    isScrollControlled: true,
-    showDragHandle: true,
-    // Full screen width: Material 3 caps sheets at 640 px and centres them,
-    // so in landscape a tap beside the sheet closed it. The sheet sits in an
-    // Align, so without a minimum width it shrinks to its content; minWidth
-    // infinity is clamped to the screen width. The notch is handled inside
-    // the sheet instead (see _CompassSheet).
-    constraints: const BoxConstraints(minWidth: double.infinity),
-    backgroundColor: Colors.white,
-    builder: (context) => ListenableBuilder(
-      listenable: device,
-      builder: (context, _) => _CompassSheet(
-        heading: device.heading,
-        direction: device.direction,
-        history: device.directionHistory,
-      ),
+  return showDeviceSheet(
+    context,
+    listenable: device,
+    builder: (context) => _CompassSheet(
+      heading: device.heading,
+      direction: device.direction,
+      history: device.directionHistory,
     ),
   );
 }
@@ -47,8 +37,6 @@ class _CompassSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
-    // The sheet spans the screen; keep its content clear of the notch and
-    // the home indicator.
     final insets = MediaQuery.paddingOf(context);
     // Fits portrait and landscape: never taller than about half the screen.
     final dial = math
@@ -64,96 +52,70 @@ class _CompassSheet extends StatelessWidget {
       size.height - insets.top - kMinInteractiveDimension,
     );
 
-    return SizedBox(
+    return DeviceSheetBody(
       height: height,
-      child: SingleChildScrollView(
-        // Drags on the content always scroll it, even when it fits, so
-        // they never pull the sheet closed. Only the drag handle or a tap
-        // outside closes it.
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: EdgeInsets.fromLTRB(
-          24 + insets.left,
-          0,
-          24 + insets.right,
-          32 + insets.bottom,
+      children: [
+        const DeviceSheetTitle('Compass'),
+        const SizedBox(height: 16),
+        // Fixed marker at the top: where the phone is pointing.
+        const Icon(Icons.arrow_drop_down, size: 36, color: AppColors.brand),
+        SizedBox.square(
+          dimension: dial,
+          child: CompassDial(heading: heading ?? 0),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'Compass',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 16),
-            // Fixed marker at the top: where the phone is pointing.
-            const Icon(Icons.arrow_drop_down, size: 36, color: AppColors.brand),
-            SizedBox.square(
-              dimension: dial,
-              child: CompassDial(heading: heading ?? 0),
-            ),
-            const SizedBox(height: 20),
-            // The live reading, or a waiting line until the first one.
-            if (heading != null)
-              Text(
-                '${heading!.round()}°  $direction',
-                key: const Key('compass.reading'),
-                style: const TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.w700,
+        const SizedBox(height: 20),
+        // The live reading, or a waiting line until the first one.
+        if (heading != null)
+          Text(
+            '${heading!.round()}°  $direction',
+            key: const Key('compass.reading'),
+            style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w700),
+          )
+        else
+          const Text(
+            'Waiting for the compass…',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: AppColors.muted),
+          ),
+        if (history.isNotEmpty) ...[
+          const SizedBox(height: 24),
+          // Kept readable in landscape instead of stretching edge to edge.
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: Column(
+              key: const Key('compass.recent'),
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Text(
+                  'Recent',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
-              )
-            else
-              const Text(
-                'Waiting for the compass…',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: AppColors.muted),
-              ),
-            if (history.isNotEmpty) ...[
-              const SizedBox(height: 24),
-              // Kept readable in landscape instead of stretching edge to edge.
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 420),
-                child: Column(
-                  key: const Key('compass.recent'),
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const Text(
-                      'Recent',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    for (final (dir, time) in history) ...[
-                      const Divider(height: 1),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                dir,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                            Text(
-                              formatTime(time),
-                              style: const TextStyle(color: AppColors.muted),
-                            ),
-                          ],
+                const SizedBox(height: 4),
+                for (final (dir, time) in history) ...[
+                  const Divider(height: 1),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            dir,
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          ),
                         ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
+                        Text(
+                          formatTime(time),
+                          style: const TextStyle(color: AppColors.muted),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ],
     );
   }
 

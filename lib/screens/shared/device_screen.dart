@@ -9,6 +9,7 @@ import '../../services/app_services.dart';
 import '../../services/device_service.dart';
 import '../../theme/app_colors.dart';
 import '../../utils/format.dart';
+import '../../widgets/accelerometer_sheet.dart';
 import '../../widgets/common.dart';
 import '../../widgets/compass_sheet.dart';
 
@@ -141,26 +142,30 @@ class DeviceScreen extends StatelessWidget {
                     ],
                   ),
                 ],
-                const SectionHeader('Accelerometer'),
-                _AxisRow(
-                  values: device.accel,
-                  notes: [
-                    for (final m in device.accelMax.values)
-                      'max ${m.toStringAsFixed(2)}',
-                  ],
-                ),
-                if (device.accelHistory.length > 1)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 6),
-                    child: Text(
-                      'Movement (X): '
-                      '${device.accelHistory.take(5).map((v) => v.x.toStringAsFixed(1)).join(' → ')}',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppColors.muted,
+                // Tap for the live values and the movement graph (slides up).
+                InkWell(
+                  key: const Key('device.accelerometer'),
+                  borderRadius: BorderRadius.circular(8),
+                  onTap: () => showAccelerometerSheet(context, device),
+                  child: Column(
+                    children: [
+                      const SectionHeader(
+                        'Accelerometer',
+                        action: Icon(
+                          Icons.chevron_right,
+                          color: AppColors.muted,
+                        ),
                       ),
-                    ),
+                      _AxisRow(
+                        values: device.accel,
+                        notes: [
+                          for (final m in device.accelMax.values)
+                            'max ${m.toStringAsFixed(2)}',
+                        ],
+                      ),
+                    ],
                   ),
+                ),
                 const SectionHeader('Gyroscope'),
                 _AxisRow(
                   values: device.gyro,

@@ -141,8 +141,12 @@ class AcceptingBiometric implements BiometricService {
 class FakeSensors implements SensorSource {
   const FakeSensors();
 
+  /// Two readings, so the movement graph has a line to draw.
   @override
-  Stream<Vec3> accelerometer() => Stream.value(const Vec3(0.02, -0.98, 9.81));
+  Stream<Vec3> accelerometer() => Stream.fromIterable(const [
+    Vec3(0.40, -0.30, 1.20),
+    Vec3(0.02, -0.98, 9.81),
+  ]);
 
   @override
   Stream<Vec3> gyroscope() => Stream.value(const Vec3(0.01, 0.03, -0.02));

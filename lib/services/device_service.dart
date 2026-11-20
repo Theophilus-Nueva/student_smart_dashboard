@@ -133,7 +133,11 @@ class DeviceService extends ChangeNotifier {
 
   Vec3 accel = Vec3.zero;
   Vec3 accelMax = Vec3.zero;
+
+  /// Latest accelerometer readings, newest first: one per second, so the
+  /// Device tab's graph covers [accelHistoryLength] seconds.
   final List<Vec3> accelHistory = [];
+  static const accelHistoryLength = 30;
   Vec3 gyro = Vec3.zero;
   Vec3 gyroPrevious = Vec3.zero;
   Vec3 gyroMax = Vec3.zero;
@@ -296,7 +300,7 @@ class DeviceService extends ChangeNotifier {
     accel = v;
     accelMax = accelMax.maxAbs(v);
     accelHistory.insert(0, v);
-    if (accelHistory.length > 10) accelHistory.removeLast();
+    if (accelHistory.length > accelHistoryLength) accelHistory.removeLast();
   }
 
   void _onGyro(Vec3 v) {

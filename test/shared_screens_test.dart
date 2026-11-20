@@ -210,6 +210,41 @@ void main() {
     expect(find.byType(CompassDial), findsNothing);
   });
 
+  testWidgets('Tapping the accelerometer slides up its values and graph', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    await signInAs(tester, 'student', 'student123');
+    await tapNav(tester, 'Device');
+    // The old one-line history is gone from the Device tab.
+    expect(find.textContaining('Movement (X)'), findsNothing);
+
+    await tester.tap(find.byKey(const Key('device.accelerometer')));
+    await tester.pumpAndSettle();
+    final sheet = find.byType(BottomSheet);
+    expect(sheet, findsOneWidget);
+    // Live values (latest fake reading) and the graph of both readings.
+    expect(
+      tester.widget<Text>(find.byKey(const Key('accel.value.Z'))).data,
+      '9.81',
+    );
+    expect(find.byKey(const Key('accel.graph')), findsOneWidget);
+    expect(find.text('Movement history'), findsOneWidget);
+
+    // Like the compass: a swipe on the content doesn't close it, a tap
+    // outside does.
+    await tester.fling(
+      find.byKey(const Key('accel.graph')),
+      const Offset(0, 600),
+      2000,
+    );
+    await tester.pumpAndSettle();
+    expect(sheet, findsOneWidget);
+    await tester.tapAt(const Offset(195, 40));
+    await tester.pumpAndSettle();
+    expect(sheet, findsNothing);
+  });
+
   testWidgets('Compass dial turns the short way across north', (tester) async {
     Future<double> turnsAt(double heading) async {
       await tester.pumpWidget(MaterialApp(home: CompassDial(heading: heading)));
