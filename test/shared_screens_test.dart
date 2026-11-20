@@ -153,6 +153,11 @@ void main() {
     expect(find.text('90°  E'), findsOneWidget);
     // Recent directions live at the bottom of the sheet, not on the card.
     final recent = find.byKey(const Key('compass.recent'));
+    // Opens only as tall as the compass: dial and reading on screen,
+    // Recent still below the bottom edge until you drag up.
+    expect(tester.getRect(find.byType(CompassDial)).top, greaterThan(0));
+    expect(tester.getRect(find.text('90°  E')).bottom, lessThan(844));
+    expect(tester.getRect(recent).top, greaterThanOrEqualTo(844));
     await tester.scrollUntilVisible(
       recent,
       100,
