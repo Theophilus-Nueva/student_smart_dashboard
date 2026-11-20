@@ -190,8 +190,22 @@ void main() {
     );
     expect(rotation.turns, closeTo(-0.25, 1e-9)); // dial turns -90°
 
-    // Swipe down closes it.
+    // A hard swipe down on the content only scrolls; the sheet stays open.
     await tester.fling(find.byType(CompassDial), const Offset(0, 600), 2000);
+    await tester.pumpAndSettle();
+    await tester.fling(find.byType(CompassDial), const Offset(0, 600), 2000);
+    await tester.pumpAndSettle();
+    expect(find.byType(CompassDial), findsOneWidget);
+
+    // Dragging the handle (top strip of the sheet) down closes it.
+    final top = tester.getRect(sheet).top;
+    await tester.dragFrom(Offset(195, top + 20), const Offset(0, 600));
+    await tester.pumpAndSettle();
+    expect(find.byType(CompassDial), findsNothing);
+
+    // So does a tap outside it.
+    await openCompassSheet(tester);
+    await tester.tapAt(const Offset(195, 40));
     await tester.pumpAndSettle();
     expect(find.byType(CompassDial), findsNothing);
   });

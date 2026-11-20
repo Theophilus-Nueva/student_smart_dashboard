@@ -56,7 +56,7 @@ class _CompassSheet extends StatelessWidget {
         .clamp(160.0, 340.0);
 
     // The sheet stays just tall enough for the compass (title down to the
-    // hint line) and its content scrolls inside it: scroll up and the
+    // reading) and its content scrolls inside it: scroll up and the
     // compass moves away to show Recent. Never taller than the screen below
     // the status bar.
     final height = math.min(
@@ -66,118 +66,100 @@ class _CompassSheet extends StatelessWidget {
 
     return SizedBox(
       height: height,
-      // Pulling down while already at the top closes the sheet, as on
-      // iOS; otherwise a swipe down on the compass would only scroll.
-      child: NotificationListener<OverscrollNotification>(
-        onNotification: (n) {
-          if (n.overscroll < 0 &&
-              n.dragDetails != null &&
-              (ModalRoute.of(context)?.isCurrent ?? false)) {
-            Navigator.of(context).pop();
-          }
-          return false;
-        },
-        child: SingleChildScrollView(
-          // Clamping, so a pull at the top reports overscroll instead of
-          // bouncing.
-          physics: const ClampingScrollPhysics(),
-          padding: EdgeInsets.fromLTRB(
-            24 + insets.left,
-            0,
-            24 + insets.right,
-            32 + insets.bottom,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'Compass',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 16),
-              // Fixed marker at the top: where the phone is pointing.
-              const Icon(
-                Icons.arrow_drop_down,
-                size: 36,
-                color: AppColors.brand,
-              ),
-              SizedBox.square(
-                dimension: dial,
-                child: CompassDial(heading: heading ?? 0),
-              ),
-              const SizedBox(height: 20),
-              // No reading yet: show only the "Waiting…" line below.
-              if (heading != null) ...[
-                Text(
-                  '${heading!.round()}°  $direction',
-                  key: const Key('compass.reading'),
-                  style: const TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 6),
-              ],
+      child: SingleChildScrollView(
+        // Drags on the content always scroll it, even when it fits, so
+        // they never pull the sheet closed. Only the drag handle or a tap
+        // outside closes it.
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.fromLTRB(
+          24 + insets.left,
+          0,
+          24 + insets.right,
+          32 + insets.bottom,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Compass',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 16),
+            // Fixed marker at the top: where the phone is pointing.
+            const Icon(Icons.arrow_drop_down, size: 36, color: AppColors.brand),
+            SizedBox.square(
+              dimension: dial,
+              child: CompassDial(heading: heading ?? 0),
+            ),
+            const SizedBox(height: 20),
+            // The live reading, or a waiting line until the first one.
+            if (heading != null)
               Text(
-                heading == null
-                    ? 'Waiting for the compass…'
-                    : 'Hold the phone flat and turn to find a direction',
+                '${heading!.round()}°  $direction',
+                key: const Key('compass.reading'),
+                style: const TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.w700,
+                ),
+              )
+            else
+              const Text(
+                'Waiting for the compass…',
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: AppColors.muted),
+                style: TextStyle(color: AppColors.muted),
               ),
-              if (history.isNotEmpty) ...[
-                const SizedBox(height: 24),
-                // Kept readable in landscape instead of stretching edge to edge.
-                ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 420),
-                  child: Column(
-                    key: const Key('compass.recent'),
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const Text(
-                        'Recent',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
+            if (history.isNotEmpty) ...[
+              const SizedBox(height: 24),
+              // Kept readable in landscape instead of stretching edge to edge.
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 420),
+                child: Column(
+                  key: const Key('compass.recent'),
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const Text(
+                      'Recent',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
                       ),
-                      const SizedBox(height: 4),
-                      for (final (dir, time) in history) ...[
-                        const Divider(height: 1),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  dir,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                    ),
+                    const SizedBox(height: 4),
+                    for (final (dir, time) in history) ...[
+                      const Divider(height: 1),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                dir,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
-                              Text(
-                                formatTime(time),
-                                style: const TextStyle(color: AppColors.muted),
-                              ),
-                            ],
-                          ),
+                            ),
+                            Text(
+                              formatTime(time),
+                              style: const TextStyle(color: AppColors.muted),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ],
-                  ),
+                  ],
                 ),
-              ],
+              ),
             ],
-          ),
+          ],
         ),
       ),
     );
   }
 
   /// Height of everything in the compass part except the dial: title,
-  /// marker, reading and hint, with their gaps and bottom padding.
-  static const _peekChrome = 24 + 16 + 36 + 20 + 40 + 6 + 20 + 24.0;
+  /// marker and reading, with their gaps and bottom padding.
+  static const _peekChrome = 24 + 16 + 36 + 20 + 40 + 24.0;
 }
 
 /// Compass dial that turns so N always points north. Turning across 0°
