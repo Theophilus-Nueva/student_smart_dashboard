@@ -143,9 +143,10 @@ class DeviceScreen extends StatelessWidget {
                   ),
                 ],
                 // Tap for the live values and the movement graph (slides up).
-                InkWell(
+                // No grey press highlight: a plain tap target.
+                GestureDetector(
                   key: const Key('device.accelerometer'),
-                  borderRadius: BorderRadius.circular(8),
+                  behavior: HitTestBehavior.opaque,
                   onTap: () => showAccelerometerSheet(context, device),
                   child: Column(
                     children: [
