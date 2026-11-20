@@ -186,8 +186,17 @@ void main() {
     await openCompassSheet(tester);
     expect(find.byType(CompassDial), findsOneWidget);
     expect(tester.takeException(), isNull);
-    // Edge to edge, so a tap at the side doesn't close it.
-    final sheet = tester.getRect(find.byType(BottomSheet));
+    // Edge to edge, so a tap at the side doesn't close it. Measures the
+    // white sheet itself (the Material), not BottomSheet's outer wrapper,
+    // which always fills the screen.
+    final sheet = tester.getRect(
+      find
+          .descendant(
+            of: find.byType(BottomSheet),
+            matching: find.byType(Material),
+          )
+          .first,
+    );
     expect(sheet.left, 0);
     expect(sheet.right, 844);
     // The dial still keeps clear of the notch.
