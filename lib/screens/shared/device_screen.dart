@@ -10,6 +10,7 @@ import '../../services/device_service.dart';
 import '../../theme/app_colors.dart';
 import '../../utils/format.dart';
 import '../../widgets/common.dart';
+import '../../widgets/compass_sheet.dart';
 
 /// Shared / Device tab (Week 5): camera, gallery, accelerometer, gyroscope,
 /// compass and sensor status. Sensors run only while this tab is open
@@ -170,7 +171,12 @@ class DeviceScreen extends StatelessWidget {
                 ),
                 const SectionHeader('Compass'),
                 Card(
+                  clipBehavior: Clip.antiAlias,
                   child: ListTile(
+                    key: const Key('device.compass'),
+                    // Tap for the full compass (slides up).
+                    onTap: () => showCompassSheet(context, device),
+                    trailing: const Icon(Icons.chevron_right),
                     leading: Transform.rotate(
                       angle: -(heading ?? 0) * math.pi / 180,
                       child: const Icon(

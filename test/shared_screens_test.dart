@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:smart_dashboard/routes/app_routes.dart';
 
 import 'package:smart_dashboard/widgets/common.dart';
+import 'package:smart_dashboard/widgets/compass_sheet.dart';
 
 import 'test_helpers.dart';
 
@@ -16,6 +17,18 @@ const _sharedRoutes = {
   AppRoutes.emergencyContacts: 'Call Security',
   AppRoutes.facultyDirectory: 'Prof. Maria Santos',
 };
+
+Future<void> openCompassSheet(WidgetTester tester) async {
+  final card = find.byKey(const Key('device.compass'));
+  await tester.scrollUntilVisible(
+    card,
+    200,
+    scrollable: find.byType(Scrollable).hitTestable().first,
+  );
+  await tester.pumpAndSettle();
+  await tester.tap(card);
+  await tester.pumpAndSettle();
+}
 
 void main() {
   for (final (user, password) in [
@@ -125,5 +138,53 @@ void main() {
 
     await tapNav(tester, 'Home');
     expect(services.device.sensorsRunning, isFalse);
+  });
+
+  testWidgets('Tapping the compass slides up a dial that follows the heading', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    await signInAs(tester, 'student', 'student123');
+    await tapNav(tester, 'Device');
+    await openCompassSheet(tester);
+
+    expect(find.byType(CompassDial), findsOneWidget);
+    // Fake heading: top of the phone pointing east (90°).
+    expect(find.text('90°  E'), findsOneWidget);
+    final rotation = tester.widget<AnimatedRotation>(
+      find.descendant(
+        of: find.byType(CompassDial),
+        matching: find.byType(AnimatedRotation),
+      ),
+    );
+    expect(rotation.turns, closeTo(-0.25, 1e-9)); // dial turns -90°
+
+    // Swipe down closes it.
+    await tester.fling(find.byType(CompassDial), const Offset(0, 600), 2000);
+    await tester.pumpAndSettle();
+    expect(find.byType(CompassDial), findsNothing);
+  });
+
+  testWidgets('Compass dial turns the short way across north', (tester) async {
+    Future<double> turnsAt(double heading) async {
+      await tester.pumpWidget(MaterialApp(home: CompassDial(heading: heading)));
+      return tester
+          .widget<AnimatedRotation>(find.byType(AnimatedRotation))
+          .turns;
+    }
+
+    expect(await turnsAt(350), closeTo(-350 / 360, 1e-9));
+    // 350° → 10° is 20° clockwise, not 340° back the other way.
+    expect(await turnsAt(10), closeTo(-370 / 360, 1e-9));
+    expect(await turnsAt(340), closeTo(-340 / 360, 1e-9));
+  });
+
+  testWidgets('Compass sheet fits in landscape', (tester) async {
+    await pumpApp(tester, size: const Size(844, 390), sidePadding: 59);
+    await signInAs(tester, 'student', 'student123');
+    await tapNav(tester, 'Device');
+    await openCompassSheet(tester);
+    expect(find.byType(CompassDial), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 }
