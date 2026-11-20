@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:math' as math;
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:geocoding/geocoding.dart';
@@ -74,59 +73,16 @@ void main() {
     expect(firstName('Ana Reyes'), 'Ana');
   });
 
-  group('Compass', () {
-    // A raw iPhone magnetometer: the phone's own field (offset) plus the
-    // Earth's horizontal field (40 µT) pointing north. [h] is where the top
-    // of the phone points, clockwise from north.
-    const offset = (x: 210.0, y: -160.0);
-    Vec3 reading(double h) {
-      final r = h * math.pi / 180;
-      return Vec3(
-        offset.x - 40 * math.sin(r),
-        offset.y + 40 * math.cos(r),
-        -30,
-      );
-    }
-
-    double rawHeading(Vec3 v) =>
-        (math.atan2(-v.x, v.y) * 180 / math.pi + 360) % 360;
-
-    test('raw readings are stuck in one direction (the bug)', () {
-      final raw = [
-        for (var h = 0; h < 360; h += 10) rawHeading(reading(h.toDouble())),
-      ];
-      // Turning the phone a full circle moves the old heading only ~30°,
-      // between SW and W.
-      expect(raw.reduce(math.min), greaterThan(220));
-      expect(raw.reduce(math.max), lessThan(260));
-    });
-
-    test('calibrated heading follows the phone all the way round', () {
-      final c = CompassCalibrator();
-      expect(c.add(reading(0)), isNull); // not calibrated yet
-      for (var h = 0; h < 360; h += 15) {
-        c.add(reading(h.toDouble()));
-      }
-      expect(c.calibrated, isTrue);
-      for (final h in [0.0, 45.0, 90.0, 135.0, 180.0, 225.0, 270.0, 315.0]) {
-        double? got;
-        for (var i = 0; i < 40; i++) {
-          got = c.add(reading(h)); // let the smoothing settle
-        }
-        final diff = ((got! - h + 540) % 360) - 180;
-        expect(diff.abs(), lessThan(2), reason: 'heading $h, got $got');
-      }
-    });
-
-    test('recalibrating starts over', () {
-      final c = CompassCalibrator();
-      for (var h = 0; h < 360; h += 15) {
-        c.add(reading(h.toDouble()));
-      }
-      c.reset();
-      expect(c.calibrated, isFalse);
-      expect(c.progress, 0);
-    });
+  test('Compass heading maps to the 8 directions', () {
+    String dirOf(double h) =>
+        DeviceService.directions[((h + 22.5) % 360 ~/ 45)];
+    expect(dirOf(0), 'N');
+    expect(dirOf(359), 'N');
+    expect(dirOf(90), 'E');
+    expect(dirOf(200), 'S');
+    expect(dirOf(225), 'SW');
+    expect(dirOf(270), 'W');
+    expect(dirOf(315), 'NW');
   });
 
   test('Place label: place, town and province, without house numbers', () {

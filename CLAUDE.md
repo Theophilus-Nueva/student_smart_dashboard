@@ -28,7 +28,7 @@ Two dashboards, separate access: **Student** and **Faculty**. Shared core plus r
 
 ## Packages named in the labs
 http, shared_preferences, path_provider, geolocator, google_maps_flutter, url_launcher, firebase_core, cloud_firestore, flutter_local_notifications, local_auth, connectivity_plus.
-All of the above are in pubspec except `google_maps_flutter`, removed on 2026-11-12: the Map screen uses OpenStreetMap tiles through `flutter_map` + `latlong2`. Also added: `mobile_scanner` (AR guide camera and QR checkpoints), `share_plus`, `geocoding`. Not used: `ar_flutter_plugin` (Dart 2 only).
+All of the above are in pubspec except `google_maps_flutter`, removed on 2026-11-12: the Map screen uses OpenStreetMap tiles through `flutter_map` + `latlong2`. Also added: `mobile_scanner` (AR guide camera and QR checkpoints), `share_plus`, `geocoding`, `flutter_compass` (Device tab compass: the phone's own calibrated heading, since the raw `sensors_plus` magnetometer on iPhone is uncalibrated). Not used: `ar_flutter_plugin` (Dart 2 only).
 
 ## Existing code (lib/)
 screens: dashboard_screen, dashboard_body, dashboard_cards, activity_feed, file_storage_screen, registration_form_screen, summary_page_screen. widgets: notification_badge, profile_card, dashboard_tile. services: api.dart. Home currently has a profile (ID) card, world clock, and Logged in Devices.

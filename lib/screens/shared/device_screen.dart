@@ -179,31 +179,19 @@ class DeviceScreen extends StatelessWidget {
                       ),
                     ),
                     title: Text(
-                      heading != null
-                          ? '${device.direction} · ${heading.round()}°'
-                          : device.status['Compass'] == SensorStatus.active
-                          ? 'Calibrating… '
-                                '${(device.compass.progress * 100).round()}%'
-                          : 'Heading —',
+                      heading == null
+                          ? 'Heading —'
+                          : '${device.direction} · ${heading.round()}°',
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                     subtitle: Text(
-                      heading == null
-                          ? 'Hold the phone flat and turn it slowly in a '
-                                'full circle to calibrate'
-                          : device.directionHistory.isEmpty
+                      device.directionHistory.isEmpty
                           ? 'Hold the phone flat for a steady reading'
                           : 'Recent: ${device.directionHistory.map((d) => '${d.$1} ${formatTime(d.$2)}').join(' · ')}',
                     ),
-                    trailing: heading == null
-                        ? null
-                        : TextButton(
-                            onPressed: device.recalibrateCompass,
-                            child: const Text('Recalibrate'),
-                          ),
                   ),
                 ),
                 const SectionHeader('Sensor Status'),

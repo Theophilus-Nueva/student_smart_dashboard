@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter_compass/flutter_compass.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sensors_plus/sensors_plus.dart';
@@ -36,68 +37,13 @@ class Vec3 {
   );
 }
 
-/// Turns raw magnetometer readings into a compass heading.
-///
-/// On iPhone, `sensors_plus` reports the raw, uncalibrated magnetometer
-/// (Core Motion's `startMagnetometerUpdates`). That reading includes the
-/// phone's own magnetic field (speaker magnets, metal parts), usually much
-/// stronger than the Earth's ~40 µT, so the heading barely moves. This
-/// removes it (hard-iron calibration): while the phone turns a full circle,
-/// the middle of the lowest and highest x / y readings is the phone's own
-/// offset, and the rest is the Earth's field.
-class CompassCalibrator {
-  /// Each horizontal axis must swing at least this much (µT) before the
-  /// heading is trusted; a full turn gives about twice the Earth's
-  /// horizontal field (~40 µT in Cavite).
-  static const minRange = 30.0;
-
-  /// Smoothing for the heading (0–1; lower is steadier but slower).
-  static const smoothing = 0.25;
-
-  double? _minX, _maxX, _minY, _maxY;
-  double? _x, _y;
-
-  bool get calibrated =>
-      _minX != null &&
-      _maxX! - _minX! >= minRange &&
-      _maxY! - _minY! >= minRange;
-
-  /// 0–1: how much of the needed swing has been seen so far.
-  double get progress {
-    if (_minX == null) return 0;
-    final rx = (_maxX! - _minX!) / minRange;
-    final ry = (_maxY! - _minY!) / minRange;
-    return math.min(1, math.min(rx, ry));
-  }
-
-  void reset() {
-    _minX = _maxX = _minY = _maxY = null;
-    _x = _y = null;
-  }
-
-  /// Adds a reading; returns the heading (0° = top of the phone pointing
-  /// north, clockwise) once calibrated, otherwise null.
-  double? add(Vec3 v) {
-    _minX = math.min(_minX ?? v.x, v.x);
-    _maxX = math.max(_maxX ?? v.x, v.x);
-    _minY = math.min(_minY ?? v.y, v.y);
-    _maxY = math.max(_maxY ?? v.y, v.y);
-    if (!calibrated) return null;
-    final x = v.x - (_minX! + _maxX!) / 2;
-    final y = v.y - (_minY! + _maxY!) / 2;
-    _x = _x == null ? x : _x! + smoothing * (x - _x!);
-    _y = _y == null ? y : _y! + smoothing * (y - _y!);
-    // Phone flat: north is where the horizontal field points.
-    final deg = math.atan2(-_x!, _y!) * 180 / math.pi;
-    return (deg + 360) % 360;
-  }
-}
-
-/// Raw sensor streams (real: `sensors_plus`; tests: fakes).
+/// Sensor streams (real: `sensors_plus` and `flutter_compass`; tests: fakes).
 abstract class SensorSource {
   Stream<Vec3> accelerometer();
   Stream<Vec3> gyroscope();
-  Stream<Vec3> magnetometer();
+
+  /// Compass heading in degrees (0 = top of the phone pointing north).
+  Stream<double> heading();
 }
 
 class DeviceSensorSource implements SensorSource {
@@ -114,10 +60,15 @@ class DeviceSensorSource implements SensorSource {
       gyroscopeEventStream(samplingPeriod: SensorInterval.uiInterval)
           .map((e) => Vec3(e.x, e.y, e.z));
 
+  /// The phone's own calibrated heading: on iPhone the one Apple's Compass
+  /// app uses (Core Location), on Android the fused rotation sensor. Both
+  /// keep themselves calibrated, unlike the raw magnetometer, which on
+  /// iPhone includes the phone's own magnetic field and got stuck on SW/W.
   @override
-  Stream<Vec3> magnetometer() =>
-      magnetometerEventStream(samplingPeriod: SensorInterval.uiInterval)
-          .map((e) => Vec3(e.x, e.y, e.z));
+  Stream<double> heading() => (FlutterCompass.events ?? const Stream.empty())
+      .map((e) => e.heading)
+      .where((h) => h != null)
+      .map((h) => (h! % 360 + 360) % 360);
 }
 
 /// A saved photo (Week 5 camera / gallery).
@@ -176,7 +127,7 @@ class DeviceService extends ChangeNotifier {
   final SensorSource sensors;
   final Future<Directory> Function() _documentsDirectory;
   final _picker = ImagePicker();
-  final _subs = <StreamSubscription<Vec3>>[];
+  final _subs = <StreamSubscription<Object>>[];
 
   List<DevicePhoto> _photos = [];
 
@@ -188,7 +139,6 @@ class DeviceService extends ChangeNotifier {
   Vec3 gyroMax = Vec3.zero;
   double? heading;
   final List<(String, DateTime)> directionHistory = [];
-  final compass = CompassCalibrator();
   final Map<String, SensorStatus> status = {
     'Camera': SensorStatus.active,
     'Accelerometer': SensorStatus.off,
@@ -297,9 +247,9 @@ class DeviceService extends ChangeNotifier {
       status[name] = SensorStatus.waiting;
     }
     _subs
-      ..add(_listen(sensors.accelerometer(), 'Accelerometer', _onAccel))
-      ..add(_listen(sensors.gyroscope(), 'Gyroscope', _onGyro))
-      ..add(_listen(sensors.magnetometer(), 'Compass', _onMag));
+      ..add(_listen<Vec3>(sensors.accelerometer(), 'Accelerometer', _onAccel))
+      ..add(_listen<Vec3>(sensors.gyroscope(), 'Gyroscope', _onGyro))
+      ..add(_listen<double>(sensors.heading(), 'Compass', _onHeading));
     notifyListeners();
   }
 
@@ -323,10 +273,10 @@ class DeviceService extends ChangeNotifier {
     notifyListeners();
   }
 
-  StreamSubscription<Vec3> _listen(
-    Stream<Vec3> stream,
+  StreamSubscription<T> _listen<T extends Object>(
+    Stream<T> stream,
     String name,
-    void Function(Vec3) onData,
+    void Function(T) onData,
   ) {
     return stream.listen(
       (v) {
@@ -355,18 +305,9 @@ class DeviceService extends ChangeNotifier {
     gyroMax = gyroMax.maxAbs(v);
   }
 
-  /// Starts the compass calibration again (e.g. after it was near a magnet).
-  void recalibrateCompass() {
-    compass.reset();
-    heading = null;
-    notifyListeners();
-  }
-
-  /// Heading with the phone lying flat: 0° when the top points north.
-  /// No tilt compensation, so tilting the phone skews the reading.
-  void _onMag(Vec3 v) {
-    heading = compass.add(v);
-    if (heading == null) return;
+  /// 0° when the top of the phone points north.
+  void _onHeading(double h) {
+    heading = h;
     final dir = direction!;
     if (directionHistory.isEmpty || directionHistory.first.$1 != dir) {
       directionHistory.insert(0, (dir, DateTime.now()));
