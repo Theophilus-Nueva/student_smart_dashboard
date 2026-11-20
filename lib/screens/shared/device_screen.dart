@@ -140,7 +140,7 @@ class DeviceScreen extends StatelessWidget {
                     ],
                   ),
                 ],
-                _sensorHeader('Accelerometer', device.status['Accelerometer']!),
+                const SectionHeader('Accelerometer'),
                 _AxisRow(
                   values: device.accel,
                   notes: [
@@ -160,7 +160,7 @@ class DeviceScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-                _sensorHeader('Gyroscope', device.status['Gyroscope']!),
+                const SectionHeader('Gyroscope'),
                 _AxisRow(
                   values: device.gyro,
                   notes: [
@@ -168,7 +168,7 @@ class DeviceScreen extends StatelessWidget {
                       'prev ${p.toStringAsFixed(2)}',
                   ],
                 ),
-                _sensorHeader('Compass', device.status['Compass']!),
+                const SectionHeader('Compass'),
                 Card(
                   child: ListTile(
                     leading: Transform.rotate(
@@ -221,15 +221,6 @@ class DeviceScreen extends StatelessWidget {
       ),
     );
   }
-
-  static Widget _sensorHeader(String title, SensorStatus status) =>
-      SectionHeader(
-        title,
-        action: Text(
-          _statusLabel(status),
-          style: TextStyle(fontSize: 12, color: _statusColor(status)),
-        ),
-      );
 
   static String _statusLabel(SensorStatus s) => switch (s) {
     SensorStatus.active => 'Active',

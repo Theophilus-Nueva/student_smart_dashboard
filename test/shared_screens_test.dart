@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:smart_dashboard/routes/app_routes.dart';
 
+import 'package:smart_dashboard/widgets/common.dart';
+
 import 'test_helpers.dart';
 
 const _sharedRoutes = {
@@ -99,7 +101,27 @@ void main() {
     // Fake readings: accelerometer Z, compass pointing east.
     expect(find.text('9.81'), findsOneWidget);
     expect(find.text('E · 90°'), findsOneWidget);
-    expect(find.text('Active'), findsWidgets);
+    // Status shows only in the Sensor Status card (Camera, Accelerometer,
+    // Gyroscope, Compass), not beside each section title.
+    expect(
+      find.descendant(
+        of: find.byType(SectionHeader),
+        matching: find.text('Active'),
+      ),
+      findsNothing,
+    );
+    await tester.scrollUntilVisible(
+      find.text('Sensor Status'),
+      200,
+      scrollable: find.byType(Scrollable).hitTestable().first,
+    );
+    await tester.pumpAndSettle();
+    await tester.drag(
+      find.byType(Scrollable).hitTestable().first,
+      const Offset(0, -400),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Active'), findsNWidgets(4));
 
     await tapNav(tester, 'Home');
     expect(services.device.sensorsRunning, isFalse);
