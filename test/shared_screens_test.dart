@@ -154,10 +154,17 @@ void main() {
     // Recent directions live at the bottom of the sheet, not on the card.
     final recent = find.byKey(const Key('compass.recent'));
     // Opens only as tall as the compass: dial and reading on screen,
-    // Recent still below the bottom edge until you drag up.
+    // Recent still below the bottom edge until you scroll.
     expect(tester.getRect(find.byType(CompassDial)).top, greaterThan(0));
     expect(tester.getRect(find.text('90°  E')).bottom, lessThan(844));
     expect(tester.getRect(recent).top, greaterThanOrEqualTo(844));
+    final sheet = find
+        .descendant(
+          of: find.byType(BottomSheet),
+          matching: find.byType(Material),
+        )
+        .first;
+    final sheetTop = tester.getRect(sheet).top;
     await tester.scrollUntilVisible(
       recent,
       100,
@@ -172,6 +179,8 @@ void main() {
       find.descendant(of: recent, matching: find.text('E')),
       findsOneWidget,
     );
+    // The content scrolled; the sheet itself stayed the same height.
+    expect(tester.getRect(sheet).top, sheetTop);
     expect(find.textContaining('Recent:'), findsNothing);
     final rotation = tester.widget<AnimatedRotation>(
       find.descendant(
