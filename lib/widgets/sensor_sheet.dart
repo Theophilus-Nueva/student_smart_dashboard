@@ -29,6 +29,7 @@ Future<void> showSensorSheet(
   required List<Vec3> Function() history,
   required int historyLength,
   required Duration interval,
+  bool animate = true,
 }) {
   final seconds = (historyLength * interval.inMilliseconds / 1000).round();
   return showDeviceSheet(
@@ -89,8 +90,11 @@ Future<void> showSensorSheet(
                           key: Key('$keyPrefix.graph'),
                           history: readings,
                           length: historyLength,
-                          // Never longer than the gap between readings.
-                          duration: interval < const Duration(milliseconds: 250)
+                          // Off: lines jump straight to each new reading.
+                          // On: never longer than the gap between readings.
+                          duration: !animate
+                              ? Duration.zero
+                              : interval < const Duration(milliseconds: 250)
                               ? interval * 0.75
                               : const Duration(milliseconds: 250),
                         ),

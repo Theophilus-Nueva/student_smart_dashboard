@@ -234,6 +234,8 @@ void main() {
     final chart = tester.widget<LineChart>(find.byType(LineChart));
     expect(chart.data.lineBarsData, hasLength(3));
     expect(chart.data.lineBarsData.first.spots, hasLength(2));
+    // The accelerometer graph still animates.
+    expect(chart.duration, const Duration(milliseconds: 250));
     expect(find.text('Movement history'), findsOneWidget);
 
     // Like the compass: a swipe on the content doesn't close it, a tap
@@ -292,6 +294,8 @@ void main() {
     expect(chart.data.lineBarsData.first.spots, hasLength(2));
     // 150 readings five a second: a 30-second window.
     expect(chart.data.maxX, 149);
+    // Gyroscope graph only: no animation between readings.
+    expect(chart.duration, Duration.zero);
     expect(find.text('Last 30 seconds'), findsOneWidget);
 
     await tester.tapAt(const Offset(195, 40));

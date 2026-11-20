@@ -20,5 +20,7 @@ Future<void> showGyroscopeSheet(BuildContext context, DeviceService device) {
     history: () => device.gyroHistory,
     historyLength: DeviceService.gyroHistoryLength,
     interval: DeviceService.gyroInterval,
+    // No animation: the graph jumps to each new reading.
+    animate: false,
   );
 }
