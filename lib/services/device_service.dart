@@ -52,7 +52,7 @@ class DeviceSensorSource implements SensorSource {
   // Week 5: accelerometer at a 1-second interval.
   @override
   Stream<Vec3> accelerometer() =>
-      accelerometerEventStream(samplingPeriod: const Duration(seconds: 1))
+      userAccelerometerEventStream(samplingPeriod: const Duration(seconds: 1))
           .map((e) => Vec3(e.x, e.y, e.z));
 
   @override
