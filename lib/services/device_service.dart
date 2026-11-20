@@ -52,12 +52,13 @@ class DeviceSensorSource implements SensorSource {
   // Week 5: accelerometer at a 1-second interval.
   @override
   Stream<Vec3> accelerometer() =>
-      userAccelerometerEventStream(samplingPeriod: const Duration(seconds: 1))
+      userAccelerometerEventStream(samplingPeriod: DeviceService.accelInterval)
           .map((e) => Vec3(e.x, e.y, e.z));
 
+  // Five readings a second: quick turns still show in the rotation graph.
   @override
   Stream<Vec3> gyroscope() =>
-      gyroscopeEventStream(samplingPeriod: SensorInterval.uiInterval)
+      gyroscopeEventStream(samplingPeriod: DeviceService.gyroInterval)
           .map((e) => Vec3(e.x, e.y, e.z));
 
   /// The phone's own calibrated heading: on iPhone the one Apple's Compass
@@ -138,9 +139,16 @@ class DeviceService extends ChangeNotifier {
   /// Device tab's graph covers [accelHistoryLength] seconds.
   final List<Vec3> accelHistory = [];
   static const accelHistoryLength = 30;
+  static const accelInterval = Duration(seconds: 1);
   Vec3 gyro = Vec3.zero;
   Vec3 gyroPrevious = Vec3.zero;
   Vec3 gyroMax = Vec3.zero;
+
+  /// Latest gyroscope readings, newest first: five a second, so the Device
+  /// tab's graph covers 30 seconds.
+  final List<Vec3> gyroHistory = [];
+  static const gyroHistoryLength = 150;
+  static const gyroInterval = Duration(milliseconds: 200);
   double? heading;
   final List<(String, DateTime)> directionHistory = [];
   final Map<String, SensorStatus> status = {
@@ -307,6 +315,8 @@ class DeviceService extends ChangeNotifier {
     gyroPrevious = gyro;
     gyro = v;
     gyroMax = gyroMax.maxAbs(v);
+    gyroHistory.insert(0, v);
+    if (gyroHistory.length > gyroHistoryLength) gyroHistory.removeLast();
   }
 
   /// 0° when the top of the phone points north.

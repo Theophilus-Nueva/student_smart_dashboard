@@ -148,8 +148,12 @@ class FakeSensors implements SensorSource {
     Vec3(0.02, -0.98, 9.81),
   ]);
 
+  /// Two readings, so the rotation graph has a line to draw.
   @override
-  Stream<Vec3> gyroscope() => Stream.value(const Vec3(0.01, 0.03, -0.02));
+  Stream<Vec3> gyroscope() => Stream.fromIterable(const [
+    Vec3(0.50, -0.20, 0.10),
+    Vec3(0.01, 0.03, -0.02),
+  ]);
 
   /// Top of the phone pointing east.
   @override

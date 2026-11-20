@@ -250,6 +250,55 @@ void main() {
     expect(sheet, findsNothing);
   });
 
+  testWidgets('Tapping the gyroscope slides up its values and graph', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    await signInAs(tester, 'student', 'student123');
+    await tapNav(tester, 'Device');
+    final section = find.byKey(const Key('device.gyroscope'));
+    await tester.scrollUntilVisible(
+      section,
+      200,
+      scrollable: find.byType(Scrollable).hitTestable().first,
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(section);
+    await tester.pumpAndSettle();
+    final sheet = find.byType(BottomSheet);
+    expect(sheet, findsOneWidget);
+    expect(find.text('Gyroscope'), findsWidgets);
+    expect(find.text('Rotation history'), findsOneWidget);
+    // Latest fake reading, with the previous one and the highest under it.
+    expect(
+      tester.widget<Text>(find.byKey(const Key('gyro.value.X'))).data,
+      '0.01',
+    );
+    expect(
+      find.descendant(of: sheet, matching: find.text('prev 0.50')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: sheet, matching: find.text('max 0.50')),
+      findsOneWidget,
+    );
+    final chart = tester.widget<LineChart>(
+      find.descendant(
+        of: find.byKey(const Key('gyro.graph')),
+        matching: find.byType(LineChart),
+      ),
+    );
+    expect(chart.data.lineBarsData, hasLength(3));
+    expect(chart.data.lineBarsData.first.spots, hasLength(2));
+    // 150 readings five a second: a 30-second window.
+    expect(chart.data.maxX, 149);
+    expect(find.text('Last 30 seconds'), findsOneWidget);
+
+    await tester.tapAt(const Offset(195, 40));
+    await tester.pumpAndSettle();
+    expect(sheet, findsNothing);
+  });
+
   testWidgets('Compass dial turns the short way across north', (tester) async {
     Future<double> turnsAt(double heading) async {
       await tester.pumpWidget(MaterialApp(home: CompassDial(heading: heading)));

@@ -12,6 +12,7 @@ import '../../utils/format.dart';
 import '../../widgets/accelerometer_sheet.dart';
 import '../../widgets/common.dart';
 import '../../widgets/compass_sheet.dart';
+import '../../widgets/gyroscope_sheet.dart';
 
 /// Shared / Device tab (Week 5): camera, gallery, accelerometer, gyroscope,
 /// compass and sensor status. Sensors run only while this tab is open
@@ -167,13 +168,29 @@ class DeviceScreen extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SectionHeader('Gyroscope'),
-                _AxisRow(
-                  values: device.gyro,
-                  notes: [
-                    for (final p in device.gyroPrevious.values)
-                      'prev ${p.toStringAsFixed(2)}',
-                  ],
+                // Tap for the live values and the rotation graph (slides up).
+                GestureDetector(
+                  key: const Key('device.gyroscope'),
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => showGyroscopeSheet(context, device),
+                  child: Column(
+                    children: [
+                      const SectionHeader(
+                        'Gyroscope',
+                        action: Icon(
+                          Icons.chevron_right,
+                          color: AppColors.muted,
+                        ),
+                      ),
+                      _AxisRow(
+                        values: device.gyro,
+                        notes: [
+                          for (final p in device.gyroPrevious.values)
+                            'prev ${p.toStringAsFixed(2)}',
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
                 const SectionHeader('Compass'),
                 Card(
