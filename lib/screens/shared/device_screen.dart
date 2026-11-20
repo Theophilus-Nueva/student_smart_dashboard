@@ -193,10 +193,6 @@ class DeviceScreen extends StatelessWidget {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    // Recent directions are in the slide-up sheet.
-                    subtitle: const Text(
-                      'Hold the phone flat for a steady reading',
-                    ),
                   ),
                 ),
                 const SectionHeader('Sensor Status'),
