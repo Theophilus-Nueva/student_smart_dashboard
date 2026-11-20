@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
 import '../services/device_service.dart';
@@ -144,29 +145,15 @@ class _AxisTile extends StatelessWidget {
 }
 
 /// Line graph of accelerometer readings (newest first in [history]): one
-/// line per axis, newest on the right, centred on 0.
+/// line per axis, newest on the right, centred on 0. Touch a point to read
+/// its value.
 class AccelGraph extends StatelessWidget {
   const AccelGraph({super.key, required this.history});
 
   final List<Vec3> history;
 
   @override
-  Widget build(BuildContext context) =>
-      CustomPaint(size: Size.infinite, painter: _GraphPainter(history));
-}
-
-class _GraphPainter extends CustomPainter {
-  _GraphPainter(List<Vec3> history) : history = List.of(history);
-
-  final List<Vec3> history;
-
-  /// Width reserved on the left for the scale labels.
-  static const _labelWidth = 36.0;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final plot = Rect.fromLTRB(_labelWidth, 8, size.width, size.height - 8);
-
+  Widget build(BuildContext context) {
     // Symmetric scale around 0 that fits the biggest reading (at least ±1).
     var peak = 1.0;
     for (final v in history) {
@@ -175,45 +162,69 @@ class _GraphPainter extends CustomPainter {
       }
     }
     final scale = peak * 1.1;
-    double yOf(double v) => plot.center.dy - v / scale * plot.height / 2;
+    // Newest reading on the right edge (x = last slot); older ones step
+    // left one slot per second, so the graph scrolls as readings come in.
+    final last = (DeviceService.accelHistoryLength - 1).toDouble();
 
-    // Grid: 0 in the middle, ±scale at the edges.
-    final grid = Paint()
-      ..color = AppColors.border
-      ..strokeWidth = 1;
-    for (final v in [scale, 0.0, -scale]) {
-      final y = yOf(v);
-      canvas.drawLine(Offset(plot.left, y), Offset(plot.right, y), grid);
-      final tp = TextPainter(
-        text: TextSpan(
-          text: v == 0 ? '0' : v.toStringAsFixed(1),
-          style: const TextStyle(fontSize: 10, color: AppColors.muted),
+    return LineChart(
+      duration: const Duration(milliseconds: 250),
+      LineChartData(
+        minX: 0,
+        maxX: last,
+        minY: -scale,
+        maxY: scale,
+        lineBarsData: [
+          for (var axis = 0; axis < 3; axis++)
+            LineChartBarData(
+              spots: [
+                for (var i = 0; i < history.length; i++)
+                  FlSpot(last - i, history[i].values[axis]),
+              ],
+              color: accelAxisColors[axis],
+              barWidth: 2,
+              dotData: const FlDotData(show: false),
+            ),
+        ],
+        // Grid and labels at −scale, 0 and +scale.
+        gridData: FlGridData(
+          drawVerticalLine: false,
+          horizontalInterval: scale,
+          getDrawingHorizontalLine: (_) =>
+              const FlLine(color: AppColors.border, strokeWidth: 1),
         ),
-        textDirection: TextDirection.ltr,
-      )..layout();
-      tp.paint(canvas, Offset(0, y - tp.height / 2));
-    }
-
-    // Newest reading on the right edge; older ones step left, one slot per
-    // second, so the graph scrolls as readings come in.
-    final step = plot.width / (DeviceService.accelHistoryLength - 1);
-    for (var axis = 0; axis < 3; axis++) {
-      final path = Path();
-      for (var i = 0; i < history.length; i++) {
-        final p = Offset(plot.right - i * step, yOf(history[i].values[axis]));
-        i == 0 ? path.moveTo(p.dx, p.dy) : path.lineTo(p.dx, p.dy);
-      }
-      canvas.drawPath(
-        path,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 2
-          ..strokeJoin = StrokeJoin.round
-          ..color = accelAxisColors[axis],
-      );
-    }
+        titlesData: FlTitlesData(
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 36,
+              interval: scale,
+              getTitlesWidget: (value, meta) => Text(
+                value.abs() < 1e-9 ? '0' : value.toStringAsFixed(1),
+                style: const TextStyle(fontSize: 10, color: AppColors.muted),
+              ),
+            ),
+          ),
+          topTitles: const AxisTitles(),
+          rightTitles: const AxisTitles(),
+          bottomTitles: const AxisTitles(),
+        ),
+        borderData: FlBorderData(show: false),
+        lineTouchData: LineTouchData(
+          touchTooltipData: LineTouchTooltipData(
+            getTooltipColor: (_) => Colors.white,
+            getTooltipItems: (spots) => [
+              for (final s in spots)
+                LineTooltipItem(
+                  '${'XYZ'[s.barIndex]}  ${s.y.toStringAsFixed(2)}',
+                  TextStyle(
+                    color: accelAxisColors[s.barIndex],
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
-
-  @override
-  bool shouldRepaint(_GraphPainter old) => true;
 }

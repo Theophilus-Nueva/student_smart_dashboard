@@ -1,3 +1,4 @@
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -229,6 +230,10 @@ void main() {
       '9.81',
     );
     expect(find.byKey(const Key('accel.graph')), findsOneWidget);
+    // fl_chart line chart: one line per axis, one point per reading.
+    final chart = tester.widget<LineChart>(find.byType(LineChart));
+    expect(chart.data.lineBarsData, hasLength(3));
+    expect(chart.data.lineBarsData.first.spots, hasLength(2));
     expect(find.text('Movement history'), findsOneWidget);
 
     // Like the compass: a swipe on the content doesn't close it, a tap
