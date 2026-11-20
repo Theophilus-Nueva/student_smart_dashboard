@@ -189,16 +189,20 @@ void main() {
     // Edge to edge, so a tap at the side doesn't close it. Measures the
     // white sheet itself (the Material), not BottomSheet's outer wrapper,
     // which always fills the screen.
-    final sheet = tester.getRect(
-      find
-          .descendant(
-            of: find.byType(BottomSheet),
-            matching: find.byType(Material),
-          )
-          .first,
-    );
+    final material = find
+        .descendant(
+          of: find.byType(BottomSheet),
+          matching: find.byType(Material),
+        )
+        .first;
+    final sheet = tester.getRect(material);
     expect(sheet.left, 0);
     expect(sheet.right, 844);
+    // The test font is wide enough to fill the row by itself, which hid a
+    // real-device bug: the sheet must be told to fill the width, not just
+    // happen to because its text is long.
+    final box = tester.renderObject<RenderBox>(material);
+    expect(box.constraints.minWidth, 844);
     // The dial still keeps clear of the notch.
     expect(tester.getRect(find.byType(CompassDial)).left, greaterThan(59));
     await tester.tapAt(const Offset(30, 300)); // beside the dial, inside it

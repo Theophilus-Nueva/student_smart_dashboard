@@ -13,9 +13,11 @@ Future<void> showCompassSheet(BuildContext context, DeviceService device) {
     isScrollControlled: true,
     showDragHandle: true,
     // Full screen width: Material 3 caps sheets at 640 px and centres them,
-    // so in landscape a tap beside the sheet closed it. The notch is
-    // handled inside the sheet instead (see _CompassSheet).
-    constraints: const BoxConstraints(),
+    // so in landscape a tap beside the sheet closed it. The sheet sits in an
+    // Align, so without a minimum width it shrinks to its content; minWidth
+    // infinity is clamped to the screen width. The notch is handled inside
+    // the sheet instead (see _CompassSheet).
+    constraints: const BoxConstraints(minWidth: double.infinity),
     backgroundColor: Colors.white,
     builder: (context) => ListenableBuilder(
       listenable: device,
