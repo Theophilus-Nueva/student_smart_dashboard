@@ -12,7 +12,10 @@ Future<void> showCompassSheet(BuildContext context, DeviceService device) {
     context: context,
     isScrollControlled: true,
     showDragHandle: true,
-    useSafeArea: true,
+    // Full screen width: Material 3 caps sheets at 640 px and centres them,
+    // so in landscape a tap beside the sheet closed it. The notch is
+    // handled inside the sheet instead (see _CompassSheet).
+    constraints: const BoxConstraints(),
     backgroundColor: Colors.white,
     builder: (context) => ListenableBuilder(
       listenable: device,
@@ -31,12 +34,20 @@ class _CompassSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
+    // The sheet spans the screen; keep its content clear of the notch and
+    // the home indicator.
+    final insets = MediaQuery.paddingOf(context);
     // Fits portrait and landscape: never taller than about half the screen.
     final dial = math
         .min(size.width - 64, size.height * 0.5)
         .clamp(160.0, 340.0);
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
+      padding: EdgeInsets.fromLTRB(
+        24 + insets.left,
+        0,
+        24 + insets.right,
+        32 + insets.bottom,
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
