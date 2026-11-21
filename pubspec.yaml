@@ -38,9 +38,23 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
 
 flutter:
   uses-material-design: true
 
   assets:
     - assets/images/
+
+# App icon (generated with `dart run flutter_launcher_icons`).
+# Source artwork: assets/icon/app_icon.svg (exported to the PNGs below).
+flutter_launcher_icons:
+  image_path: "assets/icon/app_icon.png"
+  ios: true
+  remove_alpha_ios: true
+  android: true
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/icon/app_icon_android_foreground.png"
+  # The foreground PNG is already scaled into the safe zone.
+  adaptive_icon_foreground_inset: 0
+  min_sdk_android: 21
