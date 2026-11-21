@@ -9,8 +9,9 @@ import '../../theme/app_colors.dart';
 import '../../widgets/common.dart';
 
 /// Shared / Map (Week 6): OpenStreetMap centred on you (zoom 16) with Home,
-/// School and Workplace markers. Widget tests use the schematic instead,
-/// because map tiles need the internet.
+/// School and Workplace markers. The map fills the screen; the location
+/// details sit in a slide-up panel over it. Widget tests use the schematic
+/// instead, because map tiles need the internet.
 class MapScreen extends StatelessWidget {
   const MapScreen({super.key});
 
@@ -20,103 +21,199 @@ class MapScreen extends StatelessWidget {
     final tracker = services.tracker;
     return Scaffold(
       appBar: AppBar(title: const Text('Map')),
-      body: SafeArea(
-        top: false,
-        bottom: false,
-        child: ListenableBuilder(
-          listenable: tracker,
-          builder: (context, _) {
-            final fix = tracker.fix;
-            return ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                AspectRatio(
-                  aspectRatio: 1,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
+      body: ListenableBuilder(
+        listenable: tracker,
+        builder: (context, _) {
+          final fix = tracker.fix;
+          return LayoutBuilder(
+            builder: (context, box) {
+              // Collapsed, the panel shows the address and GPS status;
+              // drag it up for coordinates and markers. It stays below
+              // three quarters of the screen so the map is never hidden.
+              final bottom = MediaQuery.paddingOf(context).bottom;
+              final peek = ((_peekHeight + bottom) / box.maxHeight).clamp(
+                0.15,
+                0.5,
+              );
+              return Stack(
+                children: [
+                  Positioned.fill(
                     child: services.useNativeMaps
                         ? _LiveMap(fix: fix)
                         : const _SchematicMap(),
                   ),
-                ),
-                if (!fix.live) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    fix.problem == null
-                        ? 'Waiting for GPS · showing the campus location.'
-                        : '${fix.problem} · showing the campus location.',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: AppColors.muted,
+                  DraggableScrollableSheet(
+                    key: const Key('map.info'),
+                    initialChildSize: peek,
+                    minChildSize: peek,
+                    maxChildSize: 0.75,
+                    snap: true,
+                    builder: (context, controller) => _InfoPanel(
+                      fix: fix,
+                      controller: controller,
+                      showCredit: services.useNativeMaps,
                     ),
                   ),
                 ],
-                const SectionHeader('Current location'),
-                Text(fix.address, style: const TextStyle(fontSize: 13)),
-                const SizedBox(height: 10),
-                // Moved here from the Home card.
-                Row(
-                  children: [
-                    Expanded(
-                      child: InfoField(
-                        label: 'Latitude',
-                        value: fix.latitude.toStringAsFixed(4),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: InfoField(
-                        label: 'Longitude',
-                        value: fix.longitude.toStringAsFixed(4),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: InfoField(
-                        label: 'Accuracy',
-                        value: '±${fix.accuracyMeters.round()} m',
-                      ),
-                    ),
-                  ],
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  /// Height of the collapsed panel above the home indicator: handle,
+  /// title, two lines of address and the status / credit line.
+  static const _peekHeight = 150.0;
+}
+
+/// Slide-up panel over the map: address, GPS status, coordinates and the
+/// Home / School / Workplace markers.
+class _InfoPanel extends StatelessWidget {
+  const _InfoPanel({
+    required this.fix,
+    required this.controller,
+    required this.showCredit,
+  });
+
+  final LocationFix fix;
+  final ScrollController controller;
+
+  /// OpenStreetMap's credit (required by its tile policy). The panel
+  /// covers the map's bottom corners, so it is shown here instead.
+  final bool showCredit;
+
+  @override
+  Widget build(BuildContext context) {
+    final insets = MediaQuery.paddingOf(context);
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        boxShadow: [BoxShadow(color: Color(0x33000000), blurRadius: 12)],
+      ),
+      child: SingleChildScrollView(
+        controller: controller,
+        padding: EdgeInsets.fromLTRB(
+          16 + insets.left,
+          0,
+          16 + insets.right,
+          16 + insets.bottom,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Drag handle.
+            Center(
+              child: Container(
+                margin: const EdgeInsets.symmetric(vertical: 10),
+                width: 32,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.border,
+                  borderRadius: BorderRadius.circular(2),
                 ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: InfoField(
-                        label: 'Speed',
-                        value: '${fix.speedKmh.round()} km/h',
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: InfoField(
-                        label: 'Altitude',
-                        value: '${fix.altitudeMeters.round()} m',
-                      ),
-                    ),
-                  ],
+              ),
+            ),
+            const Text(
+              'Current location',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              fix.address,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 13),
+            ),
+            if (!fix.live) ...[
+              const SizedBox(height: 4),
+              Text(
+                fix.problem == null
+                    ? 'Waiting for GPS · showing the campus location.'
+                    : '${fix.problem} · showing the campus location.',
+                style: const TextStyle(fontSize: 12, color: AppColors.muted),
+              ),
+            ],
+            if (showCredit) ...[
+              const SizedBox(height: 4),
+              GestureDetector(
+                onTap: () => launchUrl(
+                  Uri.parse('https://www.openstreetmap.org/copyright'),
                 ),
-                const SectionHeader('Markers'),
-                for (final m in LocationService.markers)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 6),
-                    child: Row(
-                      children: [
-                        Icon(_iconFor(m.label), size: 20),
-                        const SizedBox(width: 12),
-                        Expanded(child: Text(m.label)),
-                        Text(
-                          '${m.latitude.toStringAsFixed(4)}, '
-                          '${m.longitude.toStringAsFixed(4)}',
-                          style: const TextStyle(color: AppColors.muted),
-                        ),
-                      ],
-                    ),
+                child: const Text(
+                  '© OpenStreetMap contributors',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: AppColors.muted,
+                    decoration: TextDecoration.underline,
                   ),
+                ),
+              ),
+            ],
+            const SizedBox(height: 16),
+            // Moved here from the Home card.
+            Row(
+              children: [
+                Expanded(
+                  child: InfoField(
+                    label: 'Latitude',
+                    value: fix.latitude.toStringAsFixed(4),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: InfoField(
+                    label: 'Longitude',
+                    value: fix.longitude.toStringAsFixed(4),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: InfoField(
+                    label: 'Accuracy',
+                    value: '±${fix.accuracyMeters.round()} m',
+                  ),
+                ),
               ],
-            );
-          },
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: InfoField(
+                    label: 'Speed',
+                    value: '${fix.speedKmh.round()} km/h',
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: InfoField(
+                    label: 'Altitude',
+                    value: '${fix.altitudeMeters.round()} m',
+                  ),
+                ),
+              ],
+            ),
+            const SectionHeader('Markers'),
+            for (final m in LocationService.markers)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: Row(
+                  children: [
+                    Icon(_iconFor(m.label), size: 20),
+                    const SizedBox(width: 12),
+                    Expanded(child: Text(m.label)),
+                    Text(
+                      '${m.latitude.toStringAsFixed(4)}, '
+                      '${m.longitude.toStringAsFixed(4)}',
+                      style: const TextStyle(color: AppColors.muted),
+                    ),
+                  ],
+                ),
+              ),
+          ],
         ),
       ),
     );
@@ -181,16 +278,6 @@ class _LiveMapState extends State<_LiveMap> {
                 child: _MapPin(label: m.label),
               ),
             Marker(point: _me, width: 22, height: 22, child: const _MeDot()),
-          ],
-        ),
-        RichAttributionWidget(
-          attributions: [
-            TextSourceAttribution(
-              'OpenStreetMap contributors',
-              onTap: () => launchUrl(
-                Uri.parse('https://www.openstreetmap.org/copyright'),
-              ),
-            ),
           ],
         ),
       ],

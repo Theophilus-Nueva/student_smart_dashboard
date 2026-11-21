@@ -303,6 +303,43 @@ void main() {
     expect(sheet, findsNothing);
   });
 
+  testWidgets('Map fills the screen with a slide-up details panel', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    await signInAs(tester, 'student', 'student123');
+    await pushRoute(tester, AppRoutes.map);
+
+    // The map spans the whole body, edge to edge, under the app bar.
+    final panel = find.byKey(const Key('map.info'));
+    final body = tester.getRect(
+      find.ancestor(of: panel, matching: find.byType(Stack)).first,
+    );
+    expect(body.left, 0);
+    expect(body.width, 390);
+    expect(body.bottom, 844);
+    // Collapsed: the address shows, the coordinates are below the screen.
+    expect(tester.getRect(find.text('Current location')).bottom, lessThan(844));
+    expect(tester.getRect(find.text('Latitude')).top, greaterThan(844));
+    // Drag the panel up: the coordinates and markers come into view.
+    await tester.drag(find.text('Current location'), const Offset(0, -500));
+    await tester.pumpAndSettle();
+    expect(tester.getRect(find.text('Latitude')).bottom, lessThan(844));
+    expect(panel, findsOneWidget);
+    // Never covers the whole map.
+    expect(tester.getRect(find.text('Current location')).top, greaterThan(150));
+  });
+
+  testWidgets('Map panel fits in landscape', (tester) async {
+    await pumpApp(tester, size: const Size(844, 390), sidePadding: 59);
+    await signInAs(tester, 'student', 'student123');
+    await pushRoute(tester, AppRoutes.map);
+    expect(find.text('Current location'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    // The panel's text keeps clear of the notch.
+    expect(tester.getRect(find.text('Current location')).left, greaterThan(59));
+  });
+
   testWidgets('Compass dial turns the short way across north', (tester) async {
     Future<double> turnsAt(double heading) async {
       await tester.pumpWidget(MaterialApp(home: CompassDial(heading: heading)));
