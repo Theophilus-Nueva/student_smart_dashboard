@@ -49,3 +49,6 @@ app.*.map.json
 
 # iOS Google Maps key (MAPS_API_KEY = ...)
 /ios/Flutter/Secrets.xcconfig
+
+# Local notes for Claude Code; kept on this machine only.
+CLAUDE.md
