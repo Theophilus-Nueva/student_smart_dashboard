@@ -135,9 +135,14 @@ void main() {
     expect(find.text('Touch ID sign-in is on.'), findsOneWidget);
     expect(services.settings.get(AppSettings.biometricLogin), isTrue);
 
-    // Signed out: Login asks for Touch ID by itself (the phone's own
-    // prompt, nothing to tap first) and opens the last account.
+    // Signed out: Login offers Touch ID next to the password form but
+    // doesn't start it by itself; one tap goes straight to the phone's
+    // prompt and opens the last account.
     services.session.signOut();
+    await tester.pumpAndSettle();
+    expect(services.session.isSignedIn, isFalse);
+    expect(find.text('Sign In'), findsOneWidget);
+    await tester.tap(find.text('Sign in with Touch ID'));
     await tester.pumpAndSettle();
     expect(find.byType(BottomSheet), findsNothing);
     expect(services.session.user?.displayName, 'Pocaan, Alyssa Paola D.');

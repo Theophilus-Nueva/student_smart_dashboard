@@ -36,9 +36,8 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!services.settings.get(AppSettings.biometricLogin)) return;
       final kind = await services.biometric.detect();
       if (!mounted || !kind.available) return;
+      // Only offered: the user picks password or Face ID each time.
       setState(() => _biometric = kind);
-      // Prompt straight away for the last account.
-      if (services.session.rememberedUser != null) await _biometricSignIn();
     });
   }
 
