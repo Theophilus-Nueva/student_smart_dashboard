@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../models/app_user.dart';
@@ -291,10 +292,10 @@ class StudyReminderRow extends StatelessWidget {
   Future<void> _pickTime(BuildContext context) async {
     final services = AppScope.of(context);
     final (hour, minute) = services.settings.studyReminderTime;
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay(hour: hour, minute: minute),
-      helpText: 'Study reminder time',
+    final picked = await pickTimeOfDay(
+      context,
+      initial: TimeOfDay(hour: hour, minute: minute),
+      title: 'Study reminder time',
     );
     if (picked == null || !context.mounted) return;
     await services.settings.setStudyReminderTime(picked.hour, picked.minute);
@@ -358,4 +359,83 @@ class StudyReminderRow extends StatelessWidget {
       ],
     );
   }
+}
+
+/// The phone's own style of time picker: the iOS wheel on iPhone (in a
+/// bottom panel with Cancel / Done), the Material clock on Android.
+Future<TimeOfDay?> pickTimeOfDay(
+  BuildContext context, {
+  required TimeOfDay initial,
+  required String title,
+}) {
+  final platform = Theme.of(context).platform;
+  if (platform != TargetPlatform.iOS && platform != TargetPlatform.macOS) {
+    return showTimePicker(
+      context: context,
+      initialTime: initial,
+      helpText: title,
+    );
+  }
+  var chosen = initial;
+  return showCupertinoModalPopup<TimeOfDay>(
+    context: context,
+    builder: (popup) => ColoredBox(
+      color: CupertinoColors.systemBackground.resolveFrom(popup),
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          height: 260,
+          child: Column(
+            children: [
+              // iOS toolbar: Cancel, title, Done.
+              SizedBox(
+                height: 44,
+                child: Row(
+                  children: [
+                    CupertinoButton(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      onPressed: () => Navigator.pop(popup),
+                      child: const Text('Cancel'),
+                    ),
+                    Expanded(
+                      child: Text(
+                        title,
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                    CupertinoButton(
+                      key: const Key('timePicker.done'),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      onPressed: () => Navigator.pop(popup, chosen),
+                      child: const Text(
+                        'Done',
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: CupertinoDatePicker(
+                  mode: CupertinoDatePickerMode.time,
+                  initialDateTime: DateTime(
+                    2000,
+                    1,
+                    1,
+                    initial.hour,
+                    initial.minute,
+                  ),
+                  onDateTimeChanged: (t) =>
+                      chosen = TimeOfDay(hour: t.hour, minute: t.minute),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
 }

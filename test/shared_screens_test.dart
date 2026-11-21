@@ -1,4 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -426,6 +428,33 @@ void main() {
           .onPressed,
       isNull,
     );
+  });
+
+  testWidgets('On iPhone the study time uses the iOS wheel picker', (
+    tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    try {
+      final reminders = RecordingNotifications();
+      final services = await makeServices(notifications: reminders);
+      await pumpApp(tester, services: services);
+      await signInAs(tester, 'student', 'student123');
+      await pushRoute(tester, AppRoutes.notifications);
+      await tester.tap(find.byKey(const Key('settings.studyTime')));
+      await tester.pumpAndSettle();
+      // iOS wheel, not the Material clock dialog.
+      expect(find.byType(CupertinoDatePicker), findsOneWidget);
+      expect(find.byType(TimePickerDialog), findsNothing);
+      await tester.tap(find.byKey(const Key('timePicker.done')));
+      await tester.pumpAndSettle();
+      expect(reminders.daily[ReminderCategory.study], (19, 0));
+      expect(
+        find.text('Study reminder set for 7:00 PM every day.'),
+        findsOneWidget,
+      );
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
   });
 
   testWidgets('Compass dial turns the short way across north', (tester) async {
