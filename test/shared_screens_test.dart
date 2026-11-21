@@ -342,6 +342,42 @@ void main() {
     expect(tester.getRect(find.text('Current location')).left, greaterThan(59));
   });
 
+  testWidgets('Compass sheet follows the finger while readings arrive', (
+    tester,
+  ) async {
+    final services = await pumpApp(tester);
+    await signInAs(tester, 'student', 'student123');
+    await tapNav(tester, 'Device');
+
+    // Drags the sheet up 150 px and holds it, optionally while sensor
+    // readings arrive (they rebuild the sheet many times a second on a
+    // phone). Returns how far the sheet moved.
+    Future<double> dragUp({required bool readings}) async {
+      await openCompassSheet(tester);
+      final panel = find.byType(SlideUpPanel);
+      final start = tester.getRect(panel).top;
+      final finger = await tester.startGesture(
+        tester.getCenter(find.byType(CompassDial)),
+      );
+      for (var i = 0; i < 25; i++) {
+        if (i < 15) await finger.moveBy(const Offset(0, -10));
+        if (readings) services.device.notifyListeners();
+        await tester.pump(const Duration(milliseconds: 16));
+      }
+      final moved = start - tester.getRect(panel).top;
+      await finger.up();
+      await tester.pumpAndSettle();
+      await tester.tapAt(const Offset(195, 20)); // close it
+      await tester.pumpAndSettle();
+      return moved;
+    }
+
+    final still = await dragUp(readings: false);
+    expect(still, greaterThan(100));
+    // Readings arriving mid-drag no longer snap the sheet back.
+    expect(await dragUp(readings: true), closeTo(still, 1));
+  });
+
   testWidgets('Compass dial turns the short way across north', (tester) async {
     Future<double> turnsAt(double heading) async {
       await tester.pumpWidget(MaterialApp(home: CompassDial(heading: heading)));

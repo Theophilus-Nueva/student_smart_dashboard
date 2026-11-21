@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
@@ -109,29 +110,22 @@ Future<T?> showSlideUpSheet<T>(
   double Function(BuildContext context)? peekHeight,
   bool Function()? canExpand,
 }) {
-  Widget sheet(BuildContext context) {
-    if (peekHeight == null) {
-      final size = MediaQuery.sizeOf(context);
-      final insets = MediaQuery.paddingOf(context);
-      // Never taller than the screen below the status bar.
-      return ConstrainedBox(
-        constraints: BoxConstraints(maxHeight: size.height - insets.top),
-        child: SlideUpPanel(
-          crossAxisAlignment: crossAxisAlignment,
-          children: children(context),
-        ),
-      );
-    }
-    return _ExpandableSheet(
-      peekHeight: peekHeight(context),
-      canExpand: canExpand?.call() ?? true,
-      builder: (context, controller) => SlideUpPanel(
+  Widget panel(BuildContext context, [ScrollController? controller]) =>
+      SlideUpPanel(
         controller: controller,
         crossAxisAlignment: crossAxisAlignment,
         children: children(context),
-      ),
-    );
-  }
+      );
+
+  // Live values refresh only the panel's content, never the sheet around
+  // it: rebuilding the sheet mid-drag made it jump (see _ExpandableSheet).
+  Widget live(BuildContext context, [ScrollController? controller]) =>
+      listenable == null
+      ? panel(context, controller)
+      : ListenableBuilder(
+          listenable: listenable,
+          builder: (context, _) => panel(context, controller),
+        );
 
   return showModalBottomSheet<T>(
     context: context,
@@ -139,48 +133,96 @@ Future<T?> showSlideUpSheet<T>(
     backgroundColor: Colors.transparent,
     elevation: 0,
     constraints: const BoxConstraints(minWidth: double.infinity),
-    builder: (context) => listenable == null
-        ? sheet(context)
-        : ListenableBuilder(
-            listenable: listenable,
-            builder: (context, _) => sheet(context),
-          ),
+    builder: (context) {
+      if (peekHeight == null) {
+        final size = MediaQuery.sizeOf(context);
+        final insets = MediaQuery.paddingOf(context);
+        // Never taller than the screen below the status bar.
+        return ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: size.height - insets.top),
+          child: live(context),
+        );
+      }
+      return _ExpandableSheet(
+        peekHeight: peekHeight,
+        canExpand: canExpand,
+        listenable: listenable,
+        builder: live,
+      );
+    },
   );
 }
 
 /// Map-style sheet: opens at [peekHeight], drags up to the full screen and
 /// snaps between the two; dragging it to the bottom closes it.
-class _ExpandableSheet extends StatelessWidget {
+///
+/// It must not rebuild while it is being dragged: DraggableScrollableSheet
+/// compares its snap sizes by identity, so every rebuild with a new list
+/// fired a snap mid-drag. Sensor updates therefore refresh only the content
+/// ([builder] adds its own listener); this widget rebuilds only when
+/// [canExpand] actually changes, and keeps the same snap-size list.
+class _ExpandableSheet extends StatefulWidget {
   const _ExpandableSheet({
     required this.peekHeight,
     required this.canExpand,
+    required this.listenable,
     required this.builder,
   });
 
-  final double peekHeight;
-  final bool canExpand;
+  final double Function(BuildContext context) peekHeight;
+  final bool Function()? canExpand;
+  final Listenable? listenable;
   final ScrollableWidgetBuilder builder;
 
+  @override
+  State<_ExpandableSheet> createState() => _ExpandableSheetState();
+}
+
+class _ExpandableSheetState extends State<_ExpandableSheet> {
   /// Handle plus its margins, above the content.
   static const _handle = 24.0;
+
+  late bool _canExpand = widget.canExpand?.call() ?? true;
+  List<double> _snapSizes = const [];
+
+  @override
+  void initState() {
+    super.initState();
+    widget.listenable?.addListener(_onChange);
+  }
+
+  @override
+  void dispose() {
+    widget.listenable?.removeListener(_onChange);
+    super.dispose();
+  }
+
+  void _onChange() {
+    final canExpand = widget.canExpand?.call() ?? true;
+    if (canExpand != _canExpand) setState(() => _canExpand = canExpand);
+  }
 
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
     final insets = MediaQuery.paddingOf(context);
     final full = (size.height - insets.top) / size.height;
-    final peek = ((peekHeight + _handle + 16 + insets.bottom) / size.height)
-        .clamp(0.2, full);
-    final max = canExpand ? full : peek;
+    final peek =
+        ((widget.peekHeight(context) + _handle + 16 + insets.bottom) /
+                size.height)
+            .clamp(0.2, full);
+    final max = _canExpand ? full : peek;
     final min = math.min(0.1, peek);
+    final snapSizes = [if (peek > min && peek < max) peek];
+    if (!listEquals(snapSizes, _snapSizes)) _snapSizes = snapSizes;
     return DraggableScrollableSheet(
       expand: false,
       initialChildSize: peek,
       minChildSize: min,
       maxChildSize: max,
       snap: true,
-      snapSizes: [if (peek > min && peek < max) peek],
-      builder: builder,
+      snapSizes: _snapSizes,
+      builder: widget.builder,
     );
   }
 }
