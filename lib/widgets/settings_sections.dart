@@ -143,16 +143,9 @@ class NotificationTogglesSection extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
               child: Column(
                 children: [
-                  ToggleRow(
-                    title: 'Study Reminders',
-                    subtitle: 'Daily at 7:00 PM',
-                    value: settings.get(AppSettings.studyReminders),
-                    onChanged: (v) =>
-                        settings.set(AppSettings.studyReminders, v),
-                  ),
+                  const StudyReminderRow(),
                   ToggleRow(
                     title: 'Assignment Reminders',
-                    subtitle: 'Day before each due date',
                     value: settings.get(AppSettings.assignmentReminders),
                     onChanged: (v) =>
                         settings.set(AppSettings.assignmentReminders, v),
@@ -286,6 +279,83 @@ class _BiometricLoginToggleState extends State<BiometricLoginToggle> {
           onChanged: _busy ? null : (on) => _change(kind, on),
         );
       },
+    );
+  }
+}
+
+/// Study Reminders: on/off plus the time it arrives every day (Philippine
+/// time). Changing either reschedules the phone's daily reminder.
+class StudyReminderRow extends StatelessWidget {
+  const StudyReminderRow({super.key});
+
+  Future<void> _pickTime(BuildContext context) async {
+    final services = AppScope.of(context);
+    final (hour, minute) = services.settings.studyReminderTime;
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay(hour: hour, minute: minute),
+      helpText: 'Study reminder time',
+    );
+    if (picked == null || !context.mounted) return;
+    await services.settings.setStudyReminderTime(picked.hour, picked.minute);
+    await services.syncStudyReminder(ask: true);
+    if (context.mounted) {
+      showAppSnack(
+        context,
+        'Study reminder set for ${picked.format(context)} every day.',
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = AppScope.of(context).settings;
+    // Listens itself: as a const child it isn't rebuilt with its parent.
+    return ListenableBuilder(
+      listenable: settings,
+      builder: (context, _) => _build(context),
+    );
+  }
+
+  Widget _build(BuildContext context) {
+    final services = AppScope.of(context);
+    final settings = services.settings;
+    final on = settings.get(AppSettings.studyReminders);
+    final (hour, minute) = settings.studyReminderTime;
+    final time = TimeOfDay(hour: hour, minute: minute).format(context);
+    return Column(
+      children: [
+        ToggleRow(
+          title: 'Study Reminders',
+          subtitle: on ? 'Daily at $time' : 'Off',
+          value: on,
+          onChanged: (v) async {
+            await settings.set(AppSettings.studyReminders, v);
+            await services.syncStudyReminder(ask: v);
+          },
+        ),
+        Padding(
+          padding: const EdgeInsets.only(right: 8, bottom: 4),
+          child: Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  'Reminder time (Philippine time)',
+                  style: TextStyle(fontSize: 13, color: AppColors.muted),
+                ),
+              ),
+              OutlinedButton.icon(
+                key: const Key('settings.studyTime'),
+                // The theme makes outlined buttons full width.
+                style: OutlinedButton.styleFrom(minimumSize: const Size(0, 40)),
+                onPressed: on ? () => _pickTime(context) : null,
+                icon: const Icon(Icons.schedule, size: 18),
+                label: Text(time),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

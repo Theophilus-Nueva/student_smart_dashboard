@@ -18,6 +18,7 @@ Future<AppServices> makeServices({
   bool online = true,
   bool apiFails = false,
   BiometricService biometric = const UnavailableBiometricService(),
+  NotificationService notifications = const SilentNotificationService(),
   List<String>? sharedFiles,
 }) async {
   SharedPreferences.setMockInitialValues(prefs);
@@ -27,7 +28,7 @@ Future<AppServices> makeServices({
     connectivityChanges: () => const Stream<bool>.empty(),
     location: const SampleLocationService(),
     biometric: biometric,
-    notifications: const SilentNotificationService(),
+    notifications: notifications,
     useNativeMaps: false,
     useNativeCamera: false,
     sensors: const FakeSensors(),
@@ -160,4 +161,36 @@ class FakeSensors implements SensorSource {
   /// Top of the phone pointing east.
   @override
   Stream<double> heading() => Stream.value(90);
+}
+
+/// Records daily reminders instead of scheduling them on a phone.
+class RecordingNotifications implements NotificationService {
+  /// Category -> (hour, minute) of its daily reminder.
+  final daily = <ReminderCategory, (int, int)>{};
+
+  @override
+  Future<void> init() async {}
+
+  @override
+  Future<bool> requestPermission() async => true;
+
+  @override
+  Future<void> show(
+    ReminderCategory category,
+    String title,
+    String body,
+  ) async {}
+
+  @override
+  Future<void> scheduleDaily(
+    ReminderCategory category,
+    String title,
+    String body, {
+    required int hour,
+    required int minute,
+  }) async => daily[category] = (hour, minute);
+
+  @override
+  Future<void> cancelDaily(ReminderCategory category) async =>
+      daily.remove(category);
 }

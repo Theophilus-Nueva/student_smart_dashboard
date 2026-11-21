@@ -2,6 +2,8 @@ import 'dart:io' show Platform;
 import 'dart:ui' show Color;
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:timezone/data/latest.dart' as tzdata;
+import 'package:timezone/timezone.dart' as tz;
 
 /// Week 6 notification categories (one Android channel each).
 enum ReminderCategory {
@@ -32,7 +34,22 @@ abstract class NotificationService {
   Future<bool> requestPermission();
 
   Future<void> show(ReminderCategory category, String title, String body);
+
+  /// Repeats every day at [hour]:[minute] Philippine time, replacing any
+  /// earlier schedule for [category].
+  Future<void> scheduleDaily(
+    ReminderCategory category,
+    String title,
+    String body, {
+    required int hour,
+    required int minute,
+  });
+
+  Future<void> cancelDaily(ReminderCategory category);
 }
+
+/// Reminder times are Philippine time (LPU Cavite; no daylight saving).
+const reminderTimeZone = 'Asia/Manila';
 
 /// Phone notifications via `flutter_local_notifications`.
 class LocalNotificationService implements NotificationService {
@@ -45,6 +62,7 @@ class LocalNotificationService implements NotificationService {
   @override
   Future<void> init() async {
     if (_ready) return;
+    tzdata.initializeTimeZones();
     _ready =
         await _plugin.initialize(
           settings: const InitializationSettings(
@@ -98,7 +116,48 @@ class LocalNotificationService implements NotificationService {
       id: _nextId++,
       title: title,
       body: body,
-      notificationDetails: NotificationDetails(
+      notificationDetails: _details(category),
+    );
+  }
+
+  @override
+  Future<void> scheduleDaily(
+    ReminderCategory category,
+    String title,
+    String body, {
+    required int hour,
+    required int minute,
+  }) async {
+    await init();
+    final zone = tz.getLocation(reminderTimeZone);
+    final now = tz.TZDateTime.now(zone);
+    var next = tz.TZDateTime(zone, now.year, now.month, now.day, hour, minute);
+    if (!next.isAfter(now)) next = next.add(const Duration(days: 1));
+    await _plugin.zonedSchedule(
+      id: _dailyId(category),
+      title: title,
+      body: body,
+      scheduledDate: next,
+      notificationDetails: _details(category),
+      // Inexact on Android (may come a few minutes late) so no exact-alarm
+      // permission is needed; on time on iOS.
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      // Same time every day.
+      matchDateTimeComponents: DateTimeComponents.time,
+    );
+  }
+
+  @override
+  Future<void> cancelDaily(ReminderCategory category) async {
+    await init();
+    await _plugin.cancel(id: _dailyId(category));
+  }
+
+  /// Fixed ids for the daily reminders, well clear of one-off ids.
+  int _dailyId(ReminderCategory category) => 100000 + category.index;
+
+  NotificationDetails _details(ReminderCategory category) =>
+      NotificationDetails(
         android: AndroidNotificationDetails(
           category.channelId,
           category.label,
@@ -110,9 +169,7 @@ class LocalNotificationService implements NotificationService {
           color: const Color(0xFFB71C1C),
         ),
         iOS: const DarwinNotificationDetails(),
-      ),
-    );
-  }
+      );
 }
 
 /// No-op for widget tests.
@@ -131,4 +188,16 @@ class SilentNotificationService implements NotificationService {
     String title,
     String body,
   ) async {}
+
+  @override
+  Future<void> scheduleDaily(
+    ReminderCategory category,
+    String title,
+    String body, {
+    required int hour,
+    required int minute,
+  }) async {}
+
+  @override
+  Future<void> cancelDaily(ReminderCategory category) async {}
 }

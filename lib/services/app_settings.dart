@@ -11,6 +11,10 @@ class AppSettings extends ChangeNotifier {
   /// Off until the user turns it on in Settings › Security Center.
   static const biometricLogin = 'settings.biometricLogin';
   static const studyReminders = 'settings.studyReminders';
+
+  /// Study reminder time, in minutes after midnight (Philippine time).
+  static const studyReminderTimeKey = 'settings.studyReminderTime';
+  static const defaultStudyReminderTime = 19 * 60; // 7:00 PM
   static const assignmentReminders = 'settings.assignmentReminders';
   static const dailyCheckIn = 'settings.dailyCheckIn';
   static const autoRefresh = 'settings.autoRefresh';
@@ -24,6 +28,17 @@ class AppSettings extends ChangeNotifier {
   };
 
   bool get(String key) => _prefs.getBool(key) ?? _defaults[key] ?? false;
+
+  /// Study reminder time as (hour, minute).
+  (int, int) get studyReminderTime {
+    final m = _prefs.getInt(studyReminderTimeKey) ?? defaultStudyReminderTime;
+    return (m ~/ 60, m % 60);
+  }
+
+  Future<void> setStudyReminderTime(int hour, int minute) async {
+    await _prefs.setInt(studyReminderTimeKey, hour * 60 + minute);
+    notifyListeners();
+  }
 
   Future<void> set(String key, bool value) async {
     await _prefs.setBool(key, value);

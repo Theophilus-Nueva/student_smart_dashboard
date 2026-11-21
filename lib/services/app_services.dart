@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../auth/session.dart';
+import '../config/lab_week.dart';
 import '../models/activity_item.dart';
 import 'activity_log.dart';
 import 'app_settings.dart';
@@ -84,6 +85,26 @@ class AppServices {
   late final Session session;
   late final SyncService sync;
 
+  /// Keeps the phone's daily study reminder in step with Settings: on at
+  /// the chosen time, or cancelled. [ask] requests notification permission
+  /// first (only when the user changed something, never at start-up).
+  Future<void> syncStudyReminder({bool ask = false}) async {
+    if (!Feature.notifications.on) return;
+    if (!settings.get(AppSettings.studyReminders)) {
+      await notifications.cancelDaily(ReminderCategory.study);
+      return;
+    }
+    if (ask && !await notifications.requestPermission()) return;
+    final (hour, minute) = settings.studyReminderTime;
+    await notifications.scheduleDaily(
+      ReminderCategory.study,
+      'Study Reminder',
+      'Time to review today’s lessons.',
+      hour: hour,
+      minute: minute,
+    );
+  }
+
   Future<void> init() async {
     activity.load();
     students.load();
@@ -92,6 +113,8 @@ class AppServices {
     sync.load();
     directory.load();
     device.load();
+    // Re-apply the daily study reminder (e.g. after an app update).
+    unawaited(syncStudyReminder());
 
     session.onSignedIn = (user, method) => activity.add(
       ActivityKind.signIn,

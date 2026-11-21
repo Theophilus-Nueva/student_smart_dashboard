@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:smart_dashboard/routes/app_routes.dart';
+import 'package:smart_dashboard/services/notification_service.dart';
 
 import 'package:smart_dashboard/widgets/common.dart';
 import 'package:smart_dashboard/widgets/compass_sheet.dart';
@@ -376,6 +377,55 @@ void main() {
     expect(still, greaterThan(100));
     // Readings arriving mid-drag no longer snap the sheet back.
     expect(await dragUp(readings: true), closeTo(still, 1));
+  });
+
+  testWidgets('Study reminder time is set in Notifications and scheduled', (
+    tester,
+  ) async {
+    final reminders = RecordingNotifications();
+    final services = await makeServices(notifications: reminders);
+    await pumpApp(tester, services: services);
+    await signInAs(tester, 'student', 'student123');
+    // On by default at 7:00 PM, scheduled when the app starts.
+    expect(reminders.daily[ReminderCategory.study], (19, 0));
+
+    await pushRoute(tester, AppRoutes.notifications);
+    expect(find.text('Daily at 7:00 PM'), findsOneWidget);
+    // The time button opens a time picker; OK keeps and schedules it.
+    await tester.tap(find.byKey(const Key('settings.studyTime')));
+    await tester.pumpAndSettle();
+    expect(find.byType(TimePickerDialog), findsOneWidget);
+    expect(find.text('Study reminder time'), findsOneWidget);
+    await tester.tap(find.text('OK'));
+    await tester.pumpAndSettle();
+    expect(
+      find.text('Study reminder set for 7:00 PM every day.'),
+      findsOneWidget,
+    );
+
+    // A new time moves the daily reminder.
+    await services.settings.setStudyReminderTime(20, 30);
+    await services.syncStudyReminder();
+    await tester.pumpAndSettle();
+    expect(find.text('Daily at 8:30 PM'), findsOneWidget);
+    expect(reminders.daily[ReminderCategory.study], (20, 30));
+
+    // Turning it off cancels it and disables the time button.
+    final toggle = find.ancestor(
+      of: find.text('Study Reminders'),
+      matching: find.byType(ToggleRow),
+    );
+    await tester.tap(
+      find.descendant(of: toggle, matching: find.byType(Switch)),
+    );
+    await tester.pumpAndSettle();
+    expect(reminders.daily.containsKey(ReminderCategory.study), isFalse);
+    expect(
+      tester
+          .widget<OutlinedButton>(find.byKey(const Key('settings.studyTime')))
+          .onPressed,
+      isNull,
+    );
   });
 
   testWidgets('Compass dial turns the short way across north', (tester) async {
