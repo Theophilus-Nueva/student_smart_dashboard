@@ -5,24 +5,41 @@ import 'package:flutter/material.dart';
 import '../services/device_service.dart';
 import '../theme/app_colors.dart';
 import '../utils/format.dart';
-import 'device_sheet.dart';
+import 'slide_up_sheet.dart';
 
 /// Slides up a full compass from the Device tab's Compass card. The dial
-/// turns with the phone's live heading while the sheet is open.
+/// turns with the phone's live heading while the sheet is open. It opens
+/// at compass height; once there are directions to list, drag it up for
+/// Recent.
 Future<void> showCompassSheet(BuildContext context, DeviceService device) {
-  return showDeviceSheet(
+  return showSlideUpSheet(
     context,
     listenable: device,
-    builder: (context) => _CompassSheet(
-      heading: device.heading,
-      direction: device.direction,
-      history: device.directionHistory,
-    ),
+    crossAxisAlignment: CrossAxisAlignment.center,
+    peekHeight: (context) => _dialSize(context) + _peekChrome,
+    canExpand: () => device.directionHistory.isNotEmpty,
+    children: (context) => [
+      _CompassContent(
+        heading: device.heading,
+        direction: device.direction,
+        history: device.directionHistory,
+      ),
+    ],
   );
 }
 
-class _CompassSheet extends StatelessWidget {
-  const _CompassSheet({
+/// Fits portrait and landscape: never taller than about half the screen.
+double _dialSize(BuildContext context) {
+  final size = MediaQuery.sizeOf(context);
+  return math.min(size.width - 64, size.height * 0.5).clamp(160.0, 340.0);
+}
+
+/// Height of everything in the compass part except the dial: title,
+/// marker and reading, with their gaps.
+const _peekChrome = 24 + 16 + 36 + 20 + 40.0;
+
+class _CompassContent extends StatelessWidget {
+  const _CompassContent({
     required this.heading,
     required this.direction,
     required this.history,
@@ -36,26 +53,11 @@ class _CompassSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.sizeOf(context);
-    final insets = MediaQuery.paddingOf(context);
-    // Fits portrait and landscape: never taller than about half the screen.
-    final dial = math
-        .min(size.width - 64, size.height * 0.5)
-        .clamp(160.0, 340.0);
-
-    // The sheet stays just tall enough for the compass (title down to the
-    // reading) and its content scrolls inside it: scroll up and the
-    // compass moves away to show Recent. Never taller than the screen below
-    // the status bar.
-    final height = math.min(
-      dial + _peekChrome + insets.bottom,
-      size.height - insets.top - kMinInteractiveDimension,
-    );
-
-    return DeviceSheetBody(
-      height: height,
+    final dial = _dialSize(context);
+    return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        const DeviceSheetTitle('Compass'),
+        const SlideUpTitle('Compass'),
         const SizedBox(height: 16),
         // Fixed marker at the top: where the phone is pointing.
         const Icon(Icons.arrow_drop_down, size: 36, color: AppColors.brand),
@@ -118,10 +120,6 @@ class _CompassSheet extends StatelessWidget {
       ],
     );
   }
-
-  /// Height of everything in the compass part except the dial: title,
-  /// marker and reading, with their gaps and bottom padding.
-  static const _peekChrome = 24 + 16 + 36 + 20 + 40 + 24.0;
 }
 
 /// Compass dial that turns so N always points north. Turning across 0°

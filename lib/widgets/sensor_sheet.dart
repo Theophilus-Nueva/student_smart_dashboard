@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../services/device_service.dart';
 import '../theme/app_colors.dart';
-import 'device_sheet.dart';
+import 'slide_up_sheet.dart';
 
 /// Line colours for the X, Y and Z axes.
 const sensorAxisColors = [
@@ -32,97 +32,96 @@ Future<void> showSensorSheet(
   bool animate = true,
 }) {
   final seconds = (historyLength * interval.inMilliseconds / 1000).round();
-  return showDeviceSheet(
+  return showSlideUpSheet(
     context,
     listenable: device,
-    builder: (context) {
+    crossAxisAlignment: CrossAxisAlignment.center,
+    children: (context) {
       final readings = history();
-      return DeviceSheetBody(
-        children: [
-          DeviceSheetTitle(title),
-          const SizedBox(height: 16),
-          // Kept readable in landscape instead of stretching edge to edge.
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 640),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
-                  children: [
-                    for (var i = 0; i < 3; i++) ...[
-                      if (i > 0) const SizedBox(width: 8),
-                      Expanded(
-                        child: _SensorAxisTile(
-                          axis: 'XYZ'[i],
-                          color: sensorAxisColors[i],
-                          value: current().values[i],
-                          notes: notes(i),
-                          keyPrefix: keyPrefix,
-                        ),
+      return [
+        SlideUpTitle(title),
+        const SizedBox(height: 16),
+        // Kept readable in landscape instead of stretching edge to edge.
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 640),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  for (var i = 0; i < 3; i++) ...[
+                    if (i > 0) const SizedBox(width: 8),
+                    Expanded(
+                      child: _SensorAxisTile(
+                        axis: 'XYZ'[i],
+                        color: sensorAxisColors[i],
+                        value: current().values[i],
+                        notes: notes(i),
+                        keyPrefix: keyPrefix,
                       ),
-                    ],
+                    ),
                   ],
+                ],
+              ),
+              const SizedBox(height: 24),
+              Text(
+                historyTitle,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
                 ),
-                const SizedBox(height: 24),
-                Text(
-                  historyTitle,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'Last $seconds seconds',
-                  style: const TextStyle(fontSize: 12, color: AppColors.muted),
-                ),
-                const SizedBox(height: 12),
-                SizedBox(
-                  height: 180,
-                  child: readings.length < 2
-                      ? const Center(
-                          child: Text(
-                            'Waiting for readings…',
-                            style: TextStyle(color: AppColors.muted),
-                          ),
-                        )
-                      : SensorGraph(
-                          key: Key('$keyPrefix.graph'),
-                          history: readings,
-                          length: historyLength,
-                          // Off: lines jump straight to each new reading.
-                          // On: never longer than the gap between readings.
-                          duration: !animate
-                              ? Duration.zero
-                              : interval < const Duration(milliseconds: 250)
-                              ? interval * 0.75
-                              : const Duration(milliseconds: 250),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                'Last $seconds seconds',
+                style: const TextStyle(fontSize: 12, color: AppColors.muted),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 180,
+                child: readings.length < 2
+                    ? const Center(
+                        child: Text(
+                          'Waiting for readings…',
+                          style: TextStyle(color: AppColors.muted),
                         ),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    for (var i = 0; i < 3; i++) ...[
-                      if (i > 0) const SizedBox(width: 20),
-                      Container(
-                        width: 10,
-                        height: 10,
-                        decoration: BoxDecoration(
-                          color: sensorAxisColors[i],
-                          shape: BoxShape.circle,
-                        ),
+                      )
+                    : SensorGraph(
+                        key: Key('$keyPrefix.graph'),
+                        history: readings,
+                        length: historyLength,
+                        // Off: lines jump straight to each new reading.
+                        // On: never longer than the gap between readings.
+                        duration: !animate
+                            ? Duration.zero
+                            : interval < const Duration(milliseconds: 250)
+                            ? interval * 0.75
+                            : const Duration(milliseconds: 250),
                       ),
-                      const SizedBox(width: 6),
-                      Text('XYZ'[i]),
-                    ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  for (var i = 0; i < 3; i++) ...[
+                    if (i > 0) const SizedBox(width: 20),
+                    Container(
+                      width: 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        color: sensorAxisColors[i],
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text('XYZ'[i]),
                   ],
-                ),
-              ],
-            ),
+                ],
+              ),
+            ],
           ),
-        ],
-      );
+        ),
+      ];
     },
   );
 }

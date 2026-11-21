@@ -9,6 +9,7 @@ import '../../services/app_services.dart';
 import '../../services/device_service.dart';
 import '../../theme/app_assets.dart';
 import '../../theme/app_colors.dart';
+import '../../widgets/slide_up_sheet.dart';
 
 /// Week 7 optional AR campus guide, as a simulated AR view: the live camera
 /// with floating location labels placed by compass heading, QR checkpoint
@@ -106,63 +107,47 @@ class _ArGuideScreenState extends State<ArGuideScreen> {
 
   void _showDetails(TourLocation location) {
     final tour = AppScope.of(context).tour;
-    showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      isScrollControlled: true,
-      builder: (sheetContext) => Padding(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.asset(
-                AppAssets.campusPhoto,
-                height: 140,
-                fit: BoxFit.cover,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              location.title,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
-            ),
-            Text(
-              location.subtitle,
-              style: const TextStyle(color: AppColors.muted),
-            ),
-            const SizedBox(height: 8),
-            Text(location.description),
-            const SizedBox(height: 8),
-            Text(location.hours),
-            Text(
-              '${location.distanceMeters} m · about ${location.walkMinutes} '
-              'min walk · checkpoint ${location.qrCode}',
-              style: const TextStyle(color: AppColors.muted),
-            ),
-            if (tour.isVisited(location.id))
-              const Padding(
-                padding: EdgeInsets.only(top: 4),
-                child: Text(
-                  'Visited',
-                  style: TextStyle(color: AppColors.online),
-                ),
-              ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(sheetContext);
-                Navigator.of(
-                  context,
-                ).pushNamed(AppRoutes.locationDetail, arguments: location.id);
-              },
-              child: const Text('Open Location Details'),
-            ),
-          ],
+    showSlideUpSheet<void>(
+      context,
+      children: (sheetContext) => [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: Image.asset(
+            AppAssets.campusPhoto,
+            height: 140,
+            fit: BoxFit.cover,
+          ),
         ),
-      ),
+        const SizedBox(height: 12),
+        Text(
+          location.title,
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+        ),
+        Text(location.subtitle, style: const TextStyle(color: AppColors.muted)),
+        const SizedBox(height: 8),
+        Text(location.description),
+        const SizedBox(height: 8),
+        Text(location.hours),
+        Text(
+          '${location.distanceMeters} m · about ${location.walkMinutes} '
+          'min walk · checkpoint ${location.qrCode}',
+          style: const TextStyle(color: AppColors.muted),
+        ),
+        if (tour.isVisited(location.id))
+          const Padding(
+            padding: EdgeInsets.only(top: 4),
+            child: Text('Visited', style: TextStyle(color: AppColors.online)),
+          ),
+        const SizedBox(height: 16),
+        ElevatedButton(
+          onPressed: () {
+            Navigator.pop(sheetContext);
+            Navigator.of(context)
+                .pushNamed(AppRoutes.locationDetail, arguments: location.id);
+          },
+          child: const Text('Open Location Details'),
+        ),
+      ],
     );
   }
 

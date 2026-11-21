@@ -4,6 +4,7 @@ import '../../services/app_services.dart';
 import '../../services/app_settings.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/common.dart';
+import '../../widgets/slide_up_sheet.dart';
 import '../../theme/app_assets.dart';
 import '../../config/lab_week.dart';
 
@@ -59,10 +60,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _fingerprint() async {
     final session = AppScope.of(context).session;
-    final error = await showModalBottomSheet<String?>(
-      context: context,
-      showDragHandle: true,
-      builder: (_) => _BiometricSheet(onScan: session.signInWithFingerprint),
+    final error = await showSlideUpSheet<String?>(
+      context,
+      children: (_) => [_BiometricSheet(onScan: session.signInWithFingerprint)],
     );
     if (error != null && mounted) showAppSnack(context, error, error: true);
   }
@@ -183,7 +183,7 @@ class _BiometricSheetState extends State<_BiometricSheet> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
+      padding: const EdgeInsets.fromLTRB(8, 0, 8, 16),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [

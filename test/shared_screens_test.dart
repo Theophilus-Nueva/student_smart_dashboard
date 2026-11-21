@@ -6,6 +6,7 @@ import 'package:smart_dashboard/routes/app_routes.dart';
 
 import 'package:smart_dashboard/widgets/common.dart';
 import 'package:smart_dashboard/widgets/compass_sheet.dart';
+import 'package:smart_dashboard/widgets/slide_up_sheet.dart';
 
 import 'test_helpers.dart';
 
@@ -155,33 +156,29 @@ void main() {
     // Recent directions live at the bottom of the sheet, not on the card.
     final recent = find.byKey(const Key('compass.recent'));
     // Opens only as tall as the compass: dial and reading on screen,
-    // Recent still below the bottom edge until you scroll.
+    // Recent still below the bottom edge.
     expect(tester.getRect(find.byType(CompassDial)).top, greaterThan(0));
     expect(tester.getRect(find.text('90°  E')).bottom, lessThan(844));
     expect(tester.getRect(recent).top, greaterThanOrEqualTo(844));
-    final sheet = find
-        .descendant(
-          of: find.byType(BottomSheet),
-          matching: find.byType(Material),
-        )
-        .first;
-    final sheetTop = tester.getRect(sheet).top;
-    await tester.scrollUntilVisible(
-      recent,
-      100,
-      scrollable: find
-          .descendant(
-            of: find.byType(BottomSheet),
-            matching: find.byType(Scrollable),
-          )
-          .first,
+    // Same look as the Map panel: gray handle, no Material handle.
+    expect(find.byKey(const Key('slideUp.handle')), findsOneWidget);
+    expect(
+      tester.widget<BottomSheet>(find.byType(BottomSheet)).showDragHandle,
+      isNot(true),
     );
+    final panel = find.byType(SlideUpPanel);
+    final peekTop = tester.getRect(panel).top;
+
+    // Drag up from the dial (not the handle): the sheet grows to show
+    // Recent, like the Map panel.
+    await tester.drag(find.byType(CompassDial), const Offset(0, -500));
+    await tester.pumpAndSettle();
+    expect(tester.getRect(panel).top, lessThan(peekTop));
+    expect(tester.getRect(recent).bottom, lessThan(844));
     expect(
       find.descendant(of: recent, matching: find.text('E')),
       findsOneWidget,
     );
-    // The content scrolled; the sheet itself stayed the same height.
-    expect(tester.getRect(sheet).top, sheetTop);
     expect(find.textContaining('Recent:'), findsNothing);
     final rotation = tester.widget<AnimatedRotation>(
       find.descendant(
@@ -191,16 +188,16 @@ void main() {
     );
     expect(rotation.turns, closeTo(-0.25, 1e-9)); // dial turns -90°
 
-    // A hard swipe down on the content only scrolls; the sheet stays open.
-    await tester.fling(find.byType(CompassDial), const Offset(0, 600), 2000);
-    await tester.pumpAndSettle();
-    await tester.fling(find.byType(CompassDial), const Offset(0, 600), 2000);
+    // A small drag down springs back; the sheet stays open.
+    await tester.drag(
+      find.descendant(of: panel, matching: find.text('Compass')),
+      const Offset(0, 60),
+    );
     await tester.pumpAndSettle();
     expect(find.byType(CompassDial), findsOneWidget);
 
-    // Dragging the handle (top strip of the sheet) down closes it.
-    final top = tester.getRect(sheet).top;
-    await tester.dragFrom(Offset(195, top + 20), const Offset(0, 600));
+    // A long drag down from anywhere on it closes it.
+    await tester.drag(find.byType(CompassDial), const Offset(0, 800));
     await tester.pumpAndSettle();
     expect(find.byType(CompassDial), findsNothing);
 
@@ -238,15 +235,20 @@ void main() {
     expect(chart.duration, const Duration(milliseconds: 250));
     expect(find.text('Movement history'), findsOneWidget);
 
-    // Like the compass: a swipe on the content doesn't close it, a tap
-    // outside does.
+    // Like every slide-up: a small drag down springs back, a flick down
+    // from anywhere on it closes it, and so does a tap outside.
+    await tester.drag(find.text('Movement history'), const Offset(0, 60));
+    await tester.pumpAndSettle();
+    expect(sheet, findsOneWidget);
     await tester.fling(
-      find.byKey(const Key('accel.graph')),
-      const Offset(0, 600),
+      find.text('Movement history'),
+      const Offset(0, 300),
       2000,
     );
     await tester.pumpAndSettle();
-    expect(sheet, findsOneWidget);
+    expect(sheet, findsNothing);
+    await tester.tap(find.byKey(const Key('device.accelerometer')));
+    await tester.pumpAndSettle();
     await tester.tapAt(const Offset(195, 40));
     await tester.pumpAndSettle();
     expect(sheet, findsNothing);

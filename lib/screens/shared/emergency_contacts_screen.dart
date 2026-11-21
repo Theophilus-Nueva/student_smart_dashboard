@@ -8,6 +8,7 @@ import '../../theme/app_colors.dart';
 import '../../widgets/common.dart';
 import '../../widgets/list_row.dart';
 import '../../config/lab_week.dart';
+import '../../widgets/slide_up_sheet.dart';
 
 /// Shared / Emergency Contacts (Week 6): tel:, sms: and mailto: links via
 /// `url_launcher`. Sample numbers from the Figma prototype.
@@ -33,39 +34,28 @@ class EmergencyContactsScreen extends StatelessWidget {
     if (!context.mounted) return;
     // No app can handle the link (e.g. an emulator without a dialer).
     final value = uri.path;
-    showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      builder: (sheetContext) => Padding(
-        padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 8),
-            SelectableText(value, style: const TextStyle(fontSize: 20)),
-            const SizedBox(height: 8),
-            const Text(
-              'No app on this device can open this contact.',
-              style: TextStyle(fontSize: 12, color: AppColors.muted),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton.icon(
-              onPressed: () async {
-                await Clipboard.setData(ClipboardData(text: value));
-                if (sheetContext.mounted) Navigator.pop(sheetContext);
-                if (context.mounted) showAppSnack(context, 'Copied $value');
-              },
-              icon: const Icon(Icons.copy),
-              label: const Text('Copy'),
-            ),
-          ],
+    showSlideUpSheet<void>(
+      context,
+      children: (sheetContext) => [
+        SlideUpTitle(title),
+        const SizedBox(height: 8),
+        SelectableText(value, style: const TextStyle(fontSize: 20)),
+        const SizedBox(height: 8),
+        const Text(
+          'No app on this device can open this contact.',
+          style: TextStyle(fontSize: 12, color: AppColors.muted),
         ),
-      ),
+        const SizedBox(height: 16),
+        ElevatedButton.icon(
+          onPressed: () async {
+            await Clipboard.setData(ClipboardData(text: value));
+            if (sheetContext.mounted) Navigator.pop(sheetContext);
+            if (context.mounted) showAppSnack(context, 'Copied $value');
+          },
+          icon: const Icon(Icons.copy),
+          label: const Text('Copy'),
+        ),
+      ],
     );
   }
 

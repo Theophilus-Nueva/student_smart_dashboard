@@ -70,6 +70,8 @@ void main() {
     await tester.tap(find.text('Sign in with fingerprint'));
     await tester.pumpAndSettle();
     expect(find.text('Fingerprint Required'), findsOneWidget);
+    // The app's standard slide-up: gray handle, draggable from anywhere.
+    expect(find.byKey(const Key('slideUp.handle')), findsOneWidget);
     await tester.tap(find.byTooltip('Scan fingerprint'));
     await tester.pumpAndSettle();
     expect(
