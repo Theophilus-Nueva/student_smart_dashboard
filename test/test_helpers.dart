@@ -125,12 +125,14 @@ const sampleApiUsers = <Map<String, dynamic>>[
   },
 ];
 
-/// Fingerprint sensor that always accepts.
+/// A phone with [kind] set up (Face ID by default) that always accepts.
 class AcceptingBiometric implements BiometricService {
-  const AcceptingBiometric();
+  const AcceptingBiometric([this.kind = BiometricKind.faceId]);
+
+  final BiometricKind kind;
 
   @override
-  Future<bool> isAvailable() async => true;
+  Future<BiometricKind> detect() async => kind;
 
   @override
   Future<BiometricResult> authenticate(String reason) async =>

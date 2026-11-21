@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../services/app_services.dart';
 import '../../services/app_settings.dart';
+import '../../services/biometric_service.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/common.dart';
 import '../../widgets/slide_up_sheet.dart';
@@ -23,17 +24,22 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _obscure = true;
   String? _error;
 
+  /// The phone's biometric, once known; shown only after it is turned on
+  /// in Settings › Security Center.
+  BiometricKind? _biometric;
+
   @override
   void initState() {
     super.initState();
-    // Settings › Fingerprint Login: prompt straight away for the last account.
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      if (!mounted || !Feature.fingerprint.on) return;
+      if (!mounted || !Feature.biometricLogin.on) return;
       final services = AppScope.of(context);
-      if (!services.settings.get(AppSettings.fingerprintLogin)) return;
-      if (services.session.rememberedUser == null) return;
-      if (!await services.biometric.isAvailable() || !mounted) return;
-      await _fingerprint();
+      if (!services.settings.get(AppSettings.biometricLogin)) return;
+      final kind = await services.biometric.detect();
+      if (!mounted || !kind.available) return;
+      setState(() => _biometric = kind);
+      // Prompt straight away for the last account.
+      if (services.session.rememberedUser != null) await _biometricSignIn();
     });
   }
 
@@ -58,11 +64,18 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
-  Future<void> _fingerprint() async {
+  Future<void> _biometricSignIn() async {
+    final kind = _biometric;
+    if (kind == null) return;
     final session = AppScope.of(context).session;
     final error = await showSlideUpSheet<String?>(
       context,
-      children: (_) => [_BiometricSheet(onScan: session.signInWithFingerprint)],
+      children: (_) => [
+        _BiometricSheet(
+          kind: kind,
+          onScan: () => session.signInWithBiometric(kind),
+        ),
+      ],
     );
     if (error != null && mounted) showAppSnack(context, error, error: true);
   }
@@ -135,13 +148,15 @@ class _LoginScreenState extends State<LoginScreen> {
                             )
                           : const Text('Sign In'),
                     ),
-                    // Fingerprint login is Week 6.
-                    if (Feature.fingerprint.on) ...[
+                    // Biometric login is Week 6; shown once it is set up in
+                    // Settings and only for what this phone has.
+                    if (_biometric case final kind?) ...[
                       const SizedBox(height: 12),
                       OutlinedButton.icon(
-                        onPressed: _busy ? null : _fingerprint,
-                        icon: const Icon(Icons.fingerprint),
-                        label: const Text('Sign in with fingerprint'),
+                        key: const Key('login.biometric'),
+                        onPressed: _busy ? null : _biometricSignIn,
+                        icon: Icon(kind.icon),
+                        label: Text('Sign in with ${kind.label}'),
                       ),
                     ],
                     const SizedBox(height: 16),
@@ -161,10 +176,12 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 }
 
-/// "Fingerprint Required" sheet. Pops with an error message, or null on success.
+/// "Face ID Required" / "Fingerprint Required" sheet. Pops with an error
+/// message, or null on success.
 class _BiometricSheet extends StatefulWidget {
-  const _BiometricSheet({required this.onScan});
+  const _BiometricSheet({required this.kind, required this.onScan});
 
+  final BiometricKind kind;
   final Future<String?> Function() onScan;
 
   @override
@@ -182,27 +199,28 @@ class _BiometricSheetState extends State<_BiometricSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final kind = widget.kind;
     return Padding(
       padding: const EdgeInsets.fromLTRB(8, 0, 8, 16),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(
-            'Fingerprint Required',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+          Text(
+            '${kind.label} Required',
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),
           Text(
-            'Place your finger on the sensor to open ${LabWeek.appName}.',
+            '${kind.instruction} to open ${LabWeek.appName}.',
             textAlign: TextAlign.center,
             style: const TextStyle(color: AppColors.muted),
           ),
           const SizedBox(height: 24),
           IconButton(
             iconSize: 72,
-            tooltip: 'Scan fingerprint',
+            tooltip: 'Use ${kind.label}',
             onPressed: _scanning ? null : _scan,
-            icon: const Icon(Icons.fingerprint, color: AppColors.brand),
+            icon: Icon(kind.icon, color: AppColors.brand),
           ),
           const SizedBox(height: 16),
           TextButton(

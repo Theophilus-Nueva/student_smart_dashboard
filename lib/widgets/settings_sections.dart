@@ -4,6 +4,7 @@ import '../models/app_user.dart';
 import '../routes/app_routes.dart';
 import '../services/app_services.dart';
 import '../services/app_settings.dart';
+import '../services/biometric_service.dart';
 import '../theme/app_colors.dart';
 import '../utils/format.dart';
 import 'common.dart';
@@ -84,19 +85,7 @@ class SecurityCenterSection extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
                 child: Column(
                   children: [
-                    ToggleRow(
-                      title: 'Fingerprint Login',
-                      subtitle: 'Required when you open the app',
-                      value: settings.get(AppSettings.fingerprintLogin),
-                      onChanged: (v) =>
-                          settings.set(AppSettings.fingerprintLogin, v),
-                    ),
-                    ToggleRow(
-                      title: 'Face Authentication',
-                      subtitle: 'Use face unlock instead of fingerprint',
-                      value: settings.get(AppSettings.faceAuth),
-                      onChanged: (v) => settings.set(AppSettings.faceAuth, v),
-                    ),
+                    const BiometricLoginToggle(),
                     Padding(
                       padding: const EdgeInsets.only(right: 8),
                       child: Column(
@@ -218,6 +207,85 @@ class SettingsFooter extends StatelessWidget {
         ),
         const SizedBox(height: 24),
       ],
+    );
+  }
+}
+
+/// Security Center toggle for signing in with the phone's own biometric.
+/// It asks the phone what it has (Face ID, Touch ID, fingerprint, face
+/// unlock) and is named after it; greyed out if nothing is set up. Turning
+/// it on asks for that biometric once, so the user knows it works.
+class BiometricLoginToggle extends StatefulWidget {
+  const BiometricLoginToggle({super.key});
+
+  @override
+  State<BiometricLoginToggle> createState() => _BiometricLoginToggleState();
+}
+
+class _BiometricLoginToggleState extends State<BiometricLoginToggle> {
+  Future<BiometricKind>? _kind;
+  bool _busy = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _kind ??= AppScope.of(context).biometric.detect();
+  }
+
+  Future<void> _change(BiometricKind kind, bool on) async {
+    final services = AppScope.of(context);
+    if (!on) {
+      await services.settings.set(AppSettings.biometricLogin, false);
+      return;
+    }
+    setState(() => _busy = true);
+    final error = await services.session.confirmBiometric(kind);
+    if (!mounted) return;
+    setState(() => _busy = false);
+    if (error != null) {
+      showAppSnack(context, error, error: true);
+      return;
+    }
+    await services.settings.set(AppSettings.biometricLogin, true);
+    if (mounted) {
+      showAppSnack(context, '${kind.label} sign-in is on.');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = AppScope.of(context).settings;
+    return FutureBuilder<BiometricKind>(
+      future: _kind,
+      builder: (context, snapshot) {
+        final kind = snapshot.data;
+        if (kind == null) {
+          return const ToggleRow(
+            title: 'Biometric Login',
+            subtitle: 'Checking this phone…',
+            value: false,
+            onChanged: null,
+          );
+        }
+        if (!kind.available) {
+          return const ToggleRow(
+            key: Key('settings.biometric'),
+            title: 'Biometric Login',
+            subtitle:
+                'No Face ID or fingerprint is set up on this phone. Set one '
+                'up in your phone’s settings first.',
+            value: false,
+            onChanged: null,
+          );
+        }
+        return ToggleRow(
+          key: const Key('settings.biometric'),
+          title: 'Sign in with ${kind.label}',
+          subtitle: 'Use ${kind.label} instead of your password',
+          value: settings.get(AppSettings.biometricLogin),
+          onChanged: _busy ? null : (on) => _change(kind, on),
+        );
+      },
     );
   }
 }

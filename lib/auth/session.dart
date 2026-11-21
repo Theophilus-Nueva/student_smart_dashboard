@@ -38,27 +38,41 @@ class Session extends ChangeNotifier {
     return null;
   }
 
-  /// Returns an error message, or null on success.
-  Future<String?> signInWithFingerprint() async {
+  /// Confirms the phone's biometric before Settings turns biometric login
+  /// on. Returns an error message, or null on success.
+  Future<String?> confirmBiometric(BiometricKind kind) async {
+    final result = await _biometric.authenticate(
+      'Confirm ${kind.label} to sign in to ${LabWeek.appName}.',
+    );
+    return _biometricError(result, kind);
+  }
+
+  /// Signs in the last account with the phone's biometric. Returns an
+  /// error message, or null on success.
+  Future<String?> signInWithBiometric(BiometricKind kind) async {
     final remembered = _auth.rememberedUser;
     if (remembered == null) {
-      return 'Sign in with your password once to turn on fingerprint login.';
+      return 'Sign in with your password once to use ${kind.label}.';
     }
     final result = await _biometric.authenticate(
-      'Place your finger on the sensor to open ${LabWeek.appName}.',
+      '${kind.instruction} to open ${LabWeek.appName}.',
     );
-    switch (result) {
-      case BiometricResult.success:
-        await _complete(remembered, 'fingerprint');
-        return null;
-      case BiometricResult.failed:
-        return 'Fingerprint not recognised. Try again or use your password.';
-      case BiometricResult.cancelled:
-        return 'Fingerprint sign-in cancelled.';
-      case BiometricResult.unavailable:
-        return 'No fingerprint is set up on this device. Use your password.';
+    if (result == BiometricResult.success) {
+      await _complete(remembered, kind.label);
+      return null;
     }
+    return _biometricError(result, kind);
   }
+
+  String? _biometricError(BiometricResult result, BiometricKind kind) =>
+      switch (result) {
+        BiometricResult.success => null,
+        BiometricResult.failed =>
+          '${kind.label} not recognised. Try again or use your password.',
+        BiometricResult.cancelled => '${kind.label} cancelled.',
+        BiometricResult.unavailable =>
+          '${kind.label} is not set up on this phone. Use your password.',
+      };
 
   Future<void> _complete(AppUser user, String method) async {
     final now = DateTime.now();

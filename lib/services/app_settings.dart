@@ -7,16 +7,16 @@ class AppSettings extends ChangeNotifier {
 
   final SharedPreferences _prefs;
 
-  static const fingerprintLogin = 'settings.fingerprintLogin';
-  static const faceAuth = 'settings.faceAuth';
+  /// Sign in with the phone's biometric (Face ID, Touch ID, fingerprint).
+  /// Off until the user turns it on in Settings › Security Center.
+  static const biometricLogin = 'settings.biometricLogin';
   static const studyReminders = 'settings.studyReminders';
   static const assignmentReminders = 'settings.assignmentReminders';
   static const dailyCheckIn = 'settings.dailyCheckIn';
   static const autoRefresh = 'settings.autoRefresh';
 
   static const _defaults = {
-    fingerprintLogin: true,
-    faceAuth: false,
+    biometricLogin: false,
     studyReminders: true,
     assignmentReminders: true,
     dailyCheckIn: false,

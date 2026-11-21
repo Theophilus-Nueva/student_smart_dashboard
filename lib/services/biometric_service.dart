@@ -1,27 +1,69 @@
+import 'dart:io' show Platform;
+
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:local_auth/local_auth.dart';
 
-/// Fingerprint check (Week 6).
+/// Biometric sign-in (Week 6). The phone decides which kind it has: Face ID
+/// or Touch ID on iPhone, fingerprint or face unlock on Android.
 enum BiometricResult { success, failed, cancelled, unavailable }
 
+/// The biometric this phone offers, as the user knows it.
+enum BiometricKind {
+  faceId('Face ID', Icons.face),
+  touchId('Touch ID', Icons.fingerprint),
+  fingerprint('Fingerprint', Icons.fingerprint),
+  faceUnlock('Face Unlock', Icons.face),
+  // Android reports only "strong"/"weak" on some phones.
+  other('Biometrics', Icons.lock_person),
+  none('Biometrics', Icons.lock_person);
+
+  const BiometricKind(this.label, this.icon);
+
+  final String label;
+  final IconData icon;
+
+  bool get available => this != BiometricKind.none;
+  bool get isFace => this == faceId || this == faceUnlock;
+
+  /// Prompt shown in our sheet and by the phone, e.g. "Look at your phone".
+  String get instruction => switch (this) {
+    faceId || faceUnlock => 'Look at your phone',
+    touchId || fingerprint => 'Place your finger on the sensor',
+    _ => 'Confirm it’s you',
+  };
+}
+
 abstract class BiometricService {
-  Future<bool> isAvailable();
+  /// Which biometric is set up on this phone (none if not set up).
+  Future<BiometricKind> detect();
+
   Future<BiometricResult> authenticate(String reason);
 }
 
-/// Real fingerprint / Face ID via `local_auth`.
+/// Real Face ID / Touch ID / fingerprint via `local_auth`.
 class LocalAuthBiometricService implements BiometricService {
   LocalAuthBiometricService();
 
   final _auth = LocalAuthentication();
 
   @override
-  Future<bool> isAvailable() async {
+  Future<BiometricKind> detect() async {
     try {
-      return await _auth.isDeviceSupported() &&
-          (await _auth.getAvailableBiometrics()).isNotEmpty;
+      if (!await _auth.isDeviceSupported()) return BiometricKind.none;
+      // Only biometrics the user has actually enrolled are listed.
+      final types = await _auth.getAvailableBiometrics();
+      if (types.isEmpty) return BiometricKind.none;
+      final ios = Platform.isIOS;
+      if (types.contains(BiometricType.face)) {
+        return ios ? BiometricKind.faceId : BiometricKind.faceUnlock;
+      }
+      if (types.contains(BiometricType.fingerprint)) {
+        return ios ? BiometricKind.touchId : BiometricKind.fingerprint;
+      }
+      return BiometricKind.other;
     } on Exception {
-      return false;
+      return BiometricKind.none;
     }
   }
 
@@ -57,7 +99,7 @@ class UnavailableBiometricService implements BiometricService {
   const UnavailableBiometricService();
 
   @override
-  Future<bool> isAvailable() async => false;
+  Future<BiometricKind> detect() async => BiometricKind.none;
 
   @override
   Future<BiometricResult> authenticate(String reason) async =>

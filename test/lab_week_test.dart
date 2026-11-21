@@ -59,7 +59,7 @@ void main() {
     useWeek(1);
     final services = await pumpApp(tester);
     expect(find.text('LPU Smart Campus Dashboard'), findsOneWidget);
-    expect(find.text('Sign in with fingerprint'), findsNothing);
+    expect(find.byKey(const Key('login.biometric')), findsNothing);
 
     await signInAs(tester, 'student', 'student123');
     expect(services.tracker.running, isTrue); // GPS card from Week 1
@@ -419,7 +419,6 @@ void main() {
   ) async {
     useWeek(6);
     final services = await pumpApp(tester);
-    expect(find.text('Sign in with fingerprint'), findsOneWidget);
     await signInAs(tester, 'student', 'student123');
     expect(services.tracker.running, isTrue);
     expect(find.text('Smart Connected Dashboard'), findsOneWidget);
@@ -433,6 +432,8 @@ void main() {
 
     await tapNav(tester, 'Settings');
     expect(find.text('Security Center'), findsOneWidget);
+    // Biometric login is set up here (Week 6).
+    expect(find.byKey(const Key('settings.biometric')), findsOneWidget);
   });
 
   testWidgets('Week 7: everything, including the AR guide', (tester) async {

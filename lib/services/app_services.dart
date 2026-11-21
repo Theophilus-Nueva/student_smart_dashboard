@@ -96,7 +96,8 @@ class AppServices {
     session.onSignedIn = (user, method) => activity.add(
       ActivityKind.signIn,
       'Signed in',
-      '${method == 'fingerprint' ? 'Fingerprint' : 'Password'} · '
+      // "Password", or the biometric used ("Face ID", "Touch ID", …).
+      '${method == 'password' ? 'Password' : method} · '
           '$sampleDeviceName · ${user.role.name}',
     );
     sync.onSynced = (count) => activity.add(

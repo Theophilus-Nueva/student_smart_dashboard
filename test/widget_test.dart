@@ -2,18 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:smart_dashboard/routes/app_routes.dart';
+import 'package:smart_dashboard/services/app_settings.dart';
+import 'package:smart_dashboard/services/biometric_service.dart';
 import 'package:smart_dashboard/widgets/network_status.dart';
 
 import 'test_helpers.dart';
 
 void main() {
-  testWidgets('Login shows the app name and both sign-in options', (
-    tester,
-  ) async {
+  testWidgets('Login shows the app name and password sign-in', (tester) async {
     await pumpApp(tester);
     expect(find.text('Smart Campus Tour Guide'), findsOneWidget);
     expect(find.text('Sign In'), findsOneWidget);
-    expect(find.text('Sign in with fingerprint'), findsOneWidget);
+    // No biometric button until it is set up in Settings.
+    expect(find.byKey(const Key('login.biometric')), findsNothing);
   });
 
   testWidgets('Wrong password shows an error', (tester) async {
@@ -63,38 +64,107 @@ void main() {
     expect(find.text('Faculty access only'), findsNothing);
   });
 
-  testWidgets('Fingerprint without a remembered account explains why', (
+  testWidgets('Biometric login stays hidden until set up in Settings', (
     tester,
   ) async {
-    await pumpApp(tester);
-    await tester.tap(find.text('Sign in with fingerprint'));
+    // The phone has Face ID, but it hasn't been turned on in the app.
+    await pumpApp(
+      tester,
+      services: await makeServices(biometric: const AcceptingBiometric()),
+    );
+    expect(find.byKey(const Key('login.biometric')), findsNothing);
+    expect(find.textContaining('Face ID'), findsNothing);
+  });
+
+  testWidgets('Face ID without a remembered account explains why', (
+    tester,
+  ) async {
+    await pumpApp(
+      tester,
+      services: await makeServices(
+        prefs: {'settings.biometricLogin': true},
+        biometric: const AcceptingBiometric(),
+      ),
+    );
+    // Named after what the phone has: Face ID, not fingerprint.
+    expect(find.text('Sign in with Face ID'), findsOneWidget);
+    expect(find.textContaining('fingerprint'), findsNothing);
+    await tester.tap(find.text('Sign in with Face ID'));
     await tester.pumpAndSettle();
-    expect(find.text('Fingerprint Required'), findsOneWidget);
+    expect(find.text('Face ID Required'), findsOneWidget);
     // The app's standard slide-up: gray handle, draggable from anywhere.
     expect(find.byKey(const Key('slideUp.handle')), findsOneWidget);
-    await tester.tap(find.byTooltip('Scan fingerprint'));
+    await tester.tap(find.byTooltip('Use Face ID'));
     await tester.pumpAndSettle();
     expect(
-      find.textContaining('Sign in with your password once'),
+      find.text('Sign in with your password once to use Face ID.'),
       findsOneWidget,
     );
   });
 
-  testWidgets('Fingerprint opens the last account after a password sign-in', (
+  testWidgets('Set up Touch ID in Settings, then sign in with it', (
     tester,
   ) async {
-    final services = await makeServices(biometric: const AcceptingBiometric());
+    final services = await makeServices(
+      biometric: const AcceptingBiometric(BiometricKind.touchId),
+    );
     await pumpApp(tester, services: services);
     await signInAs(tester, 'faculty', 'faculty123');
+
+    // Settings › Security Center: one toggle, named after the phone's own
+    // biometric, off until turned on (which asks for Touch ID once).
+    await tapNav(tester, 'Settings');
+    final toggle = find.byKey(const Key('settings.biometric'));
+    await tester.scrollUntilVisible(
+      toggle,
+      200,
+      scrollable: find.byType(Scrollable).hitTestable().first,
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Sign in with Touch ID'), findsOneWidget);
+    expect(
+      tester
+          .widget<Switch>(
+            find.descendant(of: toggle, matching: find.byType(Switch)),
+          )
+          .value,
+      isFalse,
+    );
+    await tester.tap(
+      find.descendant(of: toggle, matching: find.byType(Switch)),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Touch ID sign-in is on.'), findsOneWidget);
+    expect(services.settings.get(AppSettings.biometricLogin), isTrue);
+
+    // Signed out: the Touch ID sheet opens by itself for the last account.
     services.session.signOut();
     await tester.pumpAndSettle();
-
-    // Fingerprint Login is on by default, so the sheet opens by itself.
-    expect(find.text('Fingerprint Required'), findsOneWidget);
-    await tester.tap(find.byTooltip('Scan fingerprint'));
+    expect(find.text('Touch ID Required'), findsOneWidget);
+    await tester.tap(find.byTooltip('Use Touch ID'));
     await tester.pumpAndSettle();
     expect(services.session.user?.displayName, 'Pocaan, Alyssa Paola D.');
-    expect(services.session.method, 'fingerprint');
+    expect(services.session.method, 'Touch ID');
+  });
+
+  testWidgets('Settings explains when the phone has no biometrics', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    await signInAs(tester, 'student', 'student123');
+    await tapNav(tester, 'Settings');
+    final toggle = find.byKey(const Key('settings.biometric'));
+    await tester.scrollUntilVisible(
+      toggle,
+      200,
+      scrollable: find.byType(Scrollable).hitTestable().first,
+    );
+    await tester.pumpAndSettle();
+    expect(find.textContaining('No Face ID or fingerprint'), findsOneWidget);
+    final sw = tester.widget<Switch>(
+      find.descendant(of: toggle, matching: find.byType(Switch)),
+    );
+    expect(sw.onChanged, isNull); // can't be turned on
   });
 
   testWidgets('Network status shows the three Week 7 states', (tester) async {

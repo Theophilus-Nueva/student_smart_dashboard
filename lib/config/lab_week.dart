@@ -101,7 +101,7 @@ enum Feature {
   emergencyContacts(6, 'Emergency Contacts (call, SMS, email)'),
   cloudTasks(6, 'Cloud Tasks (Firestore)'),
   notifications(6, 'Notifications screen and reminder categories'),
-  fingerprint(6, 'Fingerprint login'),
+  biometricLogin(6, 'Biometric login (Face ID, Touch ID or fingerprint)'),
   securityCenter(6, 'Settings > Security Center'),
   appActivity(6, 'Analytics: sign-ins and app activity'),
 
