@@ -1,4 +1,5 @@
 import 'dart:io' show Platform;
+import 'dart:ui' show Color;
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
@@ -47,7 +48,9 @@ class LocalNotificationService implements NotificationService {
     _ready =
         await _plugin.initialize(
           settings: const InitializationSettings(
-            android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+            // White pin silhouette (Android draws the status-bar icon in
+            // one colour, so the full-colour app icon showed as a blob).
+            android: AndroidInitializationSettings('@drawable/ic_stat_notify'),
             // Ask on first use instead of at app start.
             iOS: DarwinInitializationSettings(
               requestAlertPermission: false,
@@ -102,6 +105,9 @@ class LocalNotificationService implements NotificationService {
           channelDescription: category.description,
           importance: Importance.high,
           priority: Priority.high,
+          icon: '@drawable/ic_stat_notify',
+          // LPU red accent behind the icon in the notification list.
+          color: const Color(0xFFB71C1C),
         ),
         iOS: const DarwinNotificationDetails(),
       ),
