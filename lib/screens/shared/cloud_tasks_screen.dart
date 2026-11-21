@@ -172,16 +172,16 @@ class _CloudTasksScreenState extends State<CloudTasksScreen> {
                   ),
                   const SizedBox(height: 8),
                 ],
-                const SizedBox(height: 8),
-                Text(
-                  tasks.isCloudConnected
-                      ? 'Tasks sync in real time with Firebase and are still '
-                            'here after you restart the app.'
-                      : 'Firebase is not set up on this build, so tasks are '
-                            'saved on this phone only. They are still here after '
-                            'you restart the app.',
-                  style: const TextStyle(fontSize: 12, color: AppColors.muted),
-                ),
+                // Only explained when Firebase is missing.
+                if (!tasks.isCloudConnected) ...[
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Firebase is not set up on this build, so tasks are '
+                    'saved on this phone only. They are still here after '
+                    'you restart the app.',
+                    style: TextStyle(fontSize: 12, color: AppColors.muted),
+                  ),
+                ],
               ],
             );
           },
