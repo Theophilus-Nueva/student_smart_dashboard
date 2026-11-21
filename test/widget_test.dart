@@ -89,13 +89,11 @@ void main() {
     // Named after what the phone has: Face ID, not fingerprint.
     expect(find.text('Sign in with Face ID'), findsOneWidget);
     expect(find.textContaining('fingerprint'), findsNothing);
+    // One tap goes straight to the phone's Face ID prompt: no sheet with
+    // a face icon to tap first.
     await tester.tap(find.text('Sign in with Face ID'));
     await tester.pumpAndSettle();
-    expect(find.text('Face ID Required'), findsOneWidget);
-    // The app's standard slide-up: gray handle, draggable from anywhere.
-    expect(find.byKey(const Key('slideUp.handle')), findsOneWidget);
-    await tester.tap(find.byTooltip('Use Face ID'));
-    await tester.pumpAndSettle();
+    expect(find.byType(BottomSheet), findsNothing);
     expect(
       find.text('Sign in with your password once to use Face ID.'),
       findsOneWidget,
@@ -137,12 +135,11 @@ void main() {
     expect(find.text('Touch ID sign-in is on.'), findsOneWidget);
     expect(services.settings.get(AppSettings.biometricLogin), isTrue);
 
-    // Signed out: the Touch ID sheet opens by itself for the last account.
+    // Signed out: Login asks for Touch ID by itself (the phone's own
+    // prompt, nothing to tap first) and opens the last account.
     services.session.signOut();
     await tester.pumpAndSettle();
-    expect(find.text('Touch ID Required'), findsOneWidget);
-    await tester.tap(find.byTooltip('Use Touch ID'));
-    await tester.pumpAndSettle();
+    expect(find.byType(BottomSheet), findsNothing);
     expect(services.session.user?.displayName, 'Pocaan, Alyssa Paola D.');
     expect(services.session.method, 'Touch ID');
   });

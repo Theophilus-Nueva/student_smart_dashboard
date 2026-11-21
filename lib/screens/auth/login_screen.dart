@@ -5,7 +5,6 @@ import '../../services/app_settings.dart';
 import '../../services/biometric_service.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/common.dart';
-import '../../widgets/slide_up_sheet.dart';
 import '../../theme/app_assets.dart';
 import '../../config/lab_week.dart';
 
@@ -64,20 +63,16 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
+  /// Goes straight to the phone's own prompt (e.g. Face ID); on failure or
+  /// cancel, says why and leaves the password form ready.
   Future<void> _biometricSignIn() async {
     final kind = _biometric;
     if (kind == null) return;
-    final session = AppScope.of(context).session;
-    final error = await showSlideUpSheet<String?>(
-      context,
-      children: (_) => [
-        _BiometricSheet(
-          kind: kind,
-          onScan: () => session.signInWithBiometric(kind),
-        ),
-      ],
-    );
-    if (error != null && mounted) showAppSnack(context, error, error: true);
+    setState(() => _busy = true);
+    final error = await AppScope.of(context).session.signInWithBiometric(kind);
+    if (!mounted) return;
+    setState(() => _busy = false);
+    if (error != null) showAppSnack(context, error, error: true);
   }
 
   @override
@@ -171,63 +166,6 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-/// "Face ID Required" / "Fingerprint Required" sheet. Pops with an error
-/// message, or null on success.
-class _BiometricSheet extends StatefulWidget {
-  const _BiometricSheet({required this.kind, required this.onScan});
-
-  final BiometricKind kind;
-  final Future<String?> Function() onScan;
-
-  @override
-  State<_BiometricSheet> createState() => _BiometricSheetState();
-}
-
-class _BiometricSheetState extends State<_BiometricSheet> {
-  bool _scanning = false;
-
-  Future<void> _scan() async {
-    setState(() => _scanning = true);
-    final error = await widget.onScan();
-    if (mounted) Navigator.of(context).pop(error);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final kind = widget.kind;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(8, 0, 8, 16),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            '${kind.label} Required',
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '${kind.instruction} to open ${LabWeek.appName}.',
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: AppColors.muted),
-          ),
-          const SizedBox(height: 24),
-          IconButton(
-            iconSize: 72,
-            tooltip: 'Use ${kind.label}',
-            onPressed: _scanning ? null : _scan,
-            icon: Icon(kind.icon, color: AppColors.brand),
-          ),
-          const SizedBox(height: 16),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Use password instead'),
-          ),
-        ],
       ),
     );
   }
