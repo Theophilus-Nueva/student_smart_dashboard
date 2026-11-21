@@ -341,7 +341,7 @@ class StudyReminderRow extends StatelessWidget {
             children: [
               const Expanded(
                 child: Text(
-                  'Reminder time (Philippine time)',
+                  'Reminder time',
                   style: TextStyle(fontSize: 13, color: AppColors.muted),
                 ),
               ),
