@@ -445,6 +445,20 @@ void main() {
       // iOS wheel, not the Material clock dialog.
       expect(find.byType(CupertinoDatePicker), findsOneWidget);
       expect(find.byType(TimePickerDialog), findsNothing);
+      // Title in the normal iOS text style, not Flutter's red fallback.
+      final title = tester.widget<Text>(find.text('Study reminder time'));
+      final style = DefaultTextStyle.of(
+        tester.element(find.text('Study reminder time')),
+      ).style.merge(title.style);
+      expect(style.fontSize, 17);
+      expect(style.decoration, isNot(TextDecoration.underline));
+      // Opens on the saved time (7:00 PM).
+      expect(
+        tester
+            .widget<CupertinoDatePicker>(find.byType(CupertinoDatePicker))
+            .initialDateTime,
+        DateTime(2000, 1, 1, 19, 0),
+      );
       await tester.tap(find.byKey(const Key('timePicker.done')));
       await tester.pumpAndSettle();
       expect(reminders.daily[ReminderCategory.study], (19, 0));

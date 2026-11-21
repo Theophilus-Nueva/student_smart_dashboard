@@ -381,58 +381,63 @@ Future<TimeOfDay?> pickTimeOfDay(
     context: context,
     builder: (popup) => ColoredBox(
       color: CupertinoColors.systemBackground.resolveFrom(popup),
-      child: SafeArea(
-        top: false,
-        child: SizedBox(
-          height: 260,
-          child: Column(
-            children: [
-              // iOS toolbar: Cancel, title, Done.
-              SizedBox(
-                height: 44,
-                child: Row(
-                  children: [
-                    CupertinoButton(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      onPressed: () => Navigator.pop(popup),
-                      child: const Text('Cancel'),
-                    ),
-                    Expanded(
-                      child: Text(
-                        title,
-                        textAlign: TextAlign.center,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontWeight: FontWeight.w600),
+      // The popup sits outside the Material page, so text needs the iOS
+      // style given explicitly (otherwise Flutter's big red fallback).
+      child: DefaultTextStyle(
+        style: CupertinoTheme.of(popup).textTheme.textStyle,
+        child: SafeArea(
+          top: false,
+          child: SizedBox(
+            height: 260,
+            child: Column(
+              children: [
+                // iOS toolbar: Cancel, title, Done.
+                SizedBox(
+                  height: 44,
+                  child: Row(
+                    children: [
+                      CupertinoButton(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        onPressed: () => Navigator.pop(popup),
+                        child: const Text('Cancel'),
                       ),
-                    ),
-                    CupertinoButton(
-                      key: const Key('timePicker.done'),
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      onPressed: () => Navigator.pop(popup, chosen),
-                      child: const Text(
-                        'Done',
-                        style: TextStyle(fontWeight: FontWeight.w600),
+                      Expanded(
+                        child: Text(
+                          title,
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: CupertinoDatePicker(
-                  mode: CupertinoDatePickerMode.time,
-                  initialDateTime: DateTime(
-                    2000,
-                    1,
-                    1,
-                    initial.hour,
-                    initial.minute,
+                      CupertinoButton(
+                        key: const Key('timePicker.done'),
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        onPressed: () => Navigator.pop(popup, chosen),
+                        child: const Text(
+                          'Done',
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ],
                   ),
-                  onDateTimeChanged: (t) =>
-                      chosen = TimeOfDay(hour: t.hour, minute: t.minute),
                 ),
-              ),
-            ],
+                Expanded(
+                  child: CupertinoDatePicker(
+                    mode: CupertinoDatePickerMode.time,
+                    initialDateTime: DateTime(
+                      2000,
+                      1,
+                      1,
+                      initial.hour,
+                      initial.minute,
+                    ),
+                    onDateTimeChanged: (t) =>
+                        chosen = TimeOfDay(hour: t.hour, minute: t.minute),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
