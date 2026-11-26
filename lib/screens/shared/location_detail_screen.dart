@@ -6,6 +6,7 @@ import '../../services/app_services.dart';
 import '../../theme/app_colors.dart';
 import '../../utils/format.dart';
 import '../../widgets/common.dart';
+import '../../widgets/location_photo.dart';
 
 /// Shared / Location Detail (Week 7): hours, distance, Record Visit,
 /// bookmark, open in map, visits.
@@ -27,6 +28,35 @@ class LocationDetailScreen extends StatelessWidget {
           : 'Saved offline · uploads when you are back online',
     );
     if (context.mounted) showAppSnack(context, 'Visit recorded');
+  }
+
+  Future<void> _confirmDelete(BuildContext context, String title) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Delete location?'),
+        content: Text('$title and its visits will be removed from the tour.'),
+        actions: [
+          TextButton(
+            style: TextButton.styleFrom(foregroundColor: Colors.black),
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.brand,
+              textStyle: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !context.mounted) return;
+    final tour = AppScope.of(context).tour;
+    Navigator.of(context).pop();
+    await tour.deleteLocation(locationId);
   }
 
   @override
@@ -59,17 +89,10 @@ class LocationDetailScreen extends StatelessWidget {
             return ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                Container(
-                  height: 140,
-                  decoration: BoxDecoration(
-                    color: AppColors.field,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.apartment,
-                    size: 64,
-                    color: AppColors.muted,
-                  ),
+                LocationPhoto(
+                  location: location,
+                  height: 180,
+                  width: double.infinity,
                 ),
                 const SizedBox(height: 14),
                 Text(
@@ -94,13 +117,25 @@ class LocationDetailScreen extends StatelessWidget {
                     ),
                     child: Column(
                       children: [
-                        DetailLine(label: 'Hours', value: location.hours),
-                        DetailLine(
-                          label: 'Distance',
-                          value:
-                              '${location.distanceMeters} m from you · about '
-                              '${location.walkMinutes} min walk',
-                        ),
+                        if (location.hours.isNotEmpty)
+                          DetailLine(label: 'Hours', value: location.hours),
+                        if (location.hasDistance)
+                          DetailLine(
+                            label: 'Distance',
+                            value:
+                                '${location.distanceMeters} m from you · about '
+                                '${location.walkMinutes} min walk',
+                          ),
+                        if (location.addedByUser)
+                          DetailLine(
+                            label: 'Upload',
+                            value: location.synced
+                                ? 'Synced'
+                                : 'Pending upload',
+                            valueColor: location.synced
+                                ? AppColors.online
+                                : AppColors.pending,
+                          ),
                         DetailLine(
                           label: 'Status',
                           value: visits.isEmpty
@@ -171,6 +206,17 @@ class LocationDetailScreen extends StatelessWidget {
                   'automatically when you are back online.',
                   style: TextStyle(fontSize: 12, color: AppColors.muted),
                 ),
+                if (location.addedByUser) ...[
+                  const SizedBox(height: 16),
+                  TextButton.icon(
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.brand,
+                    ),
+                    onPressed: () => _confirmDelete(context, location.title),
+                    icon: const Icon(Icons.delete_outline),
+                    label: const Text('Delete Location'),
+                  ),
+                ],
               ],
             );
           },

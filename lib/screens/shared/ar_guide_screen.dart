@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
@@ -6,103 +8,165 @@ import '../../models/activity_item.dart';
 import '../../models/tour.dart';
 import '../../routes/app_routes.dart';
 import '../../services/app_services.dart';
-import '../../services/device_service.dart';
-import '../../theme/app_assets.dart';
 import '../../theme/app_colors.dart';
+import '../../widgets/location_photo.dart';
 import '../../widgets/slide_up_sheet.dart';
 
-/// Week 7 optional AR campus guide, as a simulated AR view: the live camera
-/// with floating location labels placed by compass heading, QR checkpoint
-/// scanning (UC001–UC005) to record visits, and the guided route with
-/// progress. Works offline; visits upload through the sync queue.
+/// Week 7 optional AR campus guide, as a simulated AR view. Each key campus
+/// location has its own printed QR code (UC001–UC006, see docs/qr_codes);
+/// when the camera detects one, that location's information is pinned over
+/// the code and the visit is recorded. The guided route and progress are
+/// shown while no code is in view. Works offline; visits
+/// upload through the sync queue.
 class ArGuideScreen extends StatefulWidget {
   const ArGuideScreen({super.key});
 
-  /// Half of the horizontal field of view used to place labels.
-  static const halfFov = 35.0;
-
   @override
-  State<ArGuideScreen> createState() => _ArGuideScreenState();
+  State<ArGuideScreen> createState() => ArGuideScreenState();
 }
 
-class _ArGuideScreenState extends State<ArGuideScreen> {
+@visibleForTesting
+class ArGuideScreenState extends State<ArGuideScreen> {
+  /// Gap between QR checks, in milliseconds.
+  static const scanIntervalMs = 25;
+
+  /// How long the info card stays after the code leaves the camera view.
+  static const holdTime = Duration(milliseconds: 1500);
+
   MobileScannerController? _camera;
-  DeviceService? _device;
-  double? _heading;
+  bool _started = false;
   final _lastScan = <String, DateTime>{};
   String? _toast;
+  bool _toastIsError = false;
+  Timer? _toastTimer;
+
+  /// The checkpoint currently in view, and where its code sits on screen
+  /// (null when the position is unknown: the card is then centred).
+  TourLocation? _detected;
+  Rect? _codeRect;
+  Timer? _hideTimer;
+  Size _viewSize = Size.zero;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (_device != null) return;
+    if (_started) return;
+    _started = true;
     final services = AppScope.of(context);
-    final device = _device = services.device..addListener(_onSensors);
-    // Start after this frame: startSensors() notifies listeners, which must
-    // not happen while widgets are building.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) device.startSensors();
-    });
     if (services.useNativeCamera) {
-      _camera = MobileScannerController(formats: const [BarcodeFormat.qrCode]);
+      _camera = MobileScannerController(
+        formats: const [BarcodeFormat.qrCode],
+        // About 40 checks a second (the default 250 ms made the card lag
+        // behind the code). Not `unrestricted`, which the package warns can
+        // run out of memory on older phones.
+        detectionTimeoutMs: scanIntervalMs,
+      );
     }
   }
 
   @override
   void dispose() {
-    final device = _device?..removeListener(_onSensors);
-    // Stop after this frame: stopSensors() notifies other listeners (the
-    // Device tab), which must not happen while the tree is being torn down.
-    if (device != null) {
-      WidgetsBinding.instance
-        ..addPostFrameCallback((_) => device.stopSensors())
-        ..scheduleFrame();
-    }
     _camera?.dispose();
+    _hideTimer?.cancel();
+    _toastTimer?.cancel();
     super.dispose();
   }
 
-  /// Smooths the compass so labels glide instead of jittering.
-  void _onSensors() {
-    final raw = _device?.heading;
-    if (raw == null || !mounted) return;
-    setState(() {
-      if (_heading == null) {
-        _heading = raw;
-      } else {
-        final delta = _angleDiff(raw, _heading!);
-        _heading = (_heading! + delta * 0.25 + 360) % 360;
-      }
-    });
-  }
-
-  Future<void> _onDetect(BarcodeCapture capture) async {
-    final services = AppScope.of(context);
+  void _onDetect(BarcodeCapture capture) {
     for (final barcode in capture.barcodes) {
       final code = barcode.rawValue;
       if (code == null) continue;
-      final location = services.tour.byQrCode(code);
-      if (location == null) continue;
-      final last = _lastScan[location.id];
-      if (last != null && DateTime.now().difference(last).inSeconds < 10) {
-        continue;
-      }
-      _lastScan[location.id] = DateTime.now();
-      await HapticFeedback.mediumImpact();
-      await services.tour.recordVisit(location.id);
-      await services.activity.add(
-        ActivityKind.visit,
-        'Checkpoint ${location.qrCode} · ${location.title}',
-        services.sync.online
-            ? 'Scanned in the AR guide'
-            : 'Saved offline · uploads when you are back online',
-      );
-      if (!mounted) return;
-      setState(() => _toast = '${location.title} checkpoint recorded');
-      Future<void>.delayed(const Duration(seconds: 3), () {
-        if (mounted) setState(() => _toast = null);
-      });
+      handleCode(code, _toScreen(barcode.corners, capture.size));
+      return;
     }
+  }
+
+  Rect? _toScreen(List<Offset> corners, Size image) =>
+      codeRectOnScreen(corners, image, _viewSize);
+
+  /// Maps the code's corners from camera-image pixels to screen points. The
+  /// preview fills the screen (BoxFit.cover), so the image is scaled up and
+  /// cropped evenly on two sides.
+  ///
+  /// On iPhone the scanner always reports the image size in portrait, even
+  /// when the phone is held sideways, so the size is flipped whenever its
+  /// orientation doesn't match the screen's (as mobile_scanner's own overlay
+  /// does). The result is kept on screen so the brackets never vanish.
+  @visibleForTesting
+  static Rect? codeRectOnScreen(List<Offset> corners, Size image, Size view) {
+    if (corners.isEmpty || image.isEmpty || view.isEmpty) return null;
+    final viewLandscape = view.width > view.height;
+    final imageLandscape = image.width > image.height;
+    if (viewLandscape != imageLandscape) image = image.flipped;
+    final scale = (view.width / image.width) > (view.height / image.height)
+        ? view.width / image.width
+        : view.height / image.height;
+    final dx = (view.width - image.width * scale) / 2;
+    final dy = (view.height - image.height * scale) / 2;
+    final points = [
+      for (final c in corners) Offset(c.dx * scale + dx, c.dy * scale + dy),
+    ];
+    var rect = Rect.fromPoints(points.first, points.first);
+    for (final p in points.skip(1)) {
+      rect = rect.expandToInclude(Rect.fromPoints(p, p));
+    }
+    // Keep the whole box on screen (shift, don't shrink).
+    final w = rect.width.clamp(1.0, view.width);
+    final h = rect.height.clamp(1.0, view.height);
+    return Rect.fromLTWH(
+      rect.left.clamp(0.0, view.width - w),
+      rect.top.clamp(0.0, view.height - h),
+      w,
+      h,
+    );
+  }
+
+  /// A QR code was read: show the location it belongs to over the code and
+  /// record the visit (at most once every 10 seconds per location).
+  @visibleForTesting
+  Future<void> handleCode(String code, [Rect? codeRect]) async {
+    final services = AppScope.of(context);
+    final location = services.tour.byQrCode(code);
+    if (location == null) {
+      _showToast('Not a campus checkpoint QR code', error: true);
+      return;
+    }
+    _hideTimer?.cancel();
+    _hideTimer = Timer(holdTime, () {
+      if (mounted) setState(() => _detected = _codeRect = null);
+    });
+    final isNew = _detected?.id != location.id;
+    setState(() {
+      _detected = location;
+      _codeRect = codeRect;
+    });
+
+    final last = _lastScan[location.id];
+    if (last != null && DateTime.now().difference(last).inSeconds < 10) return;
+    _lastScan[location.id] = DateTime.now();
+    if (isNew) unawaited(HapticFeedback.mediumImpact());
+    final firstVisit = !services.tour.isVisited(location.id);
+    await services.tour.recordVisit(location.id);
+    await services.activity.add(
+      ActivityKind.visit,
+      'Checkpoint ${location.qrCode} · ${location.title}',
+      services.sync.online
+          ? 'Scanned in the AR guide'
+          : 'Saved offline · uploads when you are back online',
+    );
+    if (firstVisit) _showToast('${location.title} added to your visits');
+  }
+
+  void _showToast(String text, {bool error = false}) {
+    if (!mounted) return;
+    _toastTimer?.cancel();
+    setState(() {
+      _toast = text;
+      _toastIsError = error;
+    });
+    _toastTimer = Timer(const Duration(seconds: 3), () {
+      if (mounted) setState(() => _toast = null);
+    });
   }
 
   void _showDetails(TourLocation location) {
@@ -110,14 +174,7 @@ class _ArGuideScreenState extends State<ArGuideScreen> {
     showSlideUpSheet<void>(
       context,
       children: (sheetContext) => [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: Image.asset(
-            AppAssets.campusPhoto,
-            height: 140,
-            fit: BoxFit.cover,
-          ),
-        ),
+        LocationPhoto(location: location, height: 140),
         const SizedBox(height: 12),
         Text(
           location.title,
@@ -179,20 +236,36 @@ class _ArGuideScreenState extends State<ArGuideScreen> {
           ListenableBuilder(
             listenable: services.tour,
             builder: (context, _) => LayoutBuilder(
-              builder: (context, box) => _Labels(
-                size: box.biggest,
-                heading: _heading,
-                onTap: _showDetails,
-              ),
+              builder: (context, box) {
+                _viewSize = box.biggest;
+                final detected = _detected;
+                // A detected code takes over the view; otherwise the scan
+                // frame shows where to aim.
+                if (detected != null) {
+                  return _CheckpointOverlay(
+                    size: box.biggest,
+                    location: detected,
+                    codeRect: _codeRect,
+                    visited: services.tour.isVisited(detected.id),
+                    onTap: () => _showDetails(detected),
+                  );
+                }
+                return const _ScanFrame();
+              },
             ),
           ),
           SafeArea(
             child: Column(
               children: [
-                _TopBar(heading: _heading),
-                if (_toast != null) _Toast(text: _toast!),
+                const _TopBar(),
+                if (_toast != null) _Toast(text: _toast!, error: _toastIsError),
                 const Spacer(),
-                const _RoutePanel(),
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 200),
+                  child: _detected == null
+                      ? const _RoutePanel()
+                      : const SizedBox(width: double.infinity),
+                ),
               ],
             ),
           ),
@@ -202,184 +275,11 @@ class _ArGuideScreenState extends State<ArGuideScreen> {
   }
 }
 
-/// Signed difference a − b in degrees, in (−180, 180].
-double _angleDiff(double a, double b) {
-  var d = (a - b) % 360;
-  if (d > 180) d -= 360;
-  if (d <= -180) d += 360;
-  return d;
-}
-
-class _Labels extends StatelessWidget {
-  const _Labels({
-    required this.size,
-    required this.heading,
-    required this.onTap,
-  });
-
-  final Size size;
-  final double? heading;
-  final ValueChanged<TourLocation> onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final tour = AppScope.of(context).tour;
-    final next = tour.nextRouteStop;
-    final h = heading;
-    if (h == null) {
-      return const SizedBox();
-    }
-    final labels = <Widget>[];
-    final offscreen = <(TourLocation, double)>[];
-    for (final l in tour.locations) {
-      final rel = _angleDiff(l.bearingDegrees, h);
-      if (rel.abs() > ArGuideScreen.halfFov) {
-        offscreen.add((l, rel));
-        continue;
-      }
-      const labelWidth = 150.0;
-      final x =
-          size.width / 2 +
-          rel / ArGuideScreen.halfFov * (size.width / 2 - labelWidth / 2) -
-          labelWidth / 2;
-      // Nearer places sit lower on screen, like objects closer to you.
-      final depth = (l.distanceMeters / 150).clamp(0.0, 1.0);
-      final y = size.height * (0.38 - depth * 0.2);
-      labels.add(
-        Positioned(
-          left: x,
-          top: y,
-          width: labelWidth,
-          child: _ArLabel(
-            location: l,
-            visited: tour.isVisited(l.id),
-            isNext: l.id == next?.id,
-            onTap: () => onTap(l),
-          ),
-        ),
-      );
-    }
-    // Edge arrow pointing toward the next stop when it is out of view.
-    if (next != null) {
-      for (final (l, rel) in offscreen) {
-        if (l.id != next.id) continue;
-        labels.add(
-          Positioned(
-            top: size.height * 0.28,
-            left: rel < 0 ? 12 : null,
-            right: rel > 0 ? 12 : null,
-            child: _EdgeHint(location: l, toLeft: rel < 0),
-          ),
-        );
-      }
-    }
-    return Stack(children: labels);
-  }
-}
-
-class _ArLabel extends StatelessWidget {
-  const _ArLabel({
-    required this.location,
-    required this.visited,
-    required this.isNext,
-    required this.onTap,
-  });
-
-  final TourLocation location;
-  final bool visited;
-  final bool isNext;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final accent = isNext
-        ? AppColors.brand
-        : visited
-        ? AppColors.online
-        : Colors.black87;
-    return Semantics(
-      button: true,
-      label: '${location.title}, ${location.distanceMeters} metres',
-      child: GestureDetector(
-        onTap: onTap,
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.92),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: accent, width: isNext ? 2 : 1),
-                boxShadow: const [
-                  BoxShadow(color: Color(0x40000000), blurRadius: 8),
-                ],
-              ),
-              child: Column(
-                children: [
-                  Text(
-                    '↑ ${location.title} (${location.distanceMeters}m)',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 13,
-                      color: accent,
-                    ),
-                  ),
-                  Text(
-                    location.hours,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 10, color: Colors.black54),
-                  ),
-                  Text(
-                    visited ? 'Visited · Tap for Details' : 'Tap for Details',
-                    style: const TextStyle(fontSize: 10, color: Colors.black54),
-                  ),
-                ],
-              ),
-            ),
-            Container(width: 2, height: 24, color: Colors.white70),
-            const Icon(Icons.circle, size: 8, color: Colors.white),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _EdgeHint extends StatelessWidget {
-  const _EdgeHint({required this.location, required this.toLeft});
-
-  final TourLocation location;
-  final bool toLeft;
-
-  @override
-  Widget build(BuildContext context) {
-    final text = toLeft ? '← ${location.title}' : '${location.title} →';
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: AppColors.brand.withValues(alpha: 0.9),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Text(
-        'Next: $text',
-        style: const TextStyle(color: Colors.white, fontSize: 12),
-      ),
-    );
-  }
-}
-
 class _TopBar extends StatelessWidget {
-  const _TopBar({required this.heading});
-
-  final double? heading;
+  const _TopBar();
 
   @override
   Widget build(BuildContext context) {
-    final h = heading;
-    final dir = h == null
-        ? null
-        : DeviceService.directions[((h + 22.5) % 360 ~/ 45)];
     return Padding(
       padding: const EdgeInsets.fromLTRB(8, 4, 12, 0),
       child: Row(
@@ -402,17 +302,6 @@ class _TopBar extends StatelessWidget {
               ),
             ),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.black38,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Text(
-              h == null ? 'Finding direction…' : '$dir · ${h.round()}°',
-              style: const TextStyle(color: Colors.white, fontSize: 12),
-            ),
-          ),
         ],
       ),
     );
@@ -420,25 +309,36 @@ class _TopBar extends StatelessWidget {
 }
 
 class _Toast extends StatelessWidget {
-  const _Toast({required this.text});
+  const _Toast({required this.text, this.error = false});
 
   final String text;
+  final bool error;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(top: 12),
+      margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.online,
+        color: error ? Colors.black87 : AppColors.online,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.check_circle, color: Colors.white, size: 18),
+          Icon(
+            error ? Icons.qr_code_2 : Icons.check_circle,
+            color: Colors.white,
+            size: 18,
+          ),
           const SizedBox(width: 6),
-          Text(text, style: const TextStyle(color: Colors.white)),
+          Flexible(
+            child: Text(
+              text,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(color: Colors.white),
+            ),
+          ),
         ],
       ),
     );
@@ -463,7 +363,7 @@ class _RoutePanel extends StatelessWidget {
         final done = tour.routeVisitedCount;
         final total = tour.routeStops.length;
         final pct = (tour.routeProgress * 100).round();
-        final pending = tour.pendingCount;
+        final pending = tour.pendingVisitCount;
         return Container(
           width: double.infinity,
           margin: const EdgeInsets.all(12),
@@ -533,8 +433,8 @@ class _RoutePanel extends StatelessWidget {
               const SizedBox(height: 8),
               Text(
                 sync.online
-                    ? 'Point the camera at a checkpoint QR code to record '
-                          'your visit.'
+                    ? 'Point the camera at a location\'s QR code to see its '
+                          'information and record your visit.'
                     : 'Offline: scans are saved on your phone and upload '
                           'when you are back online.',
                 style: const TextStyle(fontSize: 12, color: AppColors.muted),
@@ -543,6 +443,291 @@ class _RoutePanel extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+/// Corner brackets in the middle of the view showing where to aim.
+class _ScanFrame extends StatelessWidget {
+  const _ScanFrame();
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: Align(
+        alignment: const Alignment(0, -0.1),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(
+              width: 200,
+              height: 200,
+              child: CustomPaint(painter: _BracketPainter(Colors.white70)),
+            ),
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.black45,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: const Text(
+                'Scan a location QR code',
+                style: TextStyle(color: Colors.white, fontSize: 13),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Draws four L-shaped corners around the box it is given.
+class _BracketPainter extends CustomPainter {
+  const _BracketPainter(this.color);
+
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 4
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+    final len = size.shortestSide * 0.22;
+    final w = size.width, h = size.height;
+    for (final (o, dx, dy) in [
+      (Offset.zero, 1.0, 1.0),
+      (Offset(w, 0), -1.0, 1.0),
+      (Offset(0, h), 1.0, -1.0),
+      (Offset(w, h), -1.0, -1.0),
+    ]) {
+      canvas
+        ..drawLine(o, o.translate(len * dx, 0), paint)
+        ..drawLine(o, o.translate(0, len * dy), paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_BracketPainter old) => old.color != color;
+}
+
+/// The AR part of a scan: red brackets locked onto the detected code and
+/// the location's information card pinned just above it (or below, when
+/// the code is near the top of the screen).
+class _CheckpointOverlay extends StatelessWidget {
+  const _CheckpointOverlay({
+    required this.size,
+    required this.location,
+    required this.codeRect,
+    required this.visited,
+    required this.onTap,
+  });
+
+  final Size size;
+  final TourLocation location;
+  final Rect? codeRect;
+  final bool visited;
+  final VoidCallback onTap;
+
+  static const cardWidth = 290.0;
+  static const cardHeight = 236.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final rect = codeRect?.inflate(10);
+    final width = cardWidth.clamp(0.0, size.width - 24);
+    final landscape = size.width > size.height;
+    // Highest top that still fits the card (never below the minimum).
+    double clampTop(double t, double min) =>
+        t.clamp(min, (size.height - cardHeight - 12).clamp(min, size.height));
+    double left, top;
+    if (rect == null) {
+      left = (size.width - width) / 2;
+      top = clampTop(size.height * 0.3, 60);
+    } else if (landscape) {
+      // Sideways there is no room above the code: put the card beside it,
+      // on whichever side has more space.
+      final roomRight = size.width - rect.right;
+      left = roomRight >= rect.left ? rect.right + 16 : rect.left - width - 16;
+      left = left.clamp(
+        12.0,
+        (size.width - width - 12).clamp(12.0, size.width),
+      );
+      top = clampTop(rect.center.dy - cardHeight / 2, 12);
+    } else {
+      left = (rect.center.dx - width / 2).clamp(
+        12.0,
+        (size.width - width - 12).clamp(12.0, size.width),
+      );
+      final above = rect.top - cardHeight - 16;
+      top = clampTop(above > 90 ? above : rect.bottom + 16, 90);
+    }
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        if (rect != null)
+          AnimatedPositioned(
+            duration: const Duration(
+              milliseconds: ArGuideScreenState.scanIntervalMs,
+            ),
+            left: rect.left,
+            top: rect.top,
+            width: rect.width,
+            height: rect.height,
+            child: const IgnorePointer(
+              child: CustomPaint(painter: _BracketPainter(AppColors.brand)),
+            ),
+          ),
+        AnimatedPositioned(
+          duration: const Duration(
+            milliseconds: ArGuideScreenState.scanIntervalMs,
+          ),
+          left: left,
+          top: top,
+          width: width,
+          child: TweenAnimationBuilder<double>(
+            key: ValueKey(location.id),
+            tween: Tween(begin: 0.85, end: 1),
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOutBack,
+            builder: (context, t, child) => Transform.scale(
+              scale: t,
+              child: Opacity(
+                opacity: ((t - 0.85) / 0.15).clamp(0, 1),
+                child: child,
+              ),
+            ),
+            child: _CheckpointCard(
+              location: location,
+              visited: visited,
+              onTap: onTap,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _CheckpointCard extends StatelessWidget {
+  const _CheckpointCard({
+    required this.location,
+    required this.visited,
+    required this.onTap,
+  });
+
+  final TourLocation location;
+  final bool visited;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: '${location.title} checkpoint. Tap for details.',
+      child: Material(
+        color: Colors.white,
+        elevation: 10,
+        shadowColor: Colors.black54,
+        borderRadius: BorderRadius.circular(14),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                color: AppColors.brand,
+                padding: const EdgeInsets.fromLTRB(14, 8, 14, 8),
+                child: Row(
+                  children: [
+                    const Icon(Icons.qr_code_2, color: Colors.white, size: 18),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        'Checkpoint ${location.qrCode}',
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    if (visited)
+                      const Row(
+                        children: [
+                          Icon(
+                            Icons.check_circle,
+                            color: Colors.white,
+                            size: 16,
+                          ),
+                          SizedBox(width: 4),
+                          Text(
+                            'Visited',
+                            style: TextStyle(color: Colors.white, fontSize: 12),
+                          ),
+                        ],
+                      ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      location.title,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    Text(
+                      location.subtitle,
+                      style: const TextStyle(color: AppColors.muted),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      location.description,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        const Icon(Icons.schedule, size: 15),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            location.hours,
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Tap for Details',
+                      style: TextStyle(
+                        color: AppColors.brand,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -622,7 +807,3 @@ class _CameraMessage extends StatelessWidget {
     );
   }
 }
-
-/// Label placement maths, exposed for tests.
-@visibleForTesting
-double arAngleDiff(double a, double b) => _angleDiff(a, b);

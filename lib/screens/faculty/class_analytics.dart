@@ -7,6 +7,7 @@ import '../../theme/app_colors.dart';
 import '../../utils/format.dart';
 import '../../widgets/common.dart';
 import '../../widgets/connectivity_log_list.dart';
+import '../../widgets/network_status.dart';
 import '../../widgets/pull_to_sync.dart';
 import '../../widgets/stat_card.dart';
 import '../../config/lab_week.dart';
@@ -127,6 +128,12 @@ class ClassAnalytics extends StatelessWidget {
                     const SectionHeader('Sync'),
                     StatGrid(
                       children: [
+                        // Week 7 connectivity analytics: green / amber / red.
+                        StatCard(
+                          label: 'Network Status',
+                          value: sync.state.label,
+                          valueColor: sync.state.color,
+                        ),
                         StatCard(
                           label: 'Pending records',
                           value: '${sync.pendingCount}',

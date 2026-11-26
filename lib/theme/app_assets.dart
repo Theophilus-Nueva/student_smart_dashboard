@@ -11,6 +11,13 @@ class AppAssets {
   /// LPU Cavite campus photo (ID card background).
   static const campusPhoto = 'assets/images/lpu_campus.jpg';
 
+  /// Campus tour location photos (Week 7). Registrar and Student Center
+  /// have none yet and fall back to [campusPhoto].
+  static const mainBuilding = 'assets/images/locations/main_building.jpg';
+  static const library = 'assets/images/locations/library.jpg';
+  static const computerLab = 'assets/images/locations/computer_lab.jpg';
+  static const avTheater = 'assets/images/locations/av_theater.jpg';
+
   /// ID portrait for the demo student account.
   static const portraitTheophilus =
       'assets/images/portrait_theophilus_nueva.jpg';

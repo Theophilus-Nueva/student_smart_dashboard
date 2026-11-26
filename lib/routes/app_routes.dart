@@ -7,6 +7,7 @@ import '../screens/faculty/student_details_screen.dart';
 import '../screens/faculty/student_form_screen.dart';
 import '../screens/faculty/student_records_screen.dart';
 import '../screens/shared/about_lpu_screen.dart';
+import '../screens/shared/add_location_screen.dart';
 import '../screens/shared/ar_guide_screen.dart';
 import '../screens/shared/campus_tour_screen.dart';
 import '../screens/shared/cloud_tasks_screen.dart';
@@ -39,6 +40,7 @@ class AppRoutes {
   static const campusTour = '/tour';
   static const locationDetail = '/tour/location';
   static const arGuide = '/tour/ar';
+  static const addLocation = '/tour/add';
   static const map = '/map';
   static const cloudTasks = '/cloud-tasks';
   static const notifications = '/notifications';
@@ -57,6 +59,7 @@ class AppRoutes {
     campusTour: 'Campus Tour',
     locationDetail: 'Location Detail',
     arGuide: 'AR Campus Guide',
+    addLocation: 'Add Location',
     map: 'Map',
     cloudTasks: 'Cloud Tasks',
     notifications: 'Notifications',
@@ -83,6 +86,7 @@ class AppRoutes {
     campusTour: Feature.campusTour,
     locationDetail: Feature.campusTour,
     arGuide: Feature.arGuide,
+    addLocation: Feature.campusTour,
     map: Feature.map,
     cloudTasks: Feature.cloudTasks,
     notifications: Feature.notifications,
@@ -114,6 +118,7 @@ class AppRoutes {
         locationId: args,
       ),
       arGuide => const ArGuideScreen(),
+      addLocation => const AddLocationScreen(),
       map => const MapScreen(),
       cloudTasks => const CloudTasksScreen(),
       notifications => const NotificationsScreen(),

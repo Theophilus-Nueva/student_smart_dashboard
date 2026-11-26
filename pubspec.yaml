@@ -45,6 +45,7 @@ flutter:
 
   assets:
     - assets/images/
+    - assets/images/locations/
 
 # App icon (generated with `dart run flutter_launcher_icons`).
 # Source artwork: assets/icon/app_icon.svg (exported to the PNGs below).

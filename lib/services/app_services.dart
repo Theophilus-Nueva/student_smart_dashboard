@@ -45,7 +45,7 @@ class AppServices {
        settings = AppSettings(prefs),
        activity = ActivityLog(prefs),
        students = StudentRepository(prefs),
-       tour = TourService(prefs),
+       tour = TourService(prefs, documentsDirectory: documentsDirectory),
        tasks = TaskService(prefs),
        files = FileExportService(
          documentsDirectory: documentsDirectory,

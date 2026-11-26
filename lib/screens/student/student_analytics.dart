@@ -80,6 +80,12 @@ class StudentAnalytics extends StatelessWidget {
                     note: me?.program,
                   ),
                 if (Feature.offlineSync.on) ...[
+                  // Week 7 connectivity analytics: green / amber / red.
+                  StatCard(
+                    label: 'Network Status',
+                    value: sync.state.label,
+                    valueColor: sync.state.color,
+                  ),
                   StatCard(
                     label: 'Last sync',
                     value: formatLastSync(sync.lastSync),

@@ -91,6 +91,14 @@ class _CampusTourScreenState extends State<CampusTourScreen> {
                 const SizedBox(height: 12),
                 TourProgressCard(tour: tour),
                 const SectionHeader('Campus Locations'),
+                OutlinedButton.icon(
+                  key: const Key('tour.addLocation'),
+                  onPressed: () =>
+                      Navigator.of(context).pushNamed(AppRoutes.addLocation),
+                  icon: const Icon(Icons.add_location_alt),
+                  label: const Text('Add Location'),
+                ),
+                const SizedBox(height: 10),
                 if (locations.isEmpty)
                   const StateMessage(
                     icon: Icons.location_off,
@@ -174,7 +182,11 @@ class _LocationRow extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      '${location.subtitle} · ${location.distanceMeters} m',
+                      location.addedByUser
+                          ? '${location.subtitle} · '
+                                '${location.synced ? 'Added' : 'Pending upload'}'
+                          : '${location.subtitle} · '
+                                '${location.distanceMeters} m',
                       style: const TextStyle(
                         fontSize: 13,
                         color: AppColors.muted,
